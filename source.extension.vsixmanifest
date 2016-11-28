@@ -4,6 +4,7 @@
     <Identity Id="ParallelBuildsMonitor.66eaf909-5c57-43f0-88df-9e02b24d012b" Version="1.4" Language="en-US" Publisher="Krzysztof Buchacz" />
     <DisplayName>Parallel Builds Monitor</DisplayName>
     <Description xml:space="preserve">Parallel Builds Monitor for Visual Studio 2015</Description>
+    <License>ParallelBuildsMonitorLicense.txt</License>
     <ReleaseNotes></ReleaseNotes>
     <Icon>Resources\ParallelBuildsMonitorWindowPackage.ico</Icon>
     <PreviewImage>Resources\ParallelBuildsMonitorWindowPreview.png</PreviewImage>
