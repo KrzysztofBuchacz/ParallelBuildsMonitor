@@ -179,7 +179,7 @@ namespace ParallelBuildsMonitor
     string MakeKey(string Project, string ProjectConfig, string Platform)
     {
       FileInfo fi = new FileInfo(Project);
-      string key = fi.Name + "|" + ProjectConfig + "|" + Platform;
+            string key = fi.Name;// + "|" + ProjectConfig + "|" + Platform;
       return key;
     }
 
