@@ -1,4 +1,8 @@
-﻿v. 1.5 2016.11.28 License added
+﻿v. 1.7 2017.07.05 Displaying seconds in higher precision
+
+v. 1.6 2017.04.27 Migration to Visual 2017
+
+v. 1.5 2016.11.28 License added
 - minor change: Congiguration and Platform removed from project name to save space
 
 v. 1.4 2016.11.21 First Release

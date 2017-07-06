@@ -275,7 +275,21 @@ namespace ParallelBuildsMonitor
     public static string SecondsToString(long ticks)
     {
       long seconds = ticks / 10000000;
-      string ret = (seconds % 60).ToString() + "s";
+      string ret;
+      if (seconds > 9)
+      {
+        ret = (seconds % 60).ToString() + "s";
+      }
+      else if (seconds > 0)
+      {
+        long dsecs = ticks / 1000000;
+        ret = (seconds % 60).ToString() + "." + (dsecs % 10).ToString() + "s";
+      }
+      else
+      {
+        long csecs = ticks / 100000;
+        ret = (seconds % 60).ToString() + "." + ((csecs % 100) < 10 ? "0" : "") + (csecs % 100).ToString() + "s";
+      }
       long minutes = seconds / 60;
       if (minutes > 0)
       {
