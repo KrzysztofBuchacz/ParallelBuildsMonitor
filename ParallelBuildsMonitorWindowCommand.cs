@@ -27,19 +27,19 @@ namespace ParallelBuildsMonitor
     public bool success;
   }
 
-    public class BuildInfoCriticalPathComparer : IComparer<BuildInfo>
+  public class FirstStartedFirstInTheListComparer : IComparer<BuildInfo>
+  {
+    public int Compare(BuildInfo x, BuildInfo y)
     {
-        public int Compare(BuildInfo x, BuildInfo y)
-        {
-            //if (x == null) return 1;
-            //if (y == null) return 1;
-
-            //1[s] = 10000000[ticks]
-            if (Math.Abs(x.begin - y.begin) < 10000)
-                return (x.end < y.end) ? -1 : 1;
-            return (x.begin < y.begin) ? -1 : 1;
-        }
+      //if (x == null) return 1;
+      //if (y == null) return 1;
+    
+      //1[s] = 10000000[ticks]
+      if (Math.Abs(x.begin - y.begin) < 10000) // the same statring time
+        return (x.end < y.end) ? -1 : 1; // shorter first on list
+      return (x.begin < y.begin) ? -1 : 1;
     }
+  }
 
     /// <summary>
     /// Command handler
@@ -172,12 +172,11 @@ namespace ParallelBuildsMonitor
         DateTime end = new DateTime(DateTime.Now.Ticks - buildTime.Ticks);
         finishedBuilds.Add(new BuildInfo(key, start.Ticks, end.Ticks, Success));
 
+        // Alternatative way of sorting
+        // IComparer<BuildInfo> comparer = new FirstStartedFirstInTheListComparer();
+        // finishedBuilds.Sort(comparer);
 
-                IComparer<BuildInfo> comparer = new BuildInfoCriticalPathComparer();
-                finishedBuilds.Sort(comparer);
-
-
-                TimeSpan s = end - start;
+        TimeSpan s = end - start;
         DateTime t = new DateTime(s.Ticks);
         StringBuilder b = new StringBuilder(outputCounter.ToString("D3"));
         b.Append(" ");
