@@ -93,7 +93,7 @@ namespace ParallelBuildsMonitor
         FormattedText dummyText = new FormattedText("A0", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
 
         double rowHeight = dummyText.Height + 1;
-        int linesCount = host.currentBuilds.Count + host.finishedBuilds.Count + 1 + 1;
+        int linesCount = host.currentBuilds.Count + host.finishedBuilds.Count + 1 + 1 + 1;
         double totalHeight = rowHeight * linesCount;
 
         Height = totalHeight;
@@ -229,7 +229,7 @@ namespace ParallelBuildsMonitor
                     drawingContext.DrawText(itext, new Point(1, i * rowHeight));
 
                     float hddUsageInPercent = hddCounter.NextValue();
-                    int hddUsageInPixels = (int)(hddUsageInPercent * (rowHeight - hddPen.Thickness - 2) / 100 + 0.5); // divide by 100 because hdd usage is in % //DO NOT SUBMIT!!! not sure why -2
+                    int hddUsageInPixels = (int)(hddUsageInPercent / 30 * (rowHeight - hddPen.Thickness - 2) / 100 + 0.5); // divide by 100 because hdd usage is in % //DO NOT SUBMIT!!! not sure why -2  //DO NOT SUBMIT!!!  why /30?
                     host.hddUsage.Add(new Tuple<DateTime, int>(DateTime.Now, hddUsageInPixels));
 
                     if (host.hddUsage.Count > 0)
