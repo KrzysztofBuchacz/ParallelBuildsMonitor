@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using EnvDTE;
 using EnvDTE80;
+using System.Diagnostics;
 
 namespace ParallelBuildsMonitor
 {
@@ -19,14 +20,20 @@ namespace ParallelBuildsMonitor
     public string intFormat = "D3";
     public bool isBuilding = false;
 
-    Brush blueSolidBrush = new SolidColorBrush(Colors.DarkBlue);
+        PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+        PerformanceCounter hddCounter = new PerformanceCounter("PhysicalDisk", "% Disk Time", "_Total");
+
+        Brush blueSolidBrush = new SolidColorBrush(Colors.DarkBlue);
     Pen blackPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
     Brush blackBrush = new SolidColorBrush(Colors.Black);
     Brush greenSolidBrush = new SolidColorBrush(Colors.DarkGreen);
     Brush redSolidBrush = new SolidColorBrush(Colors.DarkRed);
     Brush whiteBrush = new SolidColorBrush(Colors.White);
     Pen grid = new Pen(new SolidColorBrush(Colors.LightGray), 1.0);
-    public Timer timer = new Timer();
+        //Pen cpuPen = new Pen(new SolidColorBrush(Colors.MediumPurple), 1.0);
+        Pen cpuPen = new Pen(new SolidColorBrush(Colors.White), 1.0);
+        Pen hddPen = new Pen(new SolidColorBrush(Colors.Pink), 1.0);
+        public Timer timer = new Timer();
 
     public GraphControl()
     {
@@ -86,7 +93,7 @@ namespace ParallelBuildsMonitor
         FormattedText dummyText = new FormattedText("A0", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
 
         double rowHeight = dummyText.Height + 1;
-        int linesCount = host.currentBuilds.Count + host.finishedBuilds.Count + 1;
+        int linesCount = host.currentBuilds.Count + host.finishedBuilds.Count + 1 + 1;
         double totalHeight = rowHeight * linesCount;
 
         Height = totalHeight;
@@ -184,7 +191,68 @@ namespace ParallelBuildsMonitor
           i++;
         }
 
-        if (host.currentBuilds.Count > 0 || host.finishedBuilds.Count > 0)
+                // Status separator
+                drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
+
+                { // Draw CPU usage graph
+                    FormattedText itext = new FormattedText("CPU usage", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                    drawingContext.DrawText(itext, new Point(1, i * rowHeight));
+
+                    float cpuUsageInPercent = cpuCounter.NextValue();
+                    int cpuUsageInPixels = (int)(cpuUsageInPercent * (rowHeight - cpuPen.Thickness - 2) / 100 + 0.5); // divide by 100 because CPU usage is in % //DO NOT SUBMIT!!! not sure why -2
+                    host.cpuUsage.Add(new Tuple<DateTime,int>(DateTime.Now, cpuUsageInPixels));
+
+                    if (host.cpuUsage.Count > 0)
+                    {
+                        DateTime startTime = host.cpuUsage[0].Item1;
+                        double pixelsRange = RenderSize.Width - maxStringLength;
+                        DateTime dt2 = new DateTime(maxTick);
+                        long timeRange = dt2.Ticks;
+
+                        for (int nbr = 0; nbr < host.cpuUsage.Count; nbr++)
+                        {
+                            //drawingContext.DrawLine(cpuPen, new Point(maxStringLength + nbr * 10, (i + 1) * rowHeight - host.cpuUsage[nbr].Item2 + 1), new Point(maxStringLength + nbr * 10 + 10 /*RenderSize.Width*/, (i + 1) * rowHeight - host.cpuUsage[nbr].Item2 + 1));
+
+                            TimeSpan span = host.cpuUsage[nbr].Item1 - startTime;
+                            double shift = pixelsRange * span.Ticks / timeRange;
+                            drawingContext.DrawLine(cpuPen, new Point(maxStringLength + shift, (i + 1) * rowHeight - host.cpuUsage[nbr].Item2 - 1), new Point(maxStringLength + shift + 2 /*RenderSize.Width*/, (i + 1) * rowHeight - host.cpuUsage[nbr].Item2 - 1));
+                        }
+                    }
+                    i++;
+                }
+
+                // Status separator
+                drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
+
+                { // Draw HDD usage graph
+                    FormattedText itext = new FormattedText("HDD usage", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                    drawingContext.DrawText(itext, new Point(1, i * rowHeight));
+
+                    float hddUsageInPercent = hddCounter.NextValue();
+                    int hddUsageInPixels = (int)(hddUsageInPercent * (rowHeight - hddPen.Thickness - 2) / 100 + 0.5); // divide by 100 because hdd usage is in % //DO NOT SUBMIT!!! not sure why -2
+                    host.hddUsage.Add(new Tuple<DateTime, int>(DateTime.Now, hddUsageInPixels));
+
+                    if (host.hddUsage.Count > 0)
+                    {
+                        DateTime startTime = host.hddUsage[0].Item1;
+                        double pixelsRange = RenderSize.Width - maxStringLength;
+                        DateTime dt2 = new DateTime(maxTick);
+                        long timeRange = dt2.Ticks;
+
+                        for (int nbr = 0; nbr < host.hddUsage.Count; nbr++)
+                        {
+                            //drawingContext.DrawLine(hddPen, new Point(maxStringLength + nbr * 10, (i + 1) * rowHeight - host.hddUsage[nbr].Item2 + 1), new Point(maxStringLength + nbr * 10 + 10 /*RenderSize.Width*/, (i + 1) * rowHeight - host.hddUsage[nbr].Item2 + 1));
+
+                            TimeSpan span = host.hddUsage[nbr].Item1 - startTime;
+                            double shift = pixelsRange * span.Ticks / timeRange;
+                            drawingContext.DrawLine(hddPen, new Point(maxStringLength + shift, (i + 1) * rowHeight - host.hddUsage[nbr].Item2 - 1), new Point(maxStringLength + shift + 2 /*RenderSize.Width*/, (i + 1) * rowHeight - host.hddUsage[nbr].Item2 - 1));
+                        }
+                    }
+                    i++;
+                }
+
+
+                if (host.currentBuilds.Count > 0 || host.finishedBuilds.Count > 0)
         {
           string line = "";
           if (isBuilding)
