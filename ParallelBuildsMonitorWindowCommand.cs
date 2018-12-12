@@ -52,8 +52,8 @@ namespace ParallelBuildsMonitor
     public EnvDTE.SolutionEvents solutionEvents;
     public Dictionary<string, DateTime> currentBuilds = new Dictionary<string, DateTime>();
     public List<BuildInfo> finishedBuilds = new List<BuildInfo>();
-        public List<Tuple<DateTime, int>> cpuUsage = new List<Tuple<DateTime, int>>();
-        public List<Tuple<DateTime, int>> hddUsage = new List<Tuple<DateTime, int>>();
+        public List<Tuple<DateTime, float, int>> cpuUsage = new List<Tuple<DateTime, float, int>>();
+        public List<Tuple<DateTime, float, int>> hddUsage = new List<Tuple<DateTime, float, int>>();
     public static string addinName = "VSBuildMonitor";
     public static string commandToggle = "ToggleCPPH";
     public static string commandFixIncludes = "FixIncludes";

@@ -65,8 +65,45 @@ namespace ParallelBuildsMonitor
       private set;
     }
 
+        void drawGraph(string title, System.Windows.Media.DrawingContext drawingContext, List<Tuple<DateTime, float, int>> data, Pen pen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, Typeface fontFace, bool showAverage)
+        {
+            // Status separator
+            drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
 
-    protected override void OnRender(System.Windows.Media.DrawingContext drawingContext)
+            // Draw graph
+            FormattedText itext = new FormattedText(title, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+            drawingContext.DrawText(itext, new Point(1, i * rowHeight));
+
+            if (data.Count > 0)
+            {
+                DateTime startTime = data[0].Item1;
+                double pixelsRange = RenderSize.Width - maxStringLength;
+                DateTime dt2 = new DateTime(maxTick);
+                long timeRange = dt2.Ticks;
+
+                double sum = 0;
+                for (int nbr = 0; nbr < data.Count; nbr++)
+                {
+                    TimeSpan span = data[nbr].Item1 - startTime;
+                    double shift = pixelsRange * span.Ticks / timeRange;
+                    drawingContext.DrawLine(pen, new Point(maxStringLength + shift, (i + 1) * rowHeight - data[nbr].Item3 - 1), new Point(maxStringLength + shift + 2 /*RenderSize.Width*/, (i + 1) * rowHeight - data[nbr].Item3 - 1));
+
+                    if (showAverage)
+                        sum += data[nbr].Item2;
+                }
+
+                if (showAverage)
+                {
+                    FormattedText avg = new FormattedText("Avg. " + ((long)(sum/data.Count)).ToString() + "%", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                    double m = avg.Width;
+                    drawingContext.DrawText(avg, new Point(RenderSize.Width - m, i * rowHeight));
+                }
+            }
+            i++;
+        }
+
+
+        protected override void OnRender(System.Windows.Media.DrawingContext drawingContext)
     {
       try
       {
@@ -93,7 +130,7 @@ namespace ParallelBuildsMonitor
         FormattedText dummyText = new FormattedText("A0", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
 
         double rowHeight = dummyText.Height + 1;
-        int linesCount = host.currentBuilds.Count + host.finishedBuilds.Count + 1 + 1 + 1;
+        int linesCount = host.currentBuilds.Count + host.finishedBuilds.Count + 1 + 1 + 1; // 1 for status, 1 for CPU, 1 for HDD
         double totalHeight = rowHeight * linesCount;
 
         Height = totalHeight;
@@ -190,69 +227,25 @@ namespace ParallelBuildsMonitor
           drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
           i++;
         }
+                // Measure CPU usage
+                float cpuUsageInPercent = cpuCounter.NextValue();
+                int cpuUsageInPixels = (int)(cpuUsageInPercent * (rowHeight - cpuPen.Thickness - 2) / 100 + 0.5); // divide by 100 because CPU usage is in % //DO NOT SUBMIT!!! not sure why -2
+                host.cpuUsage.Add(new Tuple<DateTime, float, int>(DateTime.Now, cpuUsageInPercent, cpuUsageInPixels));
 
-                // Status separator
-                drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
-
-                { // Draw CPU usage graph
-                    FormattedText itext = new FormattedText("CPU usage", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                    drawingContext.DrawText(itext, new Point(1, i * rowHeight));
-
-                    float cpuUsageInPercent = cpuCounter.NextValue();
-                    int cpuUsageInPixels = (int)(cpuUsageInPercent * (rowHeight - cpuPen.Thickness - 2) / 100 + 0.5); // divide by 100 because CPU usage is in % //DO NOT SUBMIT!!! not sure why -2
-                    host.cpuUsage.Add(new Tuple<DateTime,int>(DateTime.Now, cpuUsageInPixels));
-
-                    if (host.cpuUsage.Count > 0)
-                    {
-                        DateTime startTime = host.cpuUsage[0].Item1;
-                        double pixelsRange = RenderSize.Width - maxStringLength;
-                        DateTime dt2 = new DateTime(maxTick);
-                        long timeRange = dt2.Ticks;
-
-                        for (int nbr = 0; nbr < host.cpuUsage.Count; nbr++)
-                        {
-                            //drawingContext.DrawLine(cpuPen, new Point(maxStringLength + nbr * 10, (i + 1) * rowHeight - host.cpuUsage[nbr].Item2 + 1), new Point(maxStringLength + nbr * 10 + 10 /*RenderSize.Width*/, (i + 1) * rowHeight - host.cpuUsage[nbr].Item2 + 1));
-
-                            TimeSpan span = host.cpuUsage[nbr].Item1 - startTime;
-                            double shift = pixelsRange * span.Ticks / timeRange;
-                            drawingContext.DrawLine(cpuPen, new Point(maxStringLength + shift, (i + 1) * rowHeight - host.cpuUsage[nbr].Item2 - 1), new Point(maxStringLength + shift + 2 /*RenderSize.Width*/, (i + 1) * rowHeight - host.cpuUsage[nbr].Item2 - 1));
-                        }
-                    }
-                    i++;
-                }
-
-                // Status separator
-                drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
-
-                { // Draw HDD usage graph
-                    FormattedText itext = new FormattedText("HDD usage", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                    drawingContext.DrawText(itext, new Point(1, i * rowHeight));
-
-                    float hddUsageInPercent = hddCounter.NextValue();
-                    int hddUsageInPixels = (int)(hddUsageInPercent / 30 * (rowHeight - hddPen.Thickness - 2) / 100 + 0.5); // divide by 100 because hdd usage is in % //DO NOT SUBMIT!!! not sure why -2  //DO NOT SUBMIT!!!  why /30?
-                    host.hddUsage.Add(new Tuple<DateTime, int>(DateTime.Now, hddUsageInPixels));
-
-                    if (host.hddUsage.Count > 0)
-                    {
-                        DateTime startTime = host.hddUsage[0].Item1;
-                        double pixelsRange = RenderSize.Width - maxStringLength;
-                        DateTime dt2 = new DateTime(maxTick);
-                        long timeRange = dt2.Ticks;
-
-                        for (int nbr = 0; nbr < host.hddUsage.Count; nbr++)
-                        {
-                            //drawingContext.DrawLine(hddPen, new Point(maxStringLength + nbr * 10, (i + 1) * rowHeight - host.hddUsage[nbr].Item2 + 1), new Point(maxStringLength + nbr * 10 + 10 /*RenderSize.Width*/, (i + 1) * rowHeight - host.hddUsage[nbr].Item2 + 1));
-
-                            TimeSpan span = host.hddUsage[nbr].Item1 - startTime;
-                            double shift = pixelsRange * span.Ticks / timeRange;
-                            drawingContext.DrawLine(hddPen, new Point(maxStringLength + shift, (i + 1) * rowHeight - host.hddUsage[nbr].Item2 - 1), new Point(maxStringLength + shift + 2 /*RenderSize.Width*/, (i + 1) * rowHeight - host.hddUsage[nbr].Item2 - 1));
-                        }
-                    }
-                    i++;
-                }
+                // Draw CPU usage
+                drawGraph("CPU usage", drawingContext, host.cpuUsage, cpuPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, fontFace, true /*showAverage*/);
 
 
-                if (host.currentBuilds.Count > 0 || host.finishedBuilds.Count > 0)
+                // Measure HDD usage
+                float hddUsageInPercent = hddCounter.NextValue();
+                int hddUsageInPixels = (int)(hddUsageInPercent / 30 * (rowHeight - hddPen.Thickness - 2) / 100 + 0.5); // divide by 100 because hdd usage is in %. Probably there is no max value for HDD that is why divide by 30.   //DO NOT SUBMIT!!! not sure why -2
+                host.hddUsage.Add(new Tuple<DateTime, float, int>(DateTime.Now, hddUsageInPercent, hddUsageInPixels));
+
+                // Draw HDD usage
+                drawGraph("HDD usage", drawingContext, host.hddUsage, hddPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, fontFace, false /*showAverage - Probably there is no max value for HDD that is why we can't cound average*/);
+
+
+        if (host.currentBuilds.Count > 0 || host.finishedBuilds.Count > 0)
         {
           string line = "";
           if (isBuilding)
