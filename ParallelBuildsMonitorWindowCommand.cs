@@ -53,8 +53,8 @@ namespace ParallelBuildsMonitor
     public EnvDTE.SolutionEvents solutionEvents;
     public Dictionary<string, DateTime> currentBuilds = new Dictionary<string, DateTime>();
     public List<BuildInfo> finishedBuilds = new List<BuildInfo>();
-    public List<Tuple<DateTime, float, int>> cpuUsage = new List<Tuple<DateTime, float, int>>();
-    public List<Tuple<DateTime, float, int>> hddUsage = new List<Tuple<DateTime, float, int>>();
+    public List<Tuple<long, float>> cpuUsage = new List<Tuple<long, float>>();
+    public List<Tuple<long, float>> hddUsage = new List<Tuple<long, float>>();
     public static string addinName = "VSBuildMonitor";
     public static string commandToggle = "ToggleCPPH";
     public static string commandFixIncludes = "FixIncludes";
@@ -207,7 +207,7 @@ namespace ParallelBuildsMonitor
       TimeSpan s = DateTime.Now - buildTime;
       DateTime t = new DateTime(s.Ticks);
       string msg = "Build Total Time: " + SecondsToString(t.Ticks) + ", max. number of parallel builds: " + maxParallelBuilds.ToString() + "\n";
-      CollectPerformanceData();
+      CollectPerformanceData(true);
       GraphControl.Instance.InvalidateVisual();
     }
 
@@ -234,6 +234,7 @@ namespace ParallelBuildsMonitor
     void BuildEvents_OnBuildBegin(vsBuildScope Scope, vsBuildAction Action)
     {
       buildTime = DateTime.Now;
+      CollectPerformanceData(true);
       maxParallelBuilds = 0;
       allProjectsCount = 0;
       DTE2 dte = (DTE2)(package as IServiceProvider).GetService(typeof(SDTE));
@@ -247,7 +248,6 @@ namespace ParallelBuildsMonitor
       finishedBuilds.Clear();
       cpuUsage.Clear();
       hddUsage.Clear();
-      CollectPerformanceData();
       GraphControl.Instance.scrollLast = true;
       GraphControl.Instance.isBuilding = true;
       GraphControl.Instance.InvalidateVisual();
@@ -314,20 +314,23 @@ namespace ParallelBuildsMonitor
       return ret;
     }
 
-    void CollectPerformanceData()
+    void CollectPerformanceData(bool forceAdd)
     {
-      float cpuUsageInPercent = cpuCounter.NextValue();
-      cpuUsage.Add(new Tuple<DateTime, float, int>(DateTime.Now, cpuUsageInPercent, 0));
-      float hddUsageInPercent = hddCounter.NextValue();
-      hddUsage.Add(new Tuple<DateTime, float, int>(DateTime.Now, hddUsageInPercent, 0));
+      long sleep = 10000000; // 1 second
+      long ticks = DateTime.Now.Ticks;
+      if (forceAdd || cpuUsage.Count == 0 || ticks > cpuUsage[cpuUsage.Count-1].Item1 + sleep)
+        cpuUsage.Add(new Tuple<long, float>(ticks, cpuCounter.NextValue()));
+      ticks = DateTime.Now.Ticks;
+      if (forceAdd || hddUsage.Count == 0 || ticks > hddUsage[hddUsage.Count-1].Item1 + sleep)
+        hddUsage.Add(new Tuple<long, float>(ticks, hddCounter.NextValue()));
     }
 
     void timer_Tick(object sender, ElapsedEventArgs e)
     {
+      CollectPerformanceData(false);
       GraphControl.Instance.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background,
            new System.Action(() =>
            {
-             CollectPerformanceData();
              GraphControl.Instance.InvalidateVisual();
            }));
     }

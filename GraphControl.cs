@@ -63,7 +63,7 @@ namespace ParallelBuildsMonitor
       private set;
     }
 
-    void drawGraph(string title, System.Windows.Media.DrawingContext drawingContext, List<Tuple<DateTime, float, int>> data, Pen pen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, Typeface fontFace, bool showAverage)
+    void drawGraph(string title, System.Windows.Media.DrawingContext drawingContext, List<Tuple<long, float>> data, Pen pen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, Typeface fontFace, bool showAverage)
     {
       // Status separator
       drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
@@ -74,28 +74,36 @@ namespace ParallelBuildsMonitor
 
       if (data.Count > 0)
       {
-        DateTime startTime = data[0].Item1;
         double pixelsRange = RenderSize.Width - maxStringLength;
-        DateTime dt2 = new DateTime(maxTick);
-        long timeRange = dt2.Ticks;
 
-        double sum = 0;
-        for (int nbr = 1; nbr < data.Count; nbr++)
+        ParallelBuildsMonitorWindowCommand host = ParallelBuildsMonitorWindowCommand.Instance;
+
+        double sumValues = 0;
+        long sumTicks = 0;
+        long previousTick = host.buildTime.Ticks;
+        float previousValue = 0.0f;
+        for (int nbr = 0; nbr < data.Count; nbr++)
         {
-          TimeSpan spanL = data[nbr-1].Item1 - startTime;
-          TimeSpan spanR = data[nbr].Item1 - startTime;
-          double shiftL = pixelsRange * spanL.Ticks / timeRange;
-          double shiftR = pixelsRange * spanR.Ticks / timeRange;
-          drawingContext.DrawLine(pen, new Point(maxStringLength + shiftL, (i + 1) * rowHeight - Math.Min(data[nbr - 1].Item2, 100.0) * (rowHeight - 2) / 100 - 1),
+          long spanL = previousTick - host.buildTime.Ticks;
+          long spanR = data[nbr].Item1 - host.buildTime.Ticks;
+          double shiftL = (int)(spanL * (long)(RenderSize.Width - maxStringLength) / maxTick);
+          double shiftR = (int)(spanR * (long)(RenderSize.Width - maxStringLength) / maxTick);
+          drawingContext.DrawLine(pen, new Point(maxStringLength + shiftL, (i + 1) * rowHeight - Math.Min(previousValue, 100.0) * (rowHeight - 2) / 100 - 1),
                                        new Point(maxStringLength + shiftR, (i + 1) * rowHeight - Math.Min(data[nbr].Item2, 100.0) * (rowHeight - 2) / 100 - 1));
 
           if (showAverage)
-            sum += data[nbr].Item2;
+          {
+            sumValues += (previousValue + data[nbr].Item2) * (data[nbr].Item1 - previousTick);
+            sumTicks += data[nbr].Item1 - previousTick;
+          }
+
+          previousTick = data[nbr].Item1;
+          previousValue = data[nbr].Item2;
         }
 
         if (showAverage)
         {
-          FormattedText avg = new FormattedText("Avg. " + ((long)(sum / data.Count)).ToString() + "%", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+          FormattedText avg = new FormattedText("Avg. " + ((long)(sumValues / 2 / sumTicks)).ToString() + "%", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
           double m = avg.Width;
           drawingContext.DrawText(avg, new Point(RenderSize.Width - m, i * rowHeight));
         }
