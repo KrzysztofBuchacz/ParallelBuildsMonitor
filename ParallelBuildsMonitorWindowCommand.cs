@@ -314,12 +314,23 @@ namespace ParallelBuildsMonitor
       return ret;
     }
 
-    void CollectPerformanceData(bool forceAdd)
+    long SleepTime(int count)
     {
       long sleep = 10000000; // 1 second
+      if (count > 60)
+        sleep *= 10; // 10 second
+      else if (count > 1800)
+        sleep *= 60; // 1 minute
+      return sleep;
+    }
+
+    void CollectPerformanceData(bool forceAdd)
+    {
+      long sleep = SleepTime(cpuUsage.Count);
       long ticks = DateTime.Now.Ticks;
       if (forceAdd || cpuUsage.Count == 0 || ticks > cpuUsage[cpuUsage.Count-1].Item1 + sleep)
         cpuUsage.Add(new Tuple<long, float>(ticks, cpuCounter.NextValue()));
+      sleep = SleepTime(hddUsage.Count);
       ticks = DateTime.Now.Ticks;
       if (forceAdd || hddUsage.Count == 0 || ticks > hddUsage[hddUsage.Count-1].Item1 + sleep)
         hddUsage.Add(new Tuple<long, float>(ticks, hddCounter.NextValue()));

@@ -63,7 +63,7 @@ namespace ParallelBuildsMonitor
       private set;
     }
 
-    void drawGraph(string title, System.Windows.Media.DrawingContext drawingContext, List<Tuple<long, float>> data, Pen pen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, Typeface fontFace, bool showAverage)
+    void drawGraph(string title, System.Windows.Media.DrawingContext drawingContext, List<Tuple<long, float>> data, Pen pen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, long nowTick, Typeface fontFace, bool showAverage)
     {
       // Status separator
       drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
@@ -86,10 +86,25 @@ namespace ParallelBuildsMonitor
         {
           long spanL = previousTick - host.buildTime.Ticks;
           long spanR = data[nbr].Item1 - host.buildTime.Ticks;
+          if (isBuilding && nbr == data.Count - 1)
+            spanR = nowTick - host.buildTime.Ticks;
           double shiftL = (int)(spanL * (long)(RenderSize.Width - maxStringLength) / maxTick);
           double shiftR = (int)(spanR * (long)(RenderSize.Width - maxStringLength) / maxTick);
-          drawingContext.DrawLine(pen, new Point(maxStringLength + shiftL, (i + 1) * rowHeight - Math.Min(previousValue, 100.0) * (rowHeight - 2) / 100 - 1),
-                                       new Point(maxStringLength + shiftR, (i + 1) * rowHeight - Math.Min(data[nbr].Item2, 100.0) * (rowHeight - 2) / 100 - 1));
+          Point p1 = new Point(maxStringLength + shiftL, (i + 1) * rowHeight - Math.Min(previousValue, 100.0) * (rowHeight - 2) / 100 - 1);
+          Point p2 = new Point(maxStringLength + shiftR, (i + 1) * rowHeight - Math.Min(data[nbr].Item2, 100.0) * (rowHeight - 2) / 100 - 1);
+
+          StreamGeometry streamGeometry = new StreamGeometry();
+          using (StreamGeometryContext geometryContext = streamGeometry.Open())
+          {
+            geometryContext.BeginFigure(p1, true, true);
+            Point p3 = new Point(p2.X, (i + 1) * rowHeight);
+            Point p4 = new Point(p1.X, (i + 1) * rowHeight);
+            PointCollection points = new PointCollection{p2,p3,p4};
+            geometryContext.PolyLineTo(points, true, true);
+          }
+
+          drawingContext.DrawGeometry(pen.Brush, pen, streamGeometry);
+          //drawingContext.DrawLine(pen, p1, p2);
 
           if (showAverage)
           {
@@ -237,8 +252,8 @@ namespace ParallelBuildsMonitor
           i++;
         }
 
-        drawGraph("CPU usage", drawingContext, host.cpuUsage, cpuPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, fontFace, true /*showAverage*/);
-        drawGraph("HDD usage", drawingContext, host.hddUsage, hddPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, fontFace, false /*showAverage - Probably there is no max value for HDD that is why we can't cound average*/);
+        drawGraph("CPU usage", drawingContext, host.cpuUsage, cpuPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace, true /*showAverage*/);
+        drawGraph("HDD usage", drawingContext, host.hddUsage, hddPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace, false /*showAverage - Probably there is no max value for HDD that is why we can't cound average*/);
 
         if (host.currentBuilds.Count > 0 || host.finishedBuilds.Count > 0)
         {
