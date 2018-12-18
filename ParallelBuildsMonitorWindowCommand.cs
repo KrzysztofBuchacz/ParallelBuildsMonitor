@@ -52,6 +52,8 @@ namespace ParallelBuildsMonitor
     public EnvDTE.SolutionEvents solutionEvents;
     public Dictionary<string, DateTime> currentBuilds = new Dictionary<string, DateTime>();
     public List<BuildInfo> finishedBuilds = new List<BuildInfo>();
+        public List<Tuple<DateTime, float, int>> cpuUsage = new List<Tuple<DateTime, float, int>>();
+        public List<Tuple<DateTime, float, int>> hddUsage = new List<Tuple<DateTime, float, int>>();
     public static string addinName = "VSBuildMonitor";
     public static string commandToggle = "ToggleCPPH";
     public static string commandFixIncludes = "FixIncludes";
@@ -144,6 +146,8 @@ namespace ParallelBuildsMonitor
     {
       currentBuilds.Clear();
       finishedBuilds.Clear();
+            cpuUsage.Clear();
+            hddUsage.Clear();
       GraphControl.Instance.InvalidateVisual();
     }
 
@@ -237,6 +241,8 @@ namespace ParallelBuildsMonitor
       GraphControl.Instance.timer.Elapsed += new ElapsedEventHandler(timer_Tick);
       currentBuilds.Clear();
       finishedBuilds.Clear();
+            cpuUsage.Clear();
+            hddUsage.Clear();
       GraphControl.Instance.scrollLast = true;
       GraphControl.Instance.isBuilding = true;
       GraphControl.Instance.InvalidateVisual();
