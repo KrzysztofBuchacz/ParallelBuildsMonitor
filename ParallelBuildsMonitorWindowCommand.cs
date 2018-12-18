@@ -9,6 +9,7 @@ using System.Text;
 using System.Timers;
 using EnvDTE;
 using EnvDTE80;
+using System.Diagnostics;
 
 namespace ParallelBuildsMonitor
 {
@@ -52,8 +53,8 @@ namespace ParallelBuildsMonitor
     public EnvDTE.SolutionEvents solutionEvents;
     public Dictionary<string, DateTime> currentBuilds = new Dictionary<string, DateTime>();
     public List<BuildInfo> finishedBuilds = new List<BuildInfo>();
-        public List<Tuple<DateTime, float, int>> cpuUsage = new List<Tuple<DateTime, float, int>>();
-        public List<Tuple<DateTime, float, int>> hddUsage = new List<Tuple<DateTime, float, int>>();
+    public List<Tuple<DateTime, float, int>> cpuUsage = new List<Tuple<DateTime, float, int>>();
+    public List<Tuple<DateTime, float, int>> hddUsage = new List<Tuple<DateTime, float, int>>();
     public static string addinName = "VSBuildMonitor";
     public static string commandToggle = "ToggleCPPH";
     public static string commandFixIncludes = "FixIncludes";
@@ -61,6 +62,8 @@ namespace ParallelBuildsMonitor
     public int maxParallelBuilds = 0;
     public int allProjectsCount = 0;
     public int outputCounter = 0;
+    PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+    PerformanceCounter hddCounter = new PerformanceCounter("PhysicalDisk", "% Disk Time", "_Total");
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ParallelBuildsMonitorWindowCommand"/> class.
@@ -146,8 +149,8 @@ namespace ParallelBuildsMonitor
     {
       currentBuilds.Clear();
       finishedBuilds.Clear();
-            cpuUsage.Clear();
-            hddUsage.Clear();
+      cpuUsage.Clear();
+      hddUsage.Clear();
       GraphControl.Instance.InvalidateVisual();
     }
 
@@ -204,6 +207,7 @@ namespace ParallelBuildsMonitor
       TimeSpan s = DateTime.Now - buildTime;
       DateTime t = new DateTime(s.Ticks);
       string msg = "Build Total Time: " + SecondsToString(t.Ticks) + ", max. number of parallel builds: " + maxParallelBuilds.ToString() + "\n";
+      CollectPerformanceData();
       GraphControl.Instance.InvalidateVisual();
     }
 
@@ -241,8 +245,9 @@ namespace ParallelBuildsMonitor
       GraphControl.Instance.timer.Elapsed += new ElapsedEventHandler(timer_Tick);
       currentBuilds.Clear();
       finishedBuilds.Clear();
-            cpuUsage.Clear();
-            hddUsage.Clear();
+      cpuUsage.Clear();
+      hddUsage.Clear();
+      CollectPerformanceData();
       GraphControl.Instance.scrollLast = true;
       GraphControl.Instance.isBuilding = true;
       GraphControl.Instance.InvalidateVisual();
@@ -309,14 +314,22 @@ namespace ParallelBuildsMonitor
       return ret;
     }
 
+    void CollectPerformanceData()
+    {
+      float cpuUsageInPercent = cpuCounter.NextValue();
+      cpuUsage.Add(new Tuple<DateTime, float, int>(DateTime.Now, cpuUsageInPercent, 0));
+      float hddUsageInPercent = hddCounter.NextValue();
+      hddUsage.Add(new Tuple<DateTime, float, int>(DateTime.Now, hddUsageInPercent, 0));
+    }
+
     void timer_Tick(object sender, ElapsedEventArgs e)
     {
       GraphControl.Instance.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background,
            new System.Action(() =>
            {
+             CollectPerformanceData();
              GraphControl.Instance.InvalidateVisual();
            }));
-
     }
   }
 }

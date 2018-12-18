@@ -10,7 +10,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using EnvDTE;
 using EnvDTE80;
-using System.Diagnostics;
 
 namespace ParallelBuildsMonitor
 {
@@ -20,20 +19,17 @@ namespace ParallelBuildsMonitor
     public string intFormat = "D3";
     public bool isBuilding = false;
 
-        PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-        PerformanceCounter hddCounter = new PerformanceCounter("PhysicalDisk", "% Disk Time", "_Total");
-
-        Brush blueSolidBrush = new SolidColorBrush(Colors.DarkBlue);
+    // pun any colors here, set final theme dependent colors in OnForegroundChanged
+    Brush blueSolidBrush = new SolidColorBrush(Colors.DarkBlue);
     Pen blackPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
     Brush blackBrush = new SolidColorBrush(Colors.Black);
     Brush greenSolidBrush = new SolidColorBrush(Colors.DarkGreen);
     Brush redSolidBrush = new SolidColorBrush(Colors.DarkRed);
     Brush whiteBrush = new SolidColorBrush(Colors.White);
     Pen grid = new Pen(new SolidColorBrush(Colors.LightGray), 1.0);
-        //Pen cpuPen = new Pen(new SolidColorBrush(Colors.MediumPurple), 1.0);
-        Pen cpuPen = new Pen(new SolidColorBrush(Colors.White), 1.0);
-        Pen hddPen = new Pen(new SolidColorBrush(Colors.Pink), 1.0);
-        public Timer timer = new Timer();
+    Pen cpuPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
+    Pen hddPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
+    public Timer timer = new Timer();
 
     public GraphControl()
     {
@@ -57,6 +53,8 @@ namespace ParallelBuildsMonitor
       blueSolidBrush = new SolidColorBrush(isDark ? Color.FromRgb(81, 156, 245) : Colors.DarkBlue);
       blackPen = new Pen(new SolidColorBrush(isDark ? Colors.White : Colors.Black), 1.0);
       grid = new Pen(new SolidColorBrush(isDark ? Color.FromRgb(66, 66, 66) : Colors.LightGray), 1.0);
+      cpuPen = new Pen(new SolidColorBrush(isDark ? Colors.LightSeaGreen : Colors.DarkTurquoise), 1.0);
+      hddPen = new Pen(new SolidColorBrush(isDark ? Colors.LightSkyBlue : Colors.DarkViolet), 1.0);
     }
 
     public static GraphControl Instance
@@ -65,45 +63,48 @@ namespace ParallelBuildsMonitor
       private set;
     }
 
-        void drawGraph(string title, System.Windows.Media.DrawingContext drawingContext, List<Tuple<DateTime, float, int>> data, Pen pen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, Typeface fontFace, bool showAverage)
+    void drawGraph(string title, System.Windows.Media.DrawingContext drawingContext, List<Tuple<DateTime, float, int>> data, Pen pen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, Typeface fontFace, bool showAverage)
+    {
+      // Status separator
+      drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
+
+      // Draw graph
+      FormattedText itext = new FormattedText(title, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+      drawingContext.DrawText(itext, new Point(1, i * rowHeight));
+
+      if (data.Count > 0)
+      {
+        DateTime startTime = data[0].Item1;
+        double pixelsRange = RenderSize.Width - maxStringLength;
+        DateTime dt2 = new DateTime(maxTick);
+        long timeRange = dt2.Ticks;
+
+        double sum = 0;
+        for (int nbr = 1; nbr < data.Count; nbr++)
         {
-            // Status separator
-            drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
+          TimeSpan spanL = data[nbr-1].Item1 - startTime;
+          TimeSpan spanR = data[nbr].Item1 - startTime;
+          double shiftL = pixelsRange * spanL.Ticks / timeRange;
+          double shiftR = pixelsRange * spanR.Ticks / timeRange;
+          drawingContext.DrawLine(pen, new Point(maxStringLength + shiftL, (i + 1) * rowHeight - Math.Min(data[nbr - 1].Item2, 100.0) * (rowHeight - 2) / 100 - 1),
+                                       new Point(maxStringLength + shiftR, (i + 1) * rowHeight - Math.Min(data[nbr].Item2, 100.0) * (rowHeight - 2) / 100 - 1));
 
-            // Draw graph
-            FormattedText itext = new FormattedText(title, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-            drawingContext.DrawText(itext, new Point(1, i * rowHeight));
-
-            if (data.Count > 0)
-            {
-                DateTime startTime = data[0].Item1;
-                double pixelsRange = RenderSize.Width - maxStringLength;
-                DateTime dt2 = new DateTime(maxTick);
-                long timeRange = dt2.Ticks;
-
-                double sum = 0;
-                for (int nbr = 0; nbr < data.Count; nbr++)
-                {
-                    TimeSpan span = data[nbr].Item1 - startTime;
-                    double shift = pixelsRange * span.Ticks / timeRange;
-                    drawingContext.DrawLine(pen, new Point(maxStringLength + shift, (i + 1) * rowHeight - data[nbr].Item3 - 1), new Point(maxStringLength + shift + 2 /*RenderSize.Width*/, (i + 1) * rowHeight - data[nbr].Item3 - 1));
-
-                    if (showAverage)
-                        sum += data[nbr].Item2;
-                }
-
-                if (showAverage)
-                {
-                    FormattedText avg = new FormattedText("Avg. " + ((long)(sum/data.Count)).ToString() + "%", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                    double m = avg.Width;
-                    drawingContext.DrawText(avg, new Point(RenderSize.Width - m, i * rowHeight));
-                }
-            }
-            i++;
+          if (showAverage)
+            sum += data[nbr].Item2;
         }
 
+        if (showAverage)
+        {
+          FormattedText avg = new FormattedText("Avg. " + ((long)(sum / data.Count)).ToString() + "%", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+          double m = avg.Width;
+          drawingContext.DrawText(avg, new Point(RenderSize.Width - m, i * rowHeight));
+        }
+      }
+      i++;
+    }
 
-        protected override void OnRender(System.Windows.Media.DrawingContext drawingContext)
+
+    protected override void OnRender(System.Windows.Media.DrawingContext drawingContext)
     {
       try
       {
@@ -227,23 +228,9 @@ namespace ParallelBuildsMonitor
           drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
           i++;
         }
-                // Measure CPU usage
-                float cpuUsageInPercent = cpuCounter.NextValue();
-                int cpuUsageInPixels = (int)(cpuUsageInPercent * (rowHeight - cpuPen.Thickness - 2) / 100 + 0.5); // divide by 100 because CPU usage is in % //DO NOT SUBMIT!!! not sure why -2
-                host.cpuUsage.Add(new Tuple<DateTime, float, int>(DateTime.Now, cpuUsageInPercent, cpuUsageInPixels));
 
-                // Draw CPU usage
-                drawGraph("CPU usage", drawingContext, host.cpuUsage, cpuPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, fontFace, true /*showAverage*/);
-
-
-                // Measure HDD usage
-                float hddUsageInPercent = hddCounter.NextValue();
-                int hddUsageInPixels = (int)(hddUsageInPercent / 30 * (rowHeight - hddPen.Thickness - 2) / 100 + 0.5); // divide by 100 because hdd usage is in %. Probably there is no max value for HDD that is why divide by 30.   //DO NOT SUBMIT!!! not sure why -2
-                host.hddUsage.Add(new Tuple<DateTime, float, int>(DateTime.Now, hddUsageInPercent, hddUsageInPixels));
-
-                // Draw HDD usage
-                drawGraph("HDD usage", drawingContext, host.hddUsage, hddPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, fontFace, false /*showAverage - Probably there is no max value for HDD that is why we can't cound average*/);
-
+        drawGraph("CPU usage", drawingContext, host.cpuUsage, cpuPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, fontFace, true /*showAverage*/);
+        drawGraph("HDD usage", drawingContext, host.hddUsage, hddPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, fontFace, false /*showAverage - Probably there is no max value for HDD that is why we can't cound average*/);
 
         if (host.currentBuilds.Count > 0 || host.finishedBuilds.Count > 0)
         {

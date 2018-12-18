@@ -1,0 +1,8 @@
+# Find a plugin to your favourite editor here: http://editorconfig.org/
+
+# top-most EditorConfig file
+root = true
+
+[*.{cs}]
+indent_style = space
+tab_width = 2
