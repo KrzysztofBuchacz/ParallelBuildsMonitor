@@ -10,14 +10,14 @@
              d:DesignHeight="300" d:DesignWidth="300"
              Name="MyToolWindow">
     <Grid>
+        <Grid.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="_Save" Click="MenuItem_ClickSaveGraph"/>
+            </ContextMenu>
+        </Grid.ContextMenu>
         <DockPanel>
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" VerticalAlignment="Stretch" VerticalContentAlignment="Top" ScrollChanged="ScrollViewer_ScrollChanged">
                 <local:GraphControl x:Name="graph" Height="100" VerticalAlignment="Top">
-                    <local:GraphControl.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="_Save" Click="MenuItem_ClickSaveGraph"/>
-                        </ContextMenu>
-                    </local:GraphControl.ContextMenu>
                 </local:GraphControl>
             </ScrollViewer>
         </DockPanel>

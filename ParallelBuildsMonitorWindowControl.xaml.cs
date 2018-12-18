@@ -63,6 +63,8 @@
                 return;
 
             Rect bounds = VisualTreeHelper.GetDescendantBounds(target);
+            if (bounds.IsEmpty)
+                return;   // TODO: I do not know how to disable command in context menu, so just exit
             RenderTargetBitmap renderTarget = new RenderTargetBitmap((Int32)bounds.Width, (Int32)bounds.Height, 96, 96, PixelFormats.Pbgra32);
             DrawingVisual visual = new DrawingVisual();
             using (DrawingContext context = visual.RenderOpen())
