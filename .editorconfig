@@ -1,8 +1,14 @@
-# Find a plugin to your favourite editor here: http://editorconfig.org/
+###############################
+# Core EditorConfig Options   #
+###############################
 
-# top-most EditorConfig file
 root = true
 
-[*.{cs}]
+# All files
+[*]
 indent_style = space
-tab_width = 2
+
+# Code files
+[*.{cs,csx,vb,vbx}]
+indent_size = 2
+insert_final_newline = true
