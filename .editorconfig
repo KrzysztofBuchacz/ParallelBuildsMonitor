@@ -1,0 +1,14 @@
+###############################
+# Core EditorConfig Options   #
+###############################
+
+root = true
+
+# All files
+[*]
+indent_style = space
+
+# Code files
+[*.{cs,csx,vb,vbx}]
+indent_size = 2
+insert_final_newline = true
