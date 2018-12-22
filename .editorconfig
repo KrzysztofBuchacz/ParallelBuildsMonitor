@@ -9,6 +9,6 @@ root = true
 indent_style = space
 
 # Code files
-[*.{cs,csx,vb,vbx}]
+[*.{cs,csx,vb,vbx,xaml,txt}]
 indent_size = 2
 insert_final_newline = true
