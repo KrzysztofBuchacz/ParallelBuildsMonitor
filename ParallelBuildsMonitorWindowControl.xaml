@@ -12,7 +12,7 @@
     <Grid>
         <Grid.ContextMenu>
             <ContextMenu>
-                <MenuItem Header="_Save" Click="MenuItem_ClickSaveGraph"/>
+                <MenuItem Header="_Save" Click="MenuItem_ClickSaveGraph" IsEnabled="{Binding IsGraphDrawn, Mode = OneWay}" />
             </ContextMenu>
         </Grid.ContextMenu>
         <DockPanel>
