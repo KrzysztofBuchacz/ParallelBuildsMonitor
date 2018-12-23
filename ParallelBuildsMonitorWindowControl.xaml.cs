@@ -1,12 +1,59 @@
 ﻿namespace ParallelBuildsMonitor
 {
     using System;
+    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
+
+
+
+    public class ViewModel : System.ComponentModel.INotifyPropertyChanged
+    {
+        private ViewModel()
+        {
+        }
+
+        private static ViewModel instance = null;
+        // Singleton
+        public static ViewModel Instance
+        {
+            get
+            {
+                if (instance == null)
+                    instance = new ViewModel();
+                return instance;
+            }
+        }
+
+
+        private bool isGraphDrawn = false;
+        public bool IsGraphDrawn
+        {
+            get
+            {
+                return isGraphDrawn;
+            }
+            set
+            {
+                if (isGraphDrawn == value)
+                    return;
+
+                isGraphDrawn = value;
+                OnPropertyChanged("IsGraphDrawn");
+            }
+        }
+
+        public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+        public void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName]string property = "")
+        {
+            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(property));
+        }
+    }
+
 
     /// <summary>
     /// Interaction logic for ParallelBuildsMonitorWindowControl.
@@ -19,6 +66,7 @@
         public ParallelBuildsMonitorWindowControl()
         {
             this.InitializeComponent();
+            this.DataContext = ViewModel.Instance;
         }
 
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
@@ -60,11 +108,18 @@
         public static void SaveToPng(Visual target, Brush background, string fileName) //Original name was CreateBitmapFromVisual()
         {
             if (target == null || string.IsNullOrEmpty(fileName))
+            {
+                Debug.Assert(false, "Wrong SaveToPng() method call. Fix caller!");
                 return;
+            }
 
             Rect bounds = VisualTreeHelper.GetDescendantBounds(target);
             if (bounds.IsEmpty)
-                return;   // TODO: I do not know how to disable command in context menu, so just exit
+            {
+                Debug.Assert(false, "How it happen that save was not dissabled? Disable Save button to avoid wrong call.");
+                return;
+            }
+
             RenderTargetBitmap renderTarget = new RenderTargetBitmap((Int32)bounds.Width, (Int32)bounds.Height, 96, 96, PixelFormats.Pbgra32);
             DrawingVisual visual = new DrawingVisual();
             using (DrawingContext context = visual.RenderOpen())

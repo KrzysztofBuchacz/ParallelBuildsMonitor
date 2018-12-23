@@ -144,6 +144,7 @@ namespace ParallelBuildsMonitor
         {
             currentBuilds.Clear();
             finishedBuilds.Clear();
+            ViewModel.Instance.IsGraphDrawn = false;
             allProjectsCount = 0;
             GraphControl.Instance.InvalidateVisual();
         }
