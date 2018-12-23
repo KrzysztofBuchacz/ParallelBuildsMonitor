@@ -280,6 +280,8 @@ namespace ParallelBuildsMonitor
                 FormattedText maxTime = new FormattedText(s, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                 double m = maxTime.Width;
                 drawingContext.DrawText(maxTime, new Point(RenderSize.Width - m, i * rowHeight));
+
+                ViewModel.Instance.IsGraphDrawn = true;
             }
             catch (Exception)
             {

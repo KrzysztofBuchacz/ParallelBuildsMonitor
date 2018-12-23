@@ -151,6 +151,7 @@ namespace ParallelBuildsMonitor
             finishedBuilds.Clear();
             cpuUsage.Clear();
             hddUsage.Clear();
+            ViewModel.Instance.IsGraphDrawn = false;
             allProjectsCount = 0;
             GraphControl.Instance.InvalidateVisual();
         }
