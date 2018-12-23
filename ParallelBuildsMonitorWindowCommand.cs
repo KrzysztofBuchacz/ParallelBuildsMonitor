@@ -151,6 +151,7 @@ namespace ParallelBuildsMonitor
             finishedBuilds.Clear();
             cpuUsage.Clear();
             hddUsage.Clear();
+            allProjectsCount = 0;
             GraphControl.Instance.InvalidateVisual();
         }
 
@@ -314,6 +315,7 @@ namespace ParallelBuildsMonitor
             return ret;
         }
 
+        
         long SleepTime(int count)
         {
             long sleep = 10000000; // 1 second
@@ -344,6 +346,7 @@ namespace ParallelBuildsMonitor
                  {
                      GraphControl.Instance.InvalidateVisual();
                  }));
+
         }
     }
 }

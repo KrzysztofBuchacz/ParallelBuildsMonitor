@@ -19,7 +19,7 @@ namespace ParallelBuildsMonitor
         public string intFormat = "D3";
         public bool isBuilding = false;
 
-        // pun any colors here, set final theme dependent colors in OnForegroundChanged
+        // put any colors here, set final theme dependent colors in OnForegroundChanged
         Brush blueSolidBrush = new SolidColorBrush(Colors.DarkBlue);
         Pen blackPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
         Brush blackBrush = new SolidColorBrush(Colors.Black);
@@ -125,7 +125,6 @@ namespace ParallelBuildsMonitor
             }
             i++;
         }
-
 
         protected override void OnRender(System.Windows.Media.DrawingContext drawingContext)
         {
