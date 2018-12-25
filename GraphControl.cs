@@ -15,6 +15,8 @@ namespace ParallelBuildsMonitor
 {
     public class GraphControl : ContentControl
     {
+        #region Members
+
         public bool scrollLast = true;
         public string intFormat = "D3";
         public bool isBuilding = false;
@@ -29,7 +31,18 @@ namespace ParallelBuildsMonitor
         Pen grid = new Pen(new SolidColorBrush(Colors.LightGray), 1.0);
         Pen cpuPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
         Pen hddPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
-        public Timer timer = new Timer();
+        public Timer refreshTimer = new Timer();
+
+        #endregion Members
+
+        #region Properties
+
+        /// <summary>
+        /// Convinient accessor to data.
+        /// </summary>
+        static DataModel DataModel { get { return DataModel.Instance; } }
+
+        #endregion Properties
 
         public GraphControl()
         {
@@ -63,6 +76,30 @@ namespace ParallelBuildsMonitor
             private set;
         }
 
+        public void BuildBegin()
+        {
+            scrollLast = true;
+            refreshTimer.Interval = 1000;
+            refreshTimer.Elapsed += new ElapsedEventHandler(timer_Tick);
+            refreshTimer.Enabled = true;
+            isBuilding = true;
+        }
+
+        public void BuildDone()
+        {
+            refreshTimer.Enabled = false;
+            isBuilding = false;
+            InvalidateVisual();
+        }
+
+        void timer_Tick(object sender, ElapsedEventArgs e)
+        {
+            GraphControl.Instance.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background,
+                 new System.Action(() =>
+                 {
+                     GraphControl.Instance.InvalidateVisual();
+                 }));
+        }
         void drawGraph(string title, System.Windows.Media.DrawingContext drawingContext, List<Tuple<long, float>> data, Pen pen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, long nowTick, Typeface fontFace, bool showAverage)
         {
             // Status separator
@@ -76,18 +113,16 @@ namespace ParallelBuildsMonitor
             {
                 double pixelsRange = RenderSize.Width - maxStringLength;
 
-                ParallelBuildsMonitorWindowCommand host = ParallelBuildsMonitorWindowCommand.Instance;
-
                 double sumValues = 0;
                 long sumTicks = 0;
-                long previousTick = host.buildTime.Ticks;
+                long previousTick = DataModel.buildTime.Ticks;
                 float previousValue = 0.0f;
                 for (int nbr = 0; nbr < data.Count; nbr++)
                 {
-                    long spanL = previousTick - host.buildTime.Ticks;
-                    long spanR = data[nbr].Item1 - host.buildTime.Ticks;
+                    long spanL = previousTick - DataModel.buildTime.Ticks;
+                    long spanR = data[nbr].Item1 - DataModel.buildTime.Ticks;
                     if (isBuilding && nbr == data.Count - 1)
-                        spanR = nowTick - host.buildTime.Ticks;
+                        spanR = nowTick - DataModel.buildTime.Ticks;
                     double shiftL = (int)(spanL * (long)(RenderSize.Width - maxStringLength) / maxTick);
                     double shiftR = (int)(spanR * (long)(RenderSize.Width - maxStringLength) / maxTick);
                     Point p1 = new Point(maxStringLength + shiftL, (i + 1) * rowHeight - Math.Min(previousValue, 100.0) * (rowHeight - 2) / 100 - 1);
@@ -143,9 +178,7 @@ namespace ParallelBuildsMonitor
                 if (dte == null)
                     return;
 
-                ParallelBuildsMonitorWindowCommand host = ParallelBuildsMonitorWindowCommand.Instance;
-
-                if (host.allProjectsCount == 0)
+                if (DataModel.Instance.allProjectsCount == 0)
                     return;
 
                 Typeface fontFace = new Typeface(FontFamily.Source);
@@ -153,7 +186,7 @@ namespace ParallelBuildsMonitor
                 FormattedText dummyText = new FormattedText("A0", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
 
                 double rowHeight = dummyText.Height + 1;
-                int linesCount = host.currentBuilds.Count + host.finishedBuilds.Count + 1 + 1 + 1; // 1 for status, 1 for CPU, 1 for HDD
+                int linesCount = DataModel.currentBuilds.Count + DataModel.finishedBuilds.Count + 1 + 1 + 1; // 1 for status, 1 for CPU, 1 for HDD
                 double totalHeight = rowHeight * linesCount;
 
                 Height = totalHeight;
@@ -162,8 +195,8 @@ namespace ParallelBuildsMonitor
                 long tickStep = 100000000;
                 long maxTick = tickStep;
                 long nowTick = DateTime.Now.Ticks;
-                long t = nowTick - host.buildTime.Ticks;
-                if (host.currentBuilds.Count > 0)
+                long t = nowTick - DataModel.buildTime.Ticks;
+                if (DataModel.currentBuilds.Count > 0)
                 {
                     if (t > maxTick)
                     {
@@ -172,12 +205,12 @@ namespace ParallelBuildsMonitor
                 }
                 int i;
                 bool atLeastOneError = false;
-                for (i = 0; i < host.finishedBuilds.Count; i++)
+                for (i = 0; i < DataModel.finishedBuilds.Count; i++)
                 {
-                    FormattedText iname = new FormattedText(host.finishedBuilds[i].name, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                    FormattedText iname = new FormattedText(DataModel.finishedBuilds[i].name, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                     double l = iname.Width;
-                    t = host.finishedBuilds[i].end;
-                    atLeastOneError = atLeastOneError || !host.finishedBuilds[i].success;
+                    t = DataModel.finishedBuilds[i].end;
+                    atLeastOneError = atLeastOneError || !DataModel.finishedBuilds[i].success;
                     if (t > maxTick)
                     {
                         maxTick = t;
@@ -187,7 +220,7 @@ namespace ParallelBuildsMonitor
                         maxStringLength = l;
                     }
                 }
-                foreach (KeyValuePair<string, DateTime> item in host.currentBuilds)
+                foreach (KeyValuePair<string, DateTime> item in DataModel.currentBuilds)
                 {
                     FormattedText iname = new FormattedText(item.Key, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                     double l = iname.Width;
@@ -205,17 +238,17 @@ namespace ParallelBuildsMonitor
 
                 Brush greenGradientBrush = new LinearGradientBrush(Colors.MediumSeaGreen, Colors.DarkGreen, new Point(0, 0), new Point(0, 1));
                 Brush redGradientBrush = new LinearGradientBrush(Colors.IndianRed, Colors.DarkRed, new Point(0, 0), new Point(0, 1));
-                for (i = 0; i < host.finishedBuilds.Count; i++)
+                for (i = 0; i < DataModel.finishedBuilds.Count; i++)
                 {
-                    Brush solidBrush = host.finishedBuilds[i].success ? greenSolidBrush : redSolidBrush;
-                    Brush gradientBrush = host.finishedBuilds[i].success ? greenGradientBrush : redGradientBrush;
-                    DateTime span = new DateTime(host.finishedBuilds[i].end - host.finishedBuilds[i].begin);
+                    Brush solidBrush = DataModel.finishedBuilds[i].success ? greenSolidBrush : redSolidBrush;
+                    Brush gradientBrush = DataModel.finishedBuilds[i].success ? greenGradientBrush : redGradientBrush;
+                    DateTime span = new DateTime(DataModel.finishedBuilds[i].end - DataModel.finishedBuilds[i].begin);
                     string time = ParallelBuildsMonitorWindowCommand.SecondsToString(span.Ticks);
-                    FormattedText itext = new FormattedText((i + 1).ToString(intFormat) + " " + host.finishedBuilds[i].name, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, solidBrush);
+                    FormattedText itext = new FormattedText((i + 1).ToString(intFormat) + " " + DataModel.finishedBuilds[i].name, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, solidBrush);
                     drawingContext.DrawText(itext, new Point(1, i * rowHeight));
                     Rect r = new Rect();
-                    r.X = maxStringLength + (int)((host.finishedBuilds[i].begin) * (long)(RenderSize.Width - maxStringLength) / maxTick);
-                    r.Width = maxStringLength + (int)((host.finishedBuilds[i].end) * (long)(RenderSize.Width - maxStringLength) / maxTick) - r.X;
+                    r.X = maxStringLength + (int)((DataModel.finishedBuilds[i].begin) * (long)(RenderSize.Width - maxStringLength) / maxTick);
+                    r.Width = maxStringLength + (int)((DataModel.finishedBuilds[i].end) * (long)(RenderSize.Width - maxStringLength) / maxTick) - r.X;
                     if (r.Width == 0)
                     {
                         r.Width = 1;
@@ -233,13 +266,13 @@ namespace ParallelBuildsMonitor
                 }
 
                 Brush blueGradientBrush = new LinearGradientBrush(Colors.LightBlue, Colors.DarkBlue, new Point(0, 0), new Point(0, 1));
-                foreach (KeyValuePair<string, DateTime> item in host.currentBuilds)
+                foreach (KeyValuePair<string, DateTime> item in DataModel.currentBuilds)
                 {
                     FormattedText itext = new FormattedText((i + 1).ToString(intFormat) + " " + item.Key, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blueSolidBrush);
                     drawingContext.DrawText(itext, new Point(1, i * rowHeight));
                     Rect r = new Rect();
-                    r.X = maxStringLength + (int)((item.Value.Ticks - host.buildTime.Ticks) * (long)(RenderSize.Width - maxStringLength) / maxTick);
-                    r.Width = maxStringLength + (int)((nowTick - host.buildTime.Ticks) * (long)(RenderSize.Width - maxStringLength) / maxTick) - r.X;
+                    r.X = maxStringLength + (int)((item.Value.Ticks - DataModel.buildTime.Ticks) * (long)(RenderSize.Width - maxStringLength) / maxTick);
+                    r.Width = maxStringLength + (int)((nowTick - DataModel.buildTime.Ticks) * (long)(RenderSize.Width - maxStringLength) / maxTick) - r.X;
                     if (r.Width == 0)
                     {
                         r.Width = 1;
@@ -251,10 +284,10 @@ namespace ParallelBuildsMonitor
                     i++;
                 }
 
-                drawGraph("CPU usage", drawingContext, host.cpuUsage, cpuPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace, true /*showAverage*/);
-                drawGraph("HDD usage", drawingContext, host.hddUsage, hddPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace, false /*showAverage - Probably there is no max value for HDD that is why we can't cound average*/);
+                drawGraph("CPU usage", drawingContext, DataModel.cpuUsage, cpuPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace, true /*showAverage*/);
+                drawGraph("HDD usage", drawingContext, DataModel.hddUsage, hddPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace, false /*showAverage - Probably there is no max value for HDD that is why we can't cound average*/);
 
-                if (host.currentBuilds.Count > 0 || host.finishedBuilds.Count > 0)
+                if (DataModel.currentBuilds.Count > 0 || DataModel.finishedBuilds.Count > 0)
                 {
                     string line = "";
                     if (isBuilding)
@@ -265,9 +298,9 @@ namespace ParallelBuildsMonitor
                     {
                         line = "Done";
                     }
-                    if (host.maxParallelBuilds > 0)
+                    if (DataModel.maxParallelBuilds > 0)
                     {
-                        line += " (" + host.PercentageProcessorUse().ToString() + "% of " + host.maxParallelBuilds.ToString() + " CPUs)";
+                        line += " (" + DataModel.PercentageProcessorUse().ToString() + "% of " + DataModel.maxParallelBuilds.ToString() + " CPUs)";
                     }
                     FormattedText itext = new FormattedText(line, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                     drawingContext.DrawText(itext, new Point(1, i * rowHeight));

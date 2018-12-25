@@ -10,51 +10,6 @@
     using System.Windows.Media.Imaging;
 
 
-
-    public class ViewModel : System.ComponentModel.INotifyPropertyChanged
-    {
-        private ViewModel()
-        {
-        }
-
-        private static ViewModel instance = null;
-        // Singleton
-        public static ViewModel Instance
-        {
-            get
-            {
-                if (instance == null)
-                    instance = new ViewModel();
-                return instance;
-            }
-        }
-
-
-        private bool isGraphDrawn = false;
-        public bool IsGraphDrawn
-        {
-            get
-            {
-                return isGraphDrawn;
-            }
-            set
-            {
-                if (isGraphDrawn == value)
-                    return;
-
-                isGraphDrawn = value;
-                OnPropertyChanged("IsGraphDrawn");
-            }
-        }
-
-        public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
-        public void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName]string property = "")
-        {
-            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(property));
-        }
-    }
-
-
     /// <summary>
     /// Interaction logic for ParallelBuildsMonitorWindowControl.
     /// </summary>
