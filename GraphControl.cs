@@ -115,14 +115,14 @@ namespace ParallelBuildsMonitor
 
                 double sumValues = 0;
                 long sumTicks = 0;
-                long previousTick = DataModel.buildTime.Ticks;
+                long previousTick = DataModel.StartTime.Ticks;
                 float previousValue = 0.0f;
                 for (int nbr = 0; nbr < data.Count; nbr++)
                 {
-                    long spanL = previousTick - DataModel.buildTime.Ticks;
-                    long spanR = data[nbr].Item1 - DataModel.buildTime.Ticks;
+                    long spanL = previousTick - DataModel.StartTime.Ticks;
+                    long spanR = data[nbr].Item1 - DataModel.StartTime.Ticks;
                     if (isBuilding && nbr == data.Count - 1)
-                        spanR = nowTick - DataModel.buildTime.Ticks;
+                        spanR = nowTick - DataModel.StartTime.Ticks;
                     double shiftL = (int)(spanL * (long)(RenderSize.Width - maxStringLength) / maxTick);
                     double shiftR = (int)(spanR * (long)(RenderSize.Width - maxStringLength) / maxTick);
                     Point p1 = new Point(maxStringLength + shiftL, (i + 1) * rowHeight - Math.Min(previousValue, 100.0) * (rowHeight - 2) / 100 - 1);
@@ -161,163 +161,181 @@ namespace ParallelBuildsMonitor
             i++;
         }
 
+        /// <summary>
+        /// This class ensure that IsGraphDrawn is always correctly set according to current visual.
+        /// </summary>
+        private class IsGraphDrawnScope : IDisposable
+        {
+            public bool IsDrawn { get; set; } = false;
+
+            public void Dispose()
+            {
+                ViewModel.Instance.IsGraphDrawn = IsDrawn;
+            }
+        }
+
         protected override void OnRender(System.Windows.Media.DrawingContext drawingContext)
         {
             try
             {
-                if (RenderSize.Width < 10.0 || RenderSize.Height < 10.0)
+                using (IsGraphDrawnScope isGraphDrawnScope = new IsGraphDrawnScope())
                 {
-                    return;
-                }
-
-                if (ParallelBuildsMonitorWindowCommand.Instance == null)
-                    return;
-
-                DTE2 dte = (DTE2)ParallelBuildsMonitorWindowCommand.Instance.ServiceProvider.GetService(typeof(DTE));
-
-                if (dte == null)
-                    return;
-
-                if (DataModel.Instance.allProjectsCount == 0)
-                    return;
-
-                Typeface fontFace = new Typeface(FontFamily.Source);
-
-                FormattedText dummyText = new FormattedText("A0", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-
-                double rowHeight = dummyText.Height + 1;
-                int linesCount = DataModel.currentBuilds.Count + DataModel.finishedBuilds.Count + 1 + 1 + 1; // 1 for status, 1 for CPU, 1 for HDD
-                double totalHeight = rowHeight * linesCount;
-
-                Height = totalHeight;
-
-                double maxStringLength = 0.0;
-                long tickStep = 100000000;
-                long maxTick = tickStep;
-                long nowTick = DateTime.Now.Ticks;
-                long t = nowTick - DataModel.buildTime.Ticks;
-                if (DataModel.currentBuilds.Count > 0)
-                {
-                    if (t > maxTick)
+                    if (RenderSize.Width < 10.0 || RenderSize.Height < 10.0)
                     {
-                        maxTick = t;
+                        return;
                     }
-                }
-                int i;
-                bool atLeastOneError = false;
-                for (i = 0; i < DataModel.finishedBuilds.Count; i++)
-                {
-                    FormattedText iname = new FormattedText(DataModel.finishedBuilds[i].name, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                    double l = iname.Width;
-                    t = DataModel.finishedBuilds[i].end;
-                    atLeastOneError = atLeastOneError || !DataModel.finishedBuilds[i].success;
-                    if (t > maxTick)
-                    {
-                        maxTick = t;
-                    }
-                    if (l > maxStringLength)
-                    {
-                        maxStringLength = l;
-                    }
-                }
-                foreach (KeyValuePair<string, DateTime> item in DataModel.currentBuilds)
-                {
-                    FormattedText iname = new FormattedText(item.Key, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                    double l = iname.Width;
-                    if (l > maxStringLength)
-                    {
-                        maxStringLength = l;
-                    }
-                }
-                if (isBuilding)
-                {
-                    maxTick = (maxTick / tickStep + 1) * tickStep;
-                }
-                FormattedText iint = new FormattedText(i.ToString(intFormat) + " ", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                maxStringLength += 5 + iint.Width;
 
-                Brush greenGradientBrush = new LinearGradientBrush(Colors.MediumSeaGreen, Colors.DarkGreen, new Point(0, 0), new Point(0, 1));
-                Brush redGradientBrush = new LinearGradientBrush(Colors.IndianRed, Colors.DarkRed, new Point(0, 0), new Point(0, 1));
-                for (i = 0; i < DataModel.finishedBuilds.Count; i++)
-                {
-                    Brush solidBrush = DataModel.finishedBuilds[i].success ? greenSolidBrush : redSolidBrush;
-                    Brush gradientBrush = DataModel.finishedBuilds[i].success ? greenGradientBrush : redGradientBrush;
-                    DateTime span = new DateTime(DataModel.finishedBuilds[i].end - DataModel.finishedBuilds[i].begin);
-                    string time = ParallelBuildsMonitorWindowCommand.SecondsToString(span.Ticks);
-                    FormattedText itext = new FormattedText((i + 1).ToString(intFormat) + " " + DataModel.finishedBuilds[i].name, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, solidBrush);
-                    drawingContext.DrawText(itext, new Point(1, i * rowHeight));
-                    Rect r = new Rect();
-                    r.X = maxStringLength + (int)((DataModel.finishedBuilds[i].begin) * (long)(RenderSize.Width - maxStringLength) / maxTick);
-                    r.Width = maxStringLength + (int)((DataModel.finishedBuilds[i].end) * (long)(RenderSize.Width - maxStringLength) / maxTick) - r.X;
-                    if (r.Width == 0)
-                    {
-                        r.Width = 1;
-                    }
-                    r.Y = i * rowHeight + 1;
-                    r.Height = rowHeight - 1;
-                    drawingContext.DrawRectangle(gradientBrush, null, r);
-                    FormattedText itime = new FormattedText(time, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, whiteBrush);
-                    double timeLen = itime.Width;
-                    if (r.Width > timeLen)
-                    {
-                        drawingContext.DrawText(itime, new Point(r.Right - timeLen, i * rowHeight));
-                    }
-                    drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
-                }
+                    if (ParallelBuildsMonitorWindowCommand.Instance == null)
+                        return;
 
-                Brush blueGradientBrush = new LinearGradientBrush(Colors.LightBlue, Colors.DarkBlue, new Point(0, 0), new Point(0, 1));
-                foreach (KeyValuePair<string, DateTime> item in DataModel.currentBuilds)
-                {
-                    FormattedText itext = new FormattedText((i + 1).ToString(intFormat) + " " + item.Key, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blueSolidBrush);
-                    drawingContext.DrawText(itext, new Point(1, i * rowHeight));
-                    Rect r = new Rect();
-                    r.X = maxStringLength + (int)((item.Value.Ticks - DataModel.buildTime.Ticks) * (long)(RenderSize.Width - maxStringLength) / maxTick);
-                    r.Width = maxStringLength + (int)((nowTick - DataModel.buildTime.Ticks) * (long)(RenderSize.Width - maxStringLength) / maxTick) - r.X;
-                    if (r.Width == 0)
+                    DTE2 dte = (DTE2)ParallelBuildsMonitorWindowCommand.Instance.ServiceProvider.GetService(typeof(DTE));
+
+                    if (dte == null)
+                        return;
+
+                    if (DataModel.Instance.AllProjectsCount == 0)
+                        return;
+
+                    Typeface fontFace = new Typeface(FontFamily.Source);
+
+                    FormattedText dummyText = new FormattedText("A0", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+
+                    double rowHeight = dummyText.Height + 1;
+                    int linesCount = DataModel.CurrentBuilds.Count + DataModel.FinishedBuilds.Count + 1 + 1 + 1; // 1 for status, 1 for CPU, 1 for HDD
+                    double totalHeight = rowHeight * linesCount;
+
+                    Height = totalHeight;
+
+                    double maxStringLength = 0.0;
+                    long tickStep = 100000000;
+                    long maxTick = tickStep;
+                    long nowTick = DateTime.Now.Ticks;
+                    long t = nowTick - DataModel.StartTime.Ticks;
+                    if (DataModel.CurrentBuilds.Count > 0)
                     {
-                        r.Width = 1;
+                        if (t > maxTick)
+                        {
+                            maxTick = t;
+                        }
                     }
-                    r.Y = i * rowHeight + 1;
-                    r.Height = rowHeight - 1;
-                    drawingContext.DrawRectangle(blueGradientBrush, null, r);
-                    drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
-                    i++;
-                }
-
-                drawGraph("CPU usage", drawingContext, DataModel.cpuUsage, cpuPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace, true /*showAverage*/);
-                drawGraph("HDD usage", drawingContext, DataModel.hddUsage, hddPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace, false /*showAverage - Probably there is no max value for HDD that is why we can't cound average*/);
-
-                if (DataModel.currentBuilds.Count > 0 || DataModel.finishedBuilds.Count > 0)
-                {
-                    string line = "";
+                    int i;
+                    bool atLeastOneError = false;
+                    for (i = 0; i < DataModel.FinishedBuilds.Count; i++)
+                    {
+                        FormattedText iname = new FormattedText(DataModel.FinishedBuilds[i].name, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                        double l = iname.Width;
+                        t = DataModel.FinishedBuilds[i].end;
+                        atLeastOneError = atLeastOneError || !DataModel.FinishedBuilds[i].success;
+                        if (t > maxTick)
+                        {
+                            maxTick = t;
+                        }
+                        if (l > maxStringLength)
+                        {
+                            maxStringLength = l;
+                        }
+                    }
+                    foreach (KeyValuePair<string, DateTime> item in DataModel.CurrentBuilds)
+                    {
+                        FormattedText iname = new FormattedText(item.Key, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                        double l = iname.Width;
+                        if (l > maxStringLength)
+                        {
+                            maxStringLength = l;
+                        }
+                    }
                     if (isBuilding)
                     {
-                        line = "Building...";
+                        maxTick = (maxTick / tickStep + 1) * tickStep;
                     }
-                    else
-                    {
-                        line = "Done";
-                    }
-                    if (DataModel.maxParallelBuilds > 0)
-                    {
-                        line += " (" + DataModel.PercentageProcessorUse().ToString() + "% of " + DataModel.maxParallelBuilds.ToString() + " CPUs)";
-                    }
-                    FormattedText itext = new FormattedText(line, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                    drawingContext.DrawText(itext, new Point(1, i * rowHeight));
-                }
-                drawingContext.DrawLine(grid, new Point(maxStringLength, 0), new Point(maxStringLength, i * rowHeight));
-                drawingContext.DrawLine(new Pen(atLeastOneError ? redSolidBrush : greenSolidBrush, 1), new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
+                    FormattedText iint = new FormattedText(i.ToString(intFormat) + " ", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                    maxStringLength += 5 + iint.Width;
 
-                DateTime dt = new DateTime(maxTick);
-                string s = ParallelBuildsMonitorWindowCommand.SecondsToString(dt.Ticks);
-                FormattedText maxTime = new FormattedText(s, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                double m = maxTime.Width;
-                drawingContext.DrawText(maxTime, new Point(RenderSize.Width - m, i * rowHeight));
+                    Brush greenGradientBrush = new LinearGradientBrush(Colors.MediumSeaGreen, Colors.DarkGreen, new Point(0, 0), new Point(0, 1));
+                    Brush redGradientBrush = new LinearGradientBrush(Colors.IndianRed, Colors.DarkRed, new Point(0, 0), new Point(0, 1));
+                    for (i = 0; i < DataModel.FinishedBuilds.Count; i++)
+                    {
+                        Brush solidBrush = DataModel.FinishedBuilds[i].success ? greenSolidBrush : redSolidBrush;
+                        Brush gradientBrush = DataModel.FinishedBuilds[i].success ? greenGradientBrush : redGradientBrush;
+                        DateTime span = new DateTime(DataModel.FinishedBuilds[i].end - DataModel.FinishedBuilds[i].begin);
+                        string time = ParallelBuildsMonitorWindowCommand.SecondsToString(span.Ticks);
+                        FormattedText itext = new FormattedText((i + 1).ToString(intFormat) + " " + DataModel.FinishedBuilds[i].name, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, solidBrush);
+                        drawingContext.DrawText(itext, new Point(1, i * rowHeight));
+                        Rect r = new Rect();
+                        r.X = maxStringLength + (int)((DataModel.FinishedBuilds[i].begin) * (long)(RenderSize.Width - maxStringLength) / maxTick);
+                        r.Width = maxStringLength + (int)((DataModel.FinishedBuilds[i].end) * (long)(RenderSize.Width - maxStringLength) / maxTick) - r.X;
+                        if (r.Width == 0)
+                        {
+                            r.Width = 1;
+                        }
+                        r.Y = i * rowHeight + 1;
+                        r.Height = rowHeight - 1;
+                        drawingContext.DrawRectangle(gradientBrush, null, r);
+                        FormattedText itime = new FormattedText(time, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, whiteBrush);
+                        double timeLen = itime.Width;
+                        if (r.Width > timeLen)
+                        {
+                            drawingContext.DrawText(itime, new Point(r.Right - timeLen, i * rowHeight));
+                        }
+                        drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
+                    }
 
-                ViewModel.Instance.IsGraphDrawn = true;
+                    Brush blueGradientBrush = new LinearGradientBrush(Colors.LightBlue, Colors.DarkBlue, new Point(0, 0), new Point(0, 1));
+                    foreach (KeyValuePair<string, DateTime> item in DataModel.CurrentBuilds)
+                    {
+                        FormattedText itext = new FormattedText((i + 1).ToString(intFormat) + " " + item.Key, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blueSolidBrush);
+                        drawingContext.DrawText(itext, new Point(1, i * rowHeight));
+                        Rect r = new Rect();
+                        r.X = maxStringLength + (int)((item.Value.Ticks - DataModel.StartTime.Ticks) * (long)(RenderSize.Width - maxStringLength) / maxTick);
+                        r.Width = maxStringLength + (int)((nowTick - DataModel.StartTime.Ticks) * (long)(RenderSize.Width - maxStringLength) / maxTick) - r.X;
+                        if (r.Width == 0)
+                        {
+                            r.Width = 1;
+                        }
+                        r.Y = i * rowHeight + 1;
+                        r.Height = rowHeight - 1;
+                        drawingContext.DrawRectangle(blueGradientBrush, null, r);
+                        drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
+                        i++;
+                    }
+
+                    drawGraph("CPU usage", drawingContext, DataModel.CpuUsage, cpuPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace, true /*showAverage*/);
+                    drawGraph("HDD usage", drawingContext, DataModel.HddUsage, hddPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace, false /*showAverage - Probably there is no max value for HDD that is why we can't cound average*/);
+
+                    if (DataModel.CurrentBuilds.Count > 0 || DataModel.FinishedBuilds.Count > 0)
+                    {
+                        string line = "";
+                        if (isBuilding)
+                        {
+                            line = "Building...";
+                        }
+                        else
+                        {
+                            line = "Done";
+                        }
+                        if (DataModel.MaxParallelBuilds > 0)
+                        {
+                            line += " (" + DataModel.PercentageProcessorUse().ToString() + "% of " + DataModel.MaxParallelBuilds.ToString() + " CPUs)";
+                        }
+                        FormattedText itext = new FormattedText(line, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                        drawingContext.DrawText(itext, new Point(1, i * rowHeight));
+                    }
+                    drawingContext.DrawLine(grid, new Point(maxStringLength, 0), new Point(maxStringLength, i * rowHeight));
+                    drawingContext.DrawLine(new Pen(atLeastOneError ? redSolidBrush : greenSolidBrush, 1), new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
+
+                    DateTime dt = new DateTime(maxTick);
+                    string s = ParallelBuildsMonitorWindowCommand.SecondsToString(dt.Ticks);
+                    FormattedText maxTime = new FormattedText(s, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                    double m = maxTime.Width;
+                    drawingContext.DrawText(maxTime, new Point(RenderSize.Width - m, i * rowHeight));
+
+                    isGraphDrawnScope.IsDrawn = true;
+                } //End of IsGraphDrawnScope
             }
             catch (Exception)
-            {
+            {   // Keep this try{} catch{}!
+                // Actually code in try{} bail from time to time on windows resize.
+                // I guess because there is division by (x - y), while x equals y, but it might be not the only case.
             }
         }
 

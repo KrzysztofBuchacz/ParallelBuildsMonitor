@@ -28,22 +28,25 @@ namespace ParallelBuildsMonitor
     /// </summary>
     class DataModel
     {
-        #region Members
-        //DO NOT SUBMIT!!  Restrict access to get; set; to some members
-        public DateTime buildTime;
-        public Dictionary<string, DateTime> currentBuilds = new Dictionary<string, DateTime>();
-        public List<BuildInfo> finishedBuilds = new List<BuildInfo>();
-        public List<Tuple<long, float>> cpuUsage = new List<Tuple<long, float>>();
-        public List<Tuple<long, float>> hddUsage = new List<Tuple<long, float>>();
-        public int maxParallelBuilds = 0;
-        public int allProjectsCount = 0;
-        public int outputCounter = 0;
+        #region Members And Properties
 
-        PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-        PerformanceCounter hddCounter = new PerformanceCounter("PhysicalDisk", "% Disk Time", "_Total");
-        public Timer timer = new Timer();
+        /// <summary>
+        /// Holds point in time when entire build started (Solution).
+        /// </summary>
+        public DateTime StartTime { get; private set; }
+        public Dictionary<string, DateTime> CurrentBuilds { get; private set; } = new Dictionary<string, DateTime>(); //TODO: Check if collection can be changed even if private
+        public List<BuildInfo> FinishedBuilds { get; private set; } = new List<BuildInfo>(); //TODO: Check if collection can be changed even if private
 
-        #endregion Members
+        public List<Tuple<long, float>> CpuUsage { get; private set; } = new List<Tuple<long, float>>();
+        public List<Tuple<long, float>> HddUsage { get; private set; } = new List<Tuple<long, float>>();
+        public int MaxParallelBuilds { get; private set; } = 0;
+        public int AllProjectsCount { get; private set; } = 0;
+
+        private PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+        private PerformanceCounter hddCounter = new PerformanceCounter("PhysicalDisk", "% Disk Time", "_Total");
+        private Timer timer = new Timer();
+
+        #endregion Members And Properties
 
         #region Creator and Constructors
         private DataModel()
@@ -66,15 +69,14 @@ namespace ParallelBuildsMonitor
         {
             //instance = new DataModel(); // It doesn't work! So do it manually...
 
-            buildTime = DateTime.Now;
+            StartTime = DateTime.Now;
             CollectPerformanceData(true);
-            maxParallelBuilds = 0;
-            allProjectsCount = 0;
-            outputCounter = 0;
-            currentBuilds.Clear();
-            finishedBuilds.Clear();
-            cpuUsage.Clear();
-            hddUsage.Clear();
+            MaxParallelBuilds = 0;
+            AllProjectsCount = 0;
+            CurrentBuilds.Clear();
+            FinishedBuilds.Clear();
+            CpuUsage.Clear();
+            HddUsage.Clear();
         }
         #endregion
 
@@ -86,8 +88,8 @@ namespace ParallelBuildsMonitor
         public void BuildBegin(int allProjectsCount)
         {
             Reset();
-            buildTime = DateTime.Now;
-            this.allProjectsCount = allProjectsCount;
+            StartTime = DateTime.Now;
+            this.AllProjectsCount = allProjectsCount;
 
             timer.Interval = 1000;
             timer.Elapsed += new ElapsedEventHandler(timer_Tick);
@@ -105,28 +107,27 @@ namespace ParallelBuildsMonitor
         /// <param name="projectKey"></param>
         public void AddCurrentBuild(string projectKey)
         {
-            currentBuilds[projectKey] = DateTime.Now;
-            if (currentBuilds.Count > maxParallelBuilds)
+            CurrentBuilds[projectKey] = DateTime.Now;
+            if (CurrentBuilds.Count > MaxParallelBuilds)
             {
-                maxParallelBuilds = currentBuilds.Count;
+                MaxParallelBuilds = CurrentBuilds.Count;
             }
         }
 
         /// <summary>
-        /// This method move project from currentBuilds to finishedBuilds array
+        /// This method move project from CurrentBuilds to FinishedBuilds array
         /// </summary>
         /// <param name="projectKey"></param>
-        /// <returns>true on success (when project was successfully moved from currentBuilds to finishedBuilds array</returns>
+        /// <returns>true on success (when project was successfully moved from CurrentBuilds to FinishedBuilds array</returns>
         public bool FinishCurrentBuild(string projectKey, bool wasBuildSucceessful)
         {
-            if (!currentBuilds.ContainsKey(projectKey))
+            if (!CurrentBuilds.ContainsKey(projectKey))
                 return false;
 
-            outputCounter++;
-            DateTime start = new DateTime(currentBuilds[projectKey].Ticks - buildTime.Ticks);
-            currentBuilds.Remove(projectKey);
-            DateTime end = new DateTime(DateTime.Now.Ticks - buildTime.Ticks);
-            finishedBuilds.Add(new BuildInfo(projectKey, start.Ticks, end.Ticks, wasBuildSucceessful));
+            DateTime start = new DateTime(CurrentBuilds[projectKey].Ticks - StartTime.Ticks);
+            CurrentBuilds.Remove(projectKey);
+            DateTime end = new DateTime(DateTime.Now.Ticks - StartTime.Ticks);
+            FinishedBuilds.Add(new BuildInfo(projectKey, start.Ticks, end.Ticks, wasBuildSucceessful));
             TimeSpan s = end - start;
             DateTime t = new DateTime(s.Ticks);
 
@@ -144,12 +145,12 @@ namespace ParallelBuildsMonitor
         public long PercentageProcessorUse()
         {
             long percentage = 0;
-            if (maxParallelBuilds > 0)
+            if (MaxParallelBuilds > 0)
             {
                 long nowTicks = DateTime.Now.Ticks;
                 long maxTick = 0;
                 long totTicks = 0;
-                foreach (BuildInfo info in finishedBuilds)
+                foreach (BuildInfo info in FinishedBuilds)
                 {
                     totTicks += info.end - info.begin;
                     if (info.end > maxTick)
@@ -157,12 +158,12 @@ namespace ParallelBuildsMonitor
                         maxTick = info.end;
                     }
                 }
-                foreach (DateTime start in currentBuilds.Values)
+                foreach (DateTime start in CurrentBuilds.Values)
                 {
-                    maxTick = nowTicks - buildTime.Ticks;
+                    maxTick = nowTicks - StartTime.Ticks;
                     totTicks += nowTicks - start.Ticks;
                 }
-                totTicks /= maxParallelBuilds;
+                totTicks /= MaxParallelBuilds;
                 if (maxTick > 0)
                 {
                     percentage = totTicks * 100 / maxTick;
@@ -193,14 +194,14 @@ namespace ParallelBuildsMonitor
 
         public void CollectPerformanceData(bool forceAdd)
         {
-            long sleep = SleepTime(cpuUsage.Count);
+            long sleep = SleepTime(CpuUsage.Count);
             long ticks = DateTime.Now.Ticks;
-            if (forceAdd || cpuUsage.Count == 0 || ticks > cpuUsage[cpuUsage.Count - 1].Item1 + sleep)
-                cpuUsage.Add(new Tuple<long, float>(ticks, cpuCounter.NextValue()));
-            sleep = SleepTime(hddUsage.Count);
+            if (forceAdd || CpuUsage.Count == 0 || ticks > CpuUsage[CpuUsage.Count - 1].Item1 + sleep)
+                CpuUsage.Add(new Tuple<long, float>(ticks, cpuCounter.NextValue()));
+            sleep = SleepTime(HddUsage.Count);
             ticks = DateTime.Now.Ticks;
-            if (forceAdd || hddUsage.Count == 0 || ticks > hddUsage[hddUsage.Count - 1].Item1 + sleep)
-                hddUsage.Add(new Tuple<long, float>(ticks, hddCounter.NextValue()));
+            if (forceAdd || HddUsage.Count == 0 || ticks > HddUsage[HddUsage.Count - 1].Item1 + sleep)
+                HddUsage.Add(new Tuple<long, float>(ticks, hddCounter.NextValue()));
         }
 
         #endregion CPU+HDDPerformance

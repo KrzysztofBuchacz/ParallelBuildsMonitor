@@ -58,7 +58,7 @@ namespace ParallelBuildsMonitor
         /// <summary>
         /// Convinient accessor to data.
         /// </summary>
-        public static DataModel DataModel { get { return DataModel.Instance; } } //DO NOT SUBMIT!!! Should it be public?
+        private static DataModel DataModel { get { return DataModel.Instance; } }
 
         #endregion Properties
 
@@ -137,23 +137,7 @@ namespace ParallelBuildsMonitor
             string projectKey = MakeKey(Project, ProjectConfig, Platform);
             if (DataModel.FinishCurrentBuild(projectKey, Success))
             {
-                // DO NOT SUBMIT!!!   Do we need below commented out code?
-                //
-                //StringBuilder b = new StringBuilder(outputCounter.ToString("D3"));
-                //b.Append(" ");
-                //b.Append(projectKey);
-                //int space = 50 - projectKey.Length;
-                //if (space > 0)
-                //{
-                //    b.Append(' ', space);
-                //}
-                //b.Append(" \t");
-                //b.Append(SecondsToString(start.Ticks));
-                //b.Append("\t");
-                //b.Append(SecondsToString(t.Ticks));
-                //b.Append("\n");
-
-                GraphControl.Instance.InvalidateVisual();
+                GraphControl.Instance.InvalidateVisual(); //TODO. When GraphControl observe DataModel this is redundant
             }
         }
 
@@ -164,20 +148,13 @@ namespace ParallelBuildsMonitor
             int allProjectsCount = 0;
             foreach (Project project in dte.Solution.Projects)
                 allProjectsCount += GetProjectsCount(project);
-            //GraphControl.Instance.InvalidateVisual(); // We do not need that line. GraphControl.Instance.BuildBegin() refresh timer start graph
             DataModel.BuildBegin(allProjectsCount);
             GraphControl.Instance.BuildBegin();
         }
 
         void BuildEvents_OnBuildDone(vsBuildScope Scope, vsBuildAction Action)
         {
-            // DO NOT SUBMIT!!!   Do we need below commented out code?
-            //
-            //TimeSpan s = DateTime.Now - buildTime;
-            //DateTime t = new DateTime(s.Ticks);
-            //string msg = "Build Total Time: " + SecondsToString(t.Ticks) + ", max. number of parallel builds: " + maxParallelBuilds.ToString() + "\n";
             DataModel.CollectPerformanceData(true);
-            //GraphControl.Instance.InvalidateVisual(); // This line is redundant. BuildDone() handle this
             DataModel.BuildDone();
             GraphControl.Instance.BuildDone();
         }
@@ -185,7 +162,6 @@ namespace ParallelBuildsMonitor
         void solutionEvents_AfterClosing()
         {
             DataModel.Reset();
-            ViewModel.Instance.IsGraphDrawn = false;  //DO NOT SUBMIT!!  Shouldn't be ViewModel be related with DataModel not directly like here.
             GraphControl.Instance.InvalidateVisual();
         }
 
