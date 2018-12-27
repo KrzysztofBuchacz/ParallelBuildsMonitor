@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using EnvDTE;
 using EnvDTE80;
+using System.Collections.ObjectModel;
 
 namespace ParallelBuildsMonitor
 {
@@ -100,7 +101,7 @@ namespace ParallelBuildsMonitor
                      GraphControl.Instance.InvalidateVisual();
                  }));
         }
-        void drawGraph(string title, System.Windows.Media.DrawingContext drawingContext, List<Tuple<long, float>> data, Pen pen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, long nowTick, Typeface fontFace, bool showAverage)
+        void drawGraph(string title, System.Windows.Media.DrawingContext drawingContext, ReadOnlyCollection<Tuple<long, float>> data, Pen pen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, long nowTick, Typeface fontFace, bool showAverage)
         {
             // Status separator
             drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));

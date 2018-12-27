@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Timers;
 
@@ -28,19 +29,29 @@ namespace ParallelBuildsMonitor
     /// </summary>
     class DataModel
     {
-        #region Members And Properties
+        #region Properties
 
         /// <summary>
         /// Holds point in time when entire build started (Solution).
         /// </summary>
         public DateTime StartTime { get; private set; }
-        public Dictionary<string, DateTime> CurrentBuilds { get; private set; } = new Dictionary<string, DateTime>(); //TODO: Check if collection can be changed even if private
-        public List<BuildInfo> FinishedBuilds { get; private set; } = new List<BuildInfo>(); //TODO: Check if collection can be changed even if private
+        public ReadOnlyDictionary<string, DateTime> CurrentBuilds { get { return new ReadOnlyDictionary<string, DateTime>(currentBuilds); } }
+        public ReadOnlyCollection<BuildInfo> FinishedBuilds { get { return finishedBuilds.AsReadOnly(); } }
 
-        public List<Tuple<long, float>> CpuUsage { get; private set; } = new List<Tuple<long, float>>();
-        public List<Tuple<long, float>> HddUsage { get; private set; } = new List<Tuple<long, float>>();
+        public ReadOnlyCollection<Tuple<long, float>> CpuUsage { get { return cpuUsage.AsReadOnly(); } }
+        public ReadOnlyCollection<Tuple<long, float>> HddUsage { get { return hddUsage.AsReadOnly(); } }
         public int MaxParallelBuilds { get; private set; } = 0;
         public int AllProjectsCount { get; private set; } = 0;
+
+        #endregion Properties
+
+        #region Members
+
+        private Dictionary<string, DateTime> currentBuilds = new Dictionary<string, DateTime>();
+        private List<BuildInfo> finishedBuilds = new List<BuildInfo>();
+
+        private List<Tuple<long, float>> cpuUsage = new List<Tuple<long, float>>();
+        private List<Tuple<long, float>> hddUsage = new List<Tuple<long, float>>();
 
         private PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
         private PerformanceCounter hddCounter = new PerformanceCounter("PhysicalDisk", "% Disk Time", "_Total");
@@ -49,6 +60,7 @@ namespace ParallelBuildsMonitor
         #endregion Members And Properties
 
         #region Creator and Constructors
+
         private DataModel()
         {
         }
@@ -73,10 +85,10 @@ namespace ParallelBuildsMonitor
             CollectPerformanceData(true);
             MaxParallelBuilds = 0;
             AllProjectsCount = 0;
-            CurrentBuilds.Clear();
-            FinishedBuilds.Clear();
-            CpuUsage.Clear();
-            HddUsage.Clear();
+            currentBuilds.Clear();
+            finishedBuilds.Clear();
+            cpuUsage.Clear();
+            hddUsage.Clear();
         }
         #endregion
 
@@ -107,10 +119,10 @@ namespace ParallelBuildsMonitor
         /// <param name="projectKey"></param>
         public void AddCurrentBuild(string projectKey)
         {
-            CurrentBuilds[projectKey] = DateTime.Now;
-            if (CurrentBuilds.Count > MaxParallelBuilds)
+            currentBuilds[projectKey] = DateTime.Now;
+            if (currentBuilds.Count > MaxParallelBuilds)
             {
-                MaxParallelBuilds = CurrentBuilds.Count;
+                MaxParallelBuilds = currentBuilds.Count;
             }
         }
 
@@ -125,9 +137,9 @@ namespace ParallelBuildsMonitor
                 return false;
 
             DateTime start = new DateTime(CurrentBuilds[projectKey].Ticks - StartTime.Ticks);
-            CurrentBuilds.Remove(projectKey);
+            currentBuilds.Remove(projectKey);
             DateTime end = new DateTime(DateTime.Now.Ticks - StartTime.Ticks);
-            FinishedBuilds.Add(new BuildInfo(projectKey, start.Ticks, end.Ticks, wasBuildSucceessful));
+            finishedBuilds.Add(new BuildInfo(projectKey, start.Ticks, end.Ticks, wasBuildSucceessful));
             TimeSpan s = end - start;
             DateTime t = new DateTime(s.Ticks);
 
@@ -197,11 +209,11 @@ namespace ParallelBuildsMonitor
             long sleep = SleepTime(CpuUsage.Count);
             long ticks = DateTime.Now.Ticks;
             if (forceAdd || CpuUsage.Count == 0 || ticks > CpuUsage[CpuUsage.Count - 1].Item1 + sleep)
-                CpuUsage.Add(new Tuple<long, float>(ticks, cpuCounter.NextValue()));
+                cpuUsage.Add(new Tuple<long, float>(ticks, cpuCounter.NextValue()));
             sleep = SleepTime(HddUsage.Count);
             ticks = DateTime.Now.Ticks;
             if (forceAdd || HddUsage.Count == 0 || ticks > HddUsage[HddUsage.Count - 1].Item1 + sleep)
-                HddUsage.Add(new Tuple<long, float>(ticks, hddCounter.NextValue()));
+                hddUsage.Add(new Tuple<long, float>(ticks, hddCounter.NextValue()));
         }
 
         #endregion CPU+HDDPerformance
