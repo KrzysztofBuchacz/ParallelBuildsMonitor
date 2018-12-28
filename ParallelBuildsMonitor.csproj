@@ -71,6 +71,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="DataModel.cs" />
     <Compile Include="GraphControl.cs" />
     <Compile Include="ParallelBuildsMonitorWindow.cs" />
     <Compile Include="ParallelBuildsMonitorWindowCommand.cs" />
@@ -79,6 +80,7 @@
     </Compile>
     <Compile Include="ParallelBuildsMonitorWindowPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />

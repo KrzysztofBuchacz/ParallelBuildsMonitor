@@ -13,26 +13,13 @@ using System.Diagnostics;
 
 namespace ParallelBuildsMonitor
 {
-    public struct BuildInfo
-    {
-        public BuildInfo(string n, long b, long e, bool s)
-        {
-            name = n;
-            begin = b;
-            end = e;
-            success = s;
-        }
-        public long begin;
-        public long end;
-        public string name;
-        public bool success;
-    }
-
     /// <summary>
     /// Command handler
     /// </summary>
     internal sealed class ParallelBuildsMonitorWindowCommand
     {
+        #region Members
+
         /// <summary>
         /// Command ID.
         /// </summary>
@@ -47,24 +34,35 @@ namespace ParallelBuildsMonitor
         /// VS Package that provides this command, not null.
         /// </summary>
         private readonly Package package;
-
-        public DateTime buildTime;
-        public EnvDTE.BuildEvents buildEvents;
         public EnvDTE.SolutionEvents solutionEvents;
-        public Dictionary<string, DateTime> currentBuilds = new Dictionary<string, DateTime>();
-        public List<BuildInfo> finishedBuilds = new List<BuildInfo>();
-        public List<Tuple<long, float>> cpuUsage = new List<Tuple<long, float>>();
-        public List<Tuple<long, float>> hddUsage = new List<Tuple<long, float>>();
-        public static string addinName = "VSBuildMonitor";
-        public static string commandToggle = "ToggleCPPH";
-        public static string commandFixIncludes = "FixIncludes";
-        public static string commandFindReplaceGUIDsInSelection = "FindReplaceGUIDsInSelection";
-        public int maxParallelBuilds = 0;
-        public int allProjectsCount = 0;
-        public int outputCounter = 0;
-        PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-        PerformanceCounter hddCounter = new PerformanceCounter("PhysicalDisk", "% Disk Time", "_Total");
+        public EnvDTE.BuildEvents buildEvents;
+        public static string addinName = "VSBuildMonitor";  //is it used anywhere?
+        public static string commandToggle = "ToggleCPPH";  //is it used anywhere?
+        public static string commandFixIncludes = "FixIncludes";   //is it used anywhere?
+        public static string commandFindReplaceGUIDsInSelection = "FindReplaceGUIDsInSelection";   //is it used anywhere?
 
+        #endregion Members
+
+        #region Properties
+
+        /// <summary>
+        /// Gets the instance of the command.
+        /// </summary>
+        public static ParallelBuildsMonitorWindowCommand Instance { get; private set; }
+
+        /// <summary>
+        /// Gets the service provider from the owner package.
+        /// </summary>
+        public IServiceProvider ServiceProvider { get { return this.package; } }
+
+        /// <summary>
+        /// Convinient accessor to data.
+        /// </summary>
+        private static DataModel DataModel { get { return DataModel.Instance; } }
+
+        #endregion Properties
+
+        #region Initialization
         /// <summary>
         /// Initializes a new instance of the <see cref="ParallelBuildsMonitorWindowCommand"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
@@ -96,25 +94,6 @@ namespace ParallelBuildsMonitor
             buildEvents.OnBuildProjConfigDone += new _dispBuildEvents_OnBuildProjConfigDoneEventHandler(BuildEvents_OnBuildProjConfigDone);
         }
 
-        /// <summary>
-        /// Gets the instance of the command.
-        /// </summary>
-        public static ParallelBuildsMonitorWindowCommand Instance
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Gets the service provider from the owner package.
-        /// </summary>
-        public IServiceProvider ServiceProvider
-        {
-            get
-            {
-                return this.package;
-            }
-        }
 
         /// <summary>
         /// Initializes the singleton instance of the command.
@@ -124,6 +103,7 @@ namespace ParallelBuildsMonitor
         {
             Instance = new ParallelBuildsMonitorWindowCommand(package);
         }
+        #endregion Initialization
 
         /// <summary>
         /// Shows the tool window when the menu item is clicked.
@@ -145,72 +125,55 @@ namespace ParallelBuildsMonitor
             Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(windowFrame.Show());
         }
 
-        void solutionEvents_AfterClosing()
+        #region IdeEvents
+
+        void BuildEvents_OnBuildProjConfigBegin(string Project, string ProjectConfig, string Platform, string SolutionConfig)
         {
-            currentBuilds.Clear();
-            finishedBuilds.Clear();
-            cpuUsage.Clear();
-            hddUsage.Clear();
-            ViewModel.Instance.IsGraphDrawn = false;
-            allProjectsCount = 0;
-            GraphControl.Instance.InvalidateVisual();
+            DataModel.AddCurrentBuild(MakeKey(Project, ProjectConfig, Platform));
         }
 
         void BuildEvents_OnBuildProjConfigDone(string Project, string ProjectConfig, string Platform, string SolutionConfig, bool Success)
         {
-            string key = MakeKey(Project, ProjectConfig, Platform);
-            if (currentBuilds.ContainsKey(key))
+            string projectKey = MakeKey(Project, ProjectConfig, Platform);
+            if (DataModel.FinishCurrentBuild(projectKey, Success))
             {
-                outputCounter++;
-                DateTime start = new DateTime(currentBuilds[key].Ticks - buildTime.Ticks);
-                currentBuilds.Remove(key);
-                DateTime end = new DateTime(DateTime.Now.Ticks - buildTime.Ticks);
-                finishedBuilds.Add(new BuildInfo(key, start.Ticks, end.Ticks, Success));
-                TimeSpan s = end - start;
-                DateTime t = new DateTime(s.Ticks);
-                StringBuilder b = new StringBuilder(outputCounter.ToString("D3"));
-                b.Append(" ");
-                b.Append(key);
-                int space = 50 - key.Length;
-                if (space > 0)
-                {
-                    b.Append(' ', space);
-                }
-                b.Append(" \t");
-                b.Append(SecondsToString(start.Ticks));
-                b.Append("\t");
-                b.Append(SecondsToString(t.Ticks));
-                b.Append("\n");
-                GraphControl.Instance.InvalidateVisual();
+                GraphControl.Instance.InvalidateVisual(); //TODO. When GraphControl observe DataModel this is redundant
             }
         }
+
+        void BuildEvents_OnBuildBegin(vsBuildScope Scope, vsBuildAction Action)
+        {
+            DataModel.CollectPerformanceData(true);   //TODO: I wouldn't collect data here. Problem is that few projects starts in the same moment, so we have overload. I would just get performance statistics in the same time interval.
+            DTE2 dte = (DTE2)(package as IServiceProvider).GetService(typeof(SDTE));
+            int allProjectsCount = 0;
+            foreach (Project project in dte.Solution.Projects)
+                allProjectsCount += GetProjectsCount(project);
+            DataModel.BuildBegin(allProjectsCount);
+            GraphControl.Instance.BuildBegin();
+        }
+
+        void BuildEvents_OnBuildDone(vsBuildScope Scope, vsBuildAction Action)
+        {
+            DataModel.CollectPerformanceData(true);
+            DataModel.BuildDone();
+            GraphControl.Instance.BuildDone();
+        }
+
+        void solutionEvents_AfterClosing()
+        {
+            DataModel.Reset();
+            GraphControl.Instance.InvalidateVisual();
+        }
+
+        #endregion IdeEvents
+
+        #region HelperMethods
 
         string MakeKey(string Project, string ProjectConfig, string Platform)
         {
             FileInfo fi = new FileInfo(Project);
             string key = fi.Name;// + "|" + ProjectConfig + "|" + Platform;
             return key;
-        }
-
-        void BuildEvents_OnBuildProjConfigBegin(string Project, string ProjectConfig, string Platform, string SolutionConfig)
-        {
-            string key = MakeKey(Project, ProjectConfig, Platform);
-            currentBuilds[key] = DateTime.Now;
-            if (currentBuilds.Count > maxParallelBuilds)
-            {
-                maxParallelBuilds = currentBuilds.Count;
-            }
-        }
-
-        void BuildEvents_OnBuildDone(vsBuildScope Scope, vsBuildAction Action)
-        {
-            GraphControl.Instance.timer.Enabled = false;
-            GraphControl.Instance.isBuilding = false;
-            TimeSpan s = DateTime.Now - buildTime;
-            DateTime t = new DateTime(s.Ticks);
-            string msg = "Build Total Time: " + SecondsToString(t.Ticks) + ", max. number of parallel builds: " + maxParallelBuilds.ToString() + "\n";
-            CollectPerformanceData(true);
-            GraphControl.Instance.InvalidateVisual();
         }
 
         int GetProjectsCount(Project project)
@@ -233,57 +196,8 @@ namespace ParallelBuildsMonitor
             return count;
         }
 
-        void BuildEvents_OnBuildBegin(vsBuildScope Scope, vsBuildAction Action)
-        {
-            buildTime = DateTime.Now;
-            CollectPerformanceData(true);
-            maxParallelBuilds = 0;
-            allProjectsCount = 0;
-            DTE2 dte = (DTE2)(package as IServiceProvider).GetService(typeof(SDTE));
-            foreach (Project project in dte.Solution.Projects)
-                allProjectsCount += GetProjectsCount(project);
-            outputCounter = 0;
-            GraphControl.Instance.timer.Enabled = true;
-            GraphControl.Instance.timer.Interval = 1000;
-            GraphControl.Instance.timer.Elapsed += new ElapsedEventHandler(timer_Tick);
-            currentBuilds.Clear();
-            finishedBuilds.Clear();
-            cpuUsage.Clear();
-            hddUsage.Clear();
-            GraphControl.Instance.scrollLast = true;
-            GraphControl.Instance.isBuilding = true;
-            GraphControl.Instance.InvalidateVisual();
-        }
+        #endregion HelperMethods
 
-        public long PercentageProcessorUse()
-        {
-            long percentage = 0;
-            if (maxParallelBuilds > 0)
-            {
-                long nowTicks = DateTime.Now.Ticks;
-                long maxTick = 0;
-                long totTicks = 0;
-                foreach (BuildInfo info in finishedBuilds)
-                {
-                    totTicks += info.end - info.begin;
-                    if (info.end > maxTick)
-                    {
-                        maxTick = info.end;
-                    }
-                }
-                foreach (DateTime start in currentBuilds.Values)
-                {
-                    maxTick = nowTicks - buildTime.Ticks;
-                    totTicks += nowTicks - start.Ticks;
-                }
-                totTicks /= maxParallelBuilds;
-                if (maxTick > 0)
-                {
-                    percentage = totTicks * 100 / maxTick;
-                }
-            }
-            return percentage;
-        }
 
         public static string SecondsToString(long ticks)
         {
@@ -314,40 +228,6 @@ namespace ParallelBuildsMonitor
                 }
             }
             return ret;
-        }
-
-        
-        long SleepTime(int count)
-        {
-            long sleep = 10000000; // 1 second
-            if (count > 60)
-                sleep *= 10; // 10 second
-            else if (count > 1800)
-                sleep *= 60; // 1 minute
-            return sleep;
-        }
-
-        void CollectPerformanceData(bool forceAdd)
-        {
-            long sleep = SleepTime(cpuUsage.Count);
-            long ticks = DateTime.Now.Ticks;
-            if (forceAdd || cpuUsage.Count == 0 || ticks > cpuUsage[cpuUsage.Count - 1].Item1 + sleep)
-                cpuUsage.Add(new Tuple<long, float>(ticks, cpuCounter.NextValue()));
-            sleep = SleepTime(hddUsage.Count);
-            ticks = DateTime.Now.Ticks;
-            if (forceAdd || hddUsage.Count == 0 || ticks > hddUsage[hddUsage.Count - 1].Item1 + sleep)
-                hddUsage.Add(new Tuple<long, float>(ticks, hddCounter.NextValue()));
-        }
-
-        void timer_Tick(object sender, ElapsedEventArgs e)
-        {
-            CollectPerformanceData(false);
-            GraphControl.Instance.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background,
-                 new System.Action(() =>
-                 {
-                     GraphControl.Instance.InvalidateVisual();
-                 }));
-
         }
     }
 }
