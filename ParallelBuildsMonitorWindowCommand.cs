@@ -148,7 +148,7 @@ namespace ParallelBuildsMonitor
             int allProjectsCount = 0;
             foreach (Project project in dte.Solution.Projects)
                 allProjectsCount += GetProjectsCount(project);
-            DataModel.BuildBegin(allProjectsCount);
+            DataModel.BuildBegin(System.IO.Path.GetFileName(dte.Solution.FileName), allProjectsCount);
             GraphControl.Instance.BuildBegin();
         }
 

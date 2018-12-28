@@ -31,6 +31,7 @@ namespace ParallelBuildsMonitor
     {
         #region Properties
 
+        public string SolutionName { get; private set; } 
         /// <summary>
         /// Holds point in time when entire build started (Solution).
         /// </summary>
@@ -97,9 +98,10 @@ namespace ParallelBuildsMonitor
         /// <summary>
         /// Call this method when starting colleting statistics for solution (.sln)
         /// </summary>
-        public void BuildBegin(int allProjectsCount)
+        public void BuildBegin(string solutionName, int allProjectsCount)
         {
             Reset();
+            SolutionName = solutionName;
             StartTime = DateTime.Now;
             this.AllProjectsCount = allProjectsCount;
 

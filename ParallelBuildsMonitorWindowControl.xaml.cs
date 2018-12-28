@@ -97,10 +97,10 @@
 
         private void MenuItem_ClickSaveGraph(object sender, RoutedEventArgs e)
         {
-            string date = DateTime.Now.ToString("yyyy-MM-dd HH.mm.ss"); //Format "2018-05-08 01.09.07" to preserve correct sorting
+            string date = DataModel.Instance.StartTime.ToString("yyyy-MM-dd HH.mm.ss"); //Format "2018-05-08 01.09.07" to preserve correct sorting
 
             Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
-            dlg.FileName = "PBM " + date;                 // Default file name          //TODO: Should be solution name or project name (when compiling single project) instead of "PBM"
+            dlg.FileName = "PBM " + DataModel.Instance.SolutionName + " " + date;
             dlg.DefaultExt = ".png";                      // Default file extension
             dlg.Filter = "Portable Images (.png)|*.png";  // Filter files by extension
 
