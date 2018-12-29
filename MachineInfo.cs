@@ -22,9 +22,10 @@ namespace ParallelBuildsMonitor
         public bool HyperThreadingEnabled { get; private set; } = false;
         public int TotalPhysicalMemoryInGB { get; private set; } = 0;
         public int PhysicalHDDsNumber { get; private set; } = 0;
-        //public ReadOnlyCollection<UInt32> HddsSpeed { get { return hddsSpeed.AsReadOnly(); } } //TODO: Missing implementation.
+        public ReadOnlyCollection<DetectSsd.DriveType> HddsTypes { get { return hddsTypes.AsReadOnly(); } }
 
         public List<UInt32> cpusSpeedInMHz = new List<UInt32>();
+        public List<DetectSsd.DriveType> hddsTypes = new List<DetectSsd.DriveType>();
         private string separatorCached;
 
         static private MachineInfo instance;
@@ -75,6 +76,22 @@ namespace ParallelBuildsMonitor
                 }
             }
             catch { }
+
+            if (PhysicalHDDsNumber > 0)
+            {
+                for (int ii = 0; ii < PhysicalHDDsNumber; ii++)
+                {
+                    try
+                    { // Not sure if try{} catch{} is needed here
+                        DetectSsd.DriveType driveType = DetectSsd.IsSsdDrive(ii);
+                        hddsTypes.Add(driveType);
+                    }
+                    catch
+                    {
+                        hddsTypes.Add(DetectSsd.DriveType.Unknown);
+                    }
+                }
+            }
         }
 
         public override string ToString()
@@ -96,7 +113,7 @@ namespace ParallelBuildsMonitor
                 list.Add("Cores: " + PhysicalCoresNumber.ToString());
             if (CpusSpeedInMHz.Count > 0)
             {
-                bool AreAllValuesTheSame = !CpusSpeedInMHz.Any(o => o != CpusSpeedInMHz[0]);
+                bool AreAllValuesTheSame = !CpusSpeedInMHz.Any(oo => oo != CpusSpeedInMHz[0]);
                 List<string> values = new List<string>();
                 foreach (UInt32 value in CpusSpeedInMHz)
                 {
@@ -111,7 +128,22 @@ namespace ParallelBuildsMonitor
             if (TotalPhysicalMemoryInGB > 0)
                 list.Add("RAM: " + TotalPhysicalMemoryInGB.ToString() + "GB");
             if (PhysicalHDDsNumber > 0)
-                list.Add("HDDs: " + PhysicalHDDsNumber);
+            {
+                List<DetectSsd.DriveType> values = new List<DetectSsd.DriveType>();
+                bool AreAllValuesTheSame = !HddsTypes.Any(oo => oo != HddsTypes[0]);
+                foreach (DetectSsd.DriveType value in HddsTypes)
+                {
+                    if (AreAllValuesTheSame)
+                    { // Add only one value if all the same type
+                        if (DetectSsd.DriveType.Unknown != value)
+                            values.Add(value); //If all Unknown then do not add any info.
+                        break;
+                    }
+                    values.Add(value);
+                }
+                list.Add("HDD: " + PhysicalHDDsNumber + ((values.Count > 1) ? ":" : "") + ((values.Count > 0) ? " " : "") + string.Join(", ", values));
+            }
+
 
             separatorCached = separator;
             info = string.Join(separator, list);
