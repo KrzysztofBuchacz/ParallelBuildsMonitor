@@ -72,6 +72,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="DataModel.cs" />
+    <Compile Include="DetectSsd.cs" />
     <Compile Include="GraphControl.cs" />
     <Compile Include="MachineInfo.cs" />
     <Compile Include="ParallelBuildsMonitorWindow.cs" />
