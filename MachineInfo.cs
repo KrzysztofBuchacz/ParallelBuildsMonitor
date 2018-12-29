@@ -7,8 +7,11 @@ using System.Linq;
 namespace ParallelBuildsMonitor
 {
     /// <summary>
-    /// This call collect information about machine and return human readable string.
+    /// MachineInfo collect information about machine configuration and return as human readable string.
     /// </summary>
+    /// <remarks>
+    /// Informations are collected only once and then cached.
+    /// </remarks>
     public class MachineInfo
     {
         public string MachineName { get; private set; }
@@ -22,6 +25,7 @@ namespace ParallelBuildsMonitor
         //public ReadOnlyCollection<UInt32> HddsSpeed { get { return hddsSpeed.AsReadOnly(); } } //TODO: Missing implementation.
 
         public List<UInt32> cpusSpeedInMHz = new List<UInt32>();
+        private string separatorCached;
 
         static private MachineInfo instance;
         static public MachineInfo Instance
@@ -63,11 +67,14 @@ namespace ParallelBuildsMonitor
             if (PhysicalCoresNumber != LogicalCoresNumber)
                 HyperThreadingEnabled = true;
 
-            foreach (System.IO.DriveInfo info in System.IO.DriveInfo.GetDrives())
-            {
-                if (info.DriveType == System.IO.DriveType.Fixed)
+            try
+            { // Not sure if try{} catch{} is needed here
+                foreach (var item in new System.Management.ManagementObjectSearcher("SELECT DeviceID, TotalHeads FROM Win32_DiskDrive").Get())
+                {
                     PhysicalHDDsNumber += 1;
+                }
             }
+            catch { }
         }
 
         public override string ToString()
@@ -77,7 +84,7 @@ namespace ParallelBuildsMonitor
 
         public string ToString(string separator)
         {
-            if (info != null)
+            if (separatorCached == separator && info != null)
                 return info;
 
             List<string> list = new List<string>();
@@ -89,15 +96,15 @@ namespace ParallelBuildsMonitor
                 list.Add("Cores: " + PhysicalCoresNumber.ToString());
             if (CpusSpeedInMHz.Count > 0)
             {
-                bool AreAllValuesTheSame = CpusSpeedInMHz.Any(o => o != CpusSpeedInMHz[0]);
+                bool AreAllValuesTheSame = !CpusSpeedInMHz.Any(o => o != CpusSpeedInMHz[0]);
                 List<string> values = new List<string>();
                 foreach (UInt32 value in CpusSpeedInMHz)
                 {
-                    values.Add(String.Format("{0:0.0}GHz", ((double)value) / 1000, 1)); //This also do the rounding
+                    values.Add(String.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0}GHz", ((double)value) / 1000, 1)); //This also do the rounding
                     if (AreAllValuesTheSame)
                         break;
                 }
-                list.Add("CPU Speed: " + string.Join(", ", values));
+                list.Add("CPU" + ((values.Count > 1) ? "s" : "") + " Speed: " + string.Join(", ", values));
             }
             if (PhysicalCoresNumber > 0)
                 list.Add("Hyper Threading: " + (HyperThreadingEnabled ? "Enabled" : "Disabled"));
@@ -106,6 +113,7 @@ namespace ParallelBuildsMonitor
             if (PhysicalHDDsNumber > 0)
                 list.Add("HDDs: " + PhysicalHDDsNumber);
 
+            separatorCached = separator;
             info = string.Join(separator, list);
 
             return info;
