@@ -202,7 +202,7 @@ namespace ParallelBuildsMonitor
                     FormattedText dummyText = new FormattedText("A0", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
 
                     double rowHeight = dummyText.Height + 1;
-                    int linesCount = DataModel.CurrentBuilds.Count + DataModel.FinishedBuilds.Count + 1 + 1 + 1; // 1 for status, 1 for CPU, 1 for HDD
+                    int linesCount = DataModel.CurrentBuilds.Count + DataModel.FinishedBuilds.Count + 1 + 1 + 1 + 1; // 1 for header, 1 for status, 1 for CPU, 1 for HDD
                     double totalHeight = rowHeight * linesCount;
 
                     Height = totalHeight;
@@ -252,19 +252,39 @@ namespace ParallelBuildsMonitor
                     FormattedText iint = new FormattedText(i.ToString(intFormat) + " ", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                     maxStringLength += 5 + iint.Width;
 
+                    i = 0;
+                    { // Draw header
+                        string headerSeparator = "  |  ";
+                        string headerText = DataModel.SolutionName + headerSeparator + DataModel.StartTime.ToString("yyyy-MM-dd HH:mm:ss") + headerSeparator + MachineInfo.Instance.ToString(headerSeparator); // Data format "2018-05-08 01.09.07" to preserve correct sorting
+
+                        // Draw text
+                        FormattedText itext = new FormattedText(headerText, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                        {
+                            // Cut text when it is too long for window. Probably correct solution is to add horizontal scrollbar to window.
+                            // Set a maximum width and height. If the text overflows these values, an ellipsis "..." appears.
+                            itext.MaxTextWidth = RenderSize.Width;
+                            itext.MaxTextHeight = rowHeight;
+                        }
+                        drawingContext.DrawText(itext, new Point(1, i * rowHeight));
+
+                        // Draw separator
+                        drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
+                        i++;
+                    }
+
                     Brush greenGradientBrush = new LinearGradientBrush(Colors.MediumSeaGreen, Colors.DarkGreen, new Point(0, 0), new Point(0, 1));
                     Brush redGradientBrush = new LinearGradientBrush(Colors.IndianRed, Colors.DarkRed, new Point(0, 0), new Point(0, 1));
-                    for (i = 0; i < DataModel.FinishedBuilds.Count; i++)
+                    foreach (BuildInfo item in DataModel.FinishedBuilds)
                     {
-                        Brush solidBrush = DataModel.FinishedBuilds[i].success ? greenSolidBrush : redSolidBrush;
-                        Brush gradientBrush = DataModel.FinishedBuilds[i].success ? greenGradientBrush : redGradientBrush;
-                        DateTime span = new DateTime(DataModel.FinishedBuilds[i].end - DataModel.FinishedBuilds[i].begin);
+                        Brush solidBrush = item.success ? greenSolidBrush : redSolidBrush;
+                        Brush gradientBrush = item.success ? greenGradientBrush : redGradientBrush;
+                        DateTime span = new DateTime(item.end - item.begin);
                         string time = ParallelBuildsMonitorWindowCommand.SecondsToString(span.Ticks);
-                        FormattedText itext = new FormattedText((i + 1).ToString(intFormat) + " " + DataModel.FinishedBuilds[i].name, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, solidBrush);
+                        FormattedText itext = new FormattedText((i + 1).ToString(intFormat) + " " + item.name, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, solidBrush);
                         drawingContext.DrawText(itext, new Point(1, i * rowHeight));
                         Rect r = new Rect();
-                        r.X = maxStringLength + (int)((DataModel.FinishedBuilds[i].begin) * (long)(RenderSize.Width - maxStringLength) / maxTick);
-                        r.Width = maxStringLength + (int)((DataModel.FinishedBuilds[i].end) * (long)(RenderSize.Width - maxStringLength) / maxTick) - r.X;
+                        r.X = maxStringLength + (int)((item.begin) * (long)(RenderSize.Width - maxStringLength) / maxTick);
+                        r.Width = maxStringLength + (int)((item.end) * (long)(RenderSize.Width - maxStringLength) / maxTick) - r.X;
                         if (r.Width == 0)
                         {
                             r.Width = 1;
@@ -279,6 +299,7 @@ namespace ParallelBuildsMonitor
                             drawingContext.DrawText(itime, new Point(r.Right - timeLen, i * rowHeight));
                         }
                         drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
+                        i++;
                     }
 
                     Brush blueGradientBrush = new LinearGradientBrush(Colors.LightBlue, Colors.DarkBlue, new Point(0, 0), new Point(0, 1));
@@ -321,7 +342,10 @@ namespace ParallelBuildsMonitor
                         FormattedText itext = new FormattedText(line, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                         drawingContext.DrawText(itext, new Point(1, i * rowHeight));
                     }
-                    drawingContext.DrawLine(grid, new Point(maxStringLength, 0), new Point(maxStringLength, i * rowHeight));
+
+                    // Draw vertical line that separate project names from Gantt chart
+                    drawingContext.DrawLine(grid, new Point(maxStringLength, 1 * rowHeight), new Point(maxStringLength, i * rowHeight));
+
                     drawingContext.DrawLine(new Pen(atLeastOneError ? redSolidBrush : greenSolidBrush, 1), new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
 
                     DateTime dt = new DateTime(maxTick);
