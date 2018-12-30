@@ -59,7 +59,7 @@ namespace ParallelBuildsMonitor
         private static double performanceTimerInterval = 1000; // 1000 means collect data every 1s.
         private System.Timers.Timer performanceTimer = new System.Timers.Timer(performanceTimerInterval);
 
-        #endregion Members And Properties
+        #endregion Members
 
         #region Creator and Constructors
 

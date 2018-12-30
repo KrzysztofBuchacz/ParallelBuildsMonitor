@@ -11,14 +11,14 @@
 
 
     /// <summary>
-    /// Interaction logic for ParallelBuildsMonitorWindowControl.
+    /// Interaction logic for PBMControl.
     /// </summary>
-    public partial class ParallelBuildsMonitorWindowControl : UserControl
+    public partial class PBMControl : UserControl
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ParallelBuildsMonitorWindowControl"/> class.
         /// </summary>
-        public ParallelBuildsMonitorWindowControl()
+        public PBMControl()
         {
             this.InitializeComponent();
             this.DataContext = ViewModel.Instance;

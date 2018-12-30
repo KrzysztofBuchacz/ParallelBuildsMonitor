@@ -196,10 +196,10 @@ namespace ParallelBuildsMonitor
                         return;
                     }
 
-                    if (ParallelBuildsMonitorWindowCommand.Instance == null)
+                    if (PBMCommand.Instance == null)
                         return;
 
-                    DTE2 dte = (DTE2)ParallelBuildsMonitorWindowCommand.Instance.ServiceProvider.GetService(typeof(DTE));
+                    DTE2 dte = (DTE2)PBMCommand.Instance.ServiceProvider.GetService(typeof(DTE));
 
                     if (dte == null)
                         return;
@@ -289,7 +289,7 @@ namespace ParallelBuildsMonitor
                         Brush solidBrush = item.success ? greenSolidBrush : redSolidBrush;
                         Brush gradientBrush = item.success ? greenGradientBrush : redGradientBrush;
                         DateTime span = new DateTime(item.end - item.begin);
-                        string time = ParallelBuildsMonitorWindowCommand.SecondsToString(span.Ticks);
+                        string time = PBMCommand.SecondsToString(span.Ticks);
                         FormattedText itext = new FormattedText((i + 1).ToString(intFormat) + " " + item.name, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, solidBrush);
                         drawingContext.DrawText(itext, new Point(1, i * rowHeight));
                         Rect r = new Rect();
@@ -359,7 +359,7 @@ namespace ParallelBuildsMonitor
                     drawingContext.DrawLine(new Pen(atLeastOneError ? redSolidBrush : greenSolidBrush, 1), new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
 
                     DateTime dt = new DateTime(maxTick);
-                    string s = ParallelBuildsMonitorWindowCommand.SecondsToString(dt.Ticks);
+                    string s = PBMCommand.SecondsToString(dt.Ticks);
                     FormattedText maxTime = new FormattedText(s, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                     double m = maxTime.Width;
                     drawingContext.DrawText(maxTime, new Point(RenderSize.Width - m, i * rowHeight));

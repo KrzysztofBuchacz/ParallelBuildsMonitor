@@ -32,10 +32,10 @@ namespace ParallelBuildsMonitor
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [ProvideToolWindow(typeof(ParallelBuildsMonitorWindow))]
-    [Guid(ParallelBuildsMonitorWindowPackage.PackageGuidString)]
+    [ProvideToolWindow(typeof(PBMWindow))]
+    [Guid(Package.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-    public sealed class ParallelBuildsMonitorWindowPackage : Package
+    public sealed class Package : Microsoft.VisualStudio.Shell.Package
     {
         /// <summary>
         /// ParallelBuildsMonitorWindowPackage GUID string.
@@ -43,9 +43,9 @@ namespace ParallelBuildsMonitor
         public const string PackageGuidString = "3fe81f94-00df-4a3d-bff1-ae20f305aedb";
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ParallelBuildsMonitorWindow"/> class.
+        /// Initializes a new instance of the <see cref="PBMWindow"/> class.
         /// </summary>
-        public ParallelBuildsMonitorWindowPackage()
+        public Package()
         {
             // Inside this method you can place any initialization code that does not require
             // any Visual Studio service because at this point the package object is created but
@@ -61,7 +61,7 @@ namespace ParallelBuildsMonitor
         /// </summary>
         protected override void Initialize()
         {
-            ParallelBuildsMonitorWindowCommand.Initialize(this);
+            PBMCommand.Initialize(this);
             base.Initialize();
         }
 

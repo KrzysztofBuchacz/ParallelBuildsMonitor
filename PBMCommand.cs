@@ -16,7 +16,7 @@ namespace ParallelBuildsMonitor
     /// <summary>
     /// Command handler
     /// </summary>
-    internal sealed class ParallelBuildsMonitorWindowCommand
+    internal sealed class PBMCommand
     {
         #region Members
 
@@ -33,7 +33,7 @@ namespace ParallelBuildsMonitor
         /// <summary>
         /// VS Package that provides this command, not null.
         /// </summary>
-        private readonly Package package;
+        private readonly Microsoft.VisualStudio.Shell.Package package;
         public EnvDTE.SolutionEvents solutionEvents;
         public EnvDTE.BuildEvents buildEvents;
         public static string addinName = "VSBuildMonitor";  //is it used anywhere?
@@ -48,7 +48,7 @@ namespace ParallelBuildsMonitor
         /// <summary>
         /// Gets the instance of the command.
         /// </summary>
-        public static ParallelBuildsMonitorWindowCommand Instance { get; private set; }
+        public static PBMCommand Instance { get; private set; }
 
         /// <summary>
         /// Gets the service provider from the owner package.
@@ -64,11 +64,11 @@ namespace ParallelBuildsMonitor
 
         #region Initialization
         /// <summary>
-        /// Initializes a new instance of the <see cref="ParallelBuildsMonitorWindowCommand"/> class.
+        /// Initializes a new instance of the <see cref="PBMCommand"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
-        private ParallelBuildsMonitorWindowCommand(Package package)
+        private PBMCommand(Microsoft.VisualStudio.Shell.Package package)
         {
             if (package == null)
             {
@@ -99,9 +99,9 @@ namespace ParallelBuildsMonitor
         /// Initializes the singleton instance of the command.
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
-        public static void Initialize(Package package)
+        public static void Initialize(Microsoft.VisualStudio.Shell.Package package)
         {
-            Instance = new ParallelBuildsMonitorWindowCommand(package);
+            Instance = new PBMCommand(package);
         }
         #endregion Initialization
 
@@ -115,7 +115,7 @@ namespace ParallelBuildsMonitor
             // Get the instance number 0 of this tool window. This window is single instance so this instance
             // is actually the only one.
             // The last flag is set to true so that if the tool window does not exists it will be created.
-            ToolWindowPane window = this.package.FindToolWindow(typeof(ParallelBuildsMonitorWindow), 0, true);
+            ToolWindowPane window = this.package.FindToolWindow(typeof(PBMWindow), 0, true);
             if ((null == window) || (null == window.Frame))
             {
                 throw new NotSupportedException("Cannot create tool window");
