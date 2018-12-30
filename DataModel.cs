@@ -56,7 +56,8 @@ namespace ParallelBuildsMonitor
 
         private PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
         private PerformanceCounter hddCounter = new PerformanceCounter("PhysicalDisk", "% Disk Time", "_Total");
-        private Timer timer = new Timer();
+        private static double performanceTimerInterval = 1000; // 1000 means collect data every 1s.
+        private System.Timers.Timer performanceTimer = new System.Timers.Timer(performanceTimerInterval);
 
         #endregion Members And Properties
 
@@ -64,6 +65,7 @@ namespace ParallelBuildsMonitor
 
         private DataModel()
         {
+            performanceTimer.Elapsed += new ElapsedEventHandler(PerformanceTimerEventTick);
         }
 
         private static DataModel instance = null;
@@ -83,7 +85,6 @@ namespace ParallelBuildsMonitor
             //instance = new DataModel(); // It doesn't work! So do it manually...
 
             StartTime = DateTime.Now;
-            CollectPerformanceData(true);
             MaxParallelBuilds = 0;
             AllProjectsCount = 0;
             currentBuilds.Clear();
@@ -104,15 +105,13 @@ namespace ParallelBuildsMonitor
             SolutionName = solutionName;
             StartTime = DateTime.Now;
             this.AllProjectsCount = allProjectsCount;
-
-            timer.Interval = 1000;
-            timer.Elapsed += new ElapsedEventHandler(timer_Tick);
-            timer.Enabled = true;
+            performanceTimer.Start();
+            CollectPerformanceData(); // Collect 1st sample. Second will be taken after performanceTimerInterval
         }
 
         public void BuildDone()
         {
-            timer.Enabled = false;
+            performanceTimer.Stop();
         }
 
         /// <summary>
@@ -188,36 +187,20 @@ namespace ParallelBuildsMonitor
 
         #endregion HelperMethods
 
-        #region CPU+HDDPerformance
+        #region CPU, HDD Performance
 
-        void timer_Tick(object sender, ElapsedEventArgs e)
+        private void PerformanceTimerEventTick(object sender, ElapsedEventArgs e)
         {
-            CollectPerformanceData(false);
+            CollectPerformanceData();
         }
 
-        //TODO: This makes CPU Average is wrong
-        long SleepTime(int count)
+        private void CollectPerformanceData()
         {
-            long sleep = 10000000; // 1 second
-            if (count > 60)
-                sleep *= 10; // 10 second
-            else if (count > 1800)
-                sleep *= 60; // 1 minute
-            return sleep;
-        }
-
-        public void CollectPerformanceData(bool forceAdd)
-        {
-            long sleep = SleepTime(CpuUsage.Count);
             long ticks = DateTime.Now.Ticks;
-            if (forceAdd || CpuUsage.Count == 0 || ticks > CpuUsage[CpuUsage.Count - 1].Item1 + sleep)
-                cpuUsage.Add(new Tuple<long, float>(ticks, cpuCounter.NextValue()));
-            sleep = SleepTime(HddUsage.Count);
-            ticks = DateTime.Now.Ticks;
-            if (forceAdd || HddUsage.Count == 0 || ticks > HddUsage[HddUsage.Count - 1].Item1 + sleep)
-                hddUsage.Add(new Tuple<long, float>(ticks, hddCounter.NextValue()));
+            cpuUsage.Add(new Tuple<long, float>(ticks, cpuCounter.NextValue()));
+            hddUsage.Add(new Tuple<long, float>(ticks, hddCounter.NextValue()));
         }
 
-        #endregion CPU+HDDPerformance
+        #endregion CPU, HDD Performance
     }
 }
