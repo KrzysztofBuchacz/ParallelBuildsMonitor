@@ -32,7 +32,8 @@ namespace ParallelBuildsMonitor
         Pen grid = new Pen(new SolidColorBrush(Colors.LightGray), 1.0);
         Pen cpuPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
         Pen hddPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
-        public Timer refreshTimer = new Timer();
+        private static double refreshTimerInterval = 1000; // 1000 means collect data every 1s.
+        private System.Timers.Timer refreshTimer = new System.Timers.Timer(refreshTimerInterval);
 
         #endregion Members
 
@@ -49,6 +50,7 @@ namespace ParallelBuildsMonitor
         {
             Instance = this;
             OnForegroundChanged();
+            refreshTimer.Elapsed += new ElapsedEventHandler(RefreshTimerEventTick); // Are we sure there is only one instance of GraphControl? If not operator += will multiply calls...
         }
 
         void OnForegroundChanged()
@@ -80,20 +82,18 @@ namespace ParallelBuildsMonitor
         public void BuildBegin()
         {
             scrollLast = true;
-            refreshTimer.Interval = 1000;
-            refreshTimer.Elapsed += new ElapsedEventHandler(timer_Tick);
-            refreshTimer.Enabled = true;
+            refreshTimer.Start();
             isBuilding = true;
         }
 
         public void BuildDone()
         {
-            refreshTimer.Enabled = false;
+            refreshTimer.Stop();
             isBuilding = false;
             InvalidateVisual();
         }
 
-        void timer_Tick(object sender, ElapsedEventArgs e)
+        private void RefreshTimerEventTick(object sender, ElapsedEventArgs e)
         {
             GraphControl.Instance.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background,
                  new System.Action(() =>
@@ -101,6 +101,7 @@ namespace ParallelBuildsMonitor
                      GraphControl.Instance.InvalidateVisual();
                  }));
         }
+
         void drawGraph(string title, System.Windows.Media.DrawingContext drawingContext, ReadOnlyCollection<Tuple<long, float>> data, Pen pen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, long nowTick, Typeface fontFace, bool showAverage)
         {
             // Status separator
@@ -118,11 +119,20 @@ namespace ParallelBuildsMonitor
                 long sumTicks = 0;
                 long previousTick = DataModel.StartTime.Ticks;
                 float previousValue = 0.0f;
-                for (int nbr = 0; nbr < data.Count; nbr++)
+
+                int step = 1;
+                if (data.Count > 10) // Do rarefy only when more than 10 samples
+                {
+                    step = (int)(data.Count / (pixelsRange / 10)); // Draw no frequent than 10 pixels
+                    if (step < 1)
+                        step = 1;
+                }
+
+                for (int nbr = 0; nbr < data.Count; nbr += step)
                 {
                     long spanL = previousTick - DataModel.StartTime.Ticks;
                     long spanR = data[nbr].Item1 - DataModel.StartTime.Ticks;
-                    if (isBuilding && nbr == data.Count - 1)
+                    if (isBuilding && nbr >= data.Count - step)
                         spanR = nowTick - DataModel.StartTime.Ticks;
                     double shiftL = (int)(spanL * (long)(RenderSize.Width - maxStringLength) / maxTick);
                     double shiftR = (int)(spanR * (long)(RenderSize.Width - maxStringLength) / maxTick);

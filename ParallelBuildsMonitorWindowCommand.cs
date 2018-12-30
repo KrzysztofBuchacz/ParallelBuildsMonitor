@@ -143,7 +143,6 @@ namespace ParallelBuildsMonitor
 
         void BuildEvents_OnBuildBegin(vsBuildScope Scope, vsBuildAction Action)
         {
-            DataModel.CollectPerformanceData(true);   //TODO: I wouldn't collect data here. Problem is that few projects starts in the same moment, so we have overload. I would just get performance statistics in the same time interval.
             DTE2 dte = (DTE2)(package as IServiceProvider).GetService(typeof(SDTE));
             int allProjectsCount = 0;
             foreach (Project project in dte.Solution.Projects)
@@ -154,7 +153,6 @@ namespace ParallelBuildsMonitor
 
         void BuildEvents_OnBuildDone(vsBuildScope Scope, vsBuildAction Action)
         {
-            DataModel.CollectPerformanceData(true);
             DataModel.BuildDone();
             GraphControl.Instance.BuildDone();
         }
