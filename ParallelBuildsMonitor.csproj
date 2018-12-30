@@ -75,12 +75,12 @@
     <Compile Include="DetectSsd.cs" />
     <Compile Include="GraphControl.cs" />
     <Compile Include="MachineInfo.cs" />
-    <Compile Include="ParallelBuildsMonitorWindow.cs" />
-    <Compile Include="ParallelBuildsMonitorWindowCommand.cs" />
-    <Compile Include="ParallelBuildsMonitorWindowControl.xaml.cs">
-      <DependentUpon>ParallelBuildsMonitorWindowControl.xaml</DependentUpon>
+    <Compile Include="PBMWindow.cs" />
+    <Compile Include="PBMCommand.cs" />
+    <Compile Include="PBMControl.xaml.cs">
+      <DependentUpon>PBMControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ParallelBuildsMonitorWindowPackage.cs" />
+    <Compile Include="Package.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ViewModel.cs" />
   </ItemGroup>
@@ -94,33 +94,33 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <VSCTCompile Include="ParallelBuildsMonitorWindowPackage.vsct">
+    <VSCTCompile Include="Package.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
     </VSCTCompile>
-    <Content Include="ParallelBuildsMonitorReleaseNotes.txt">
+    <Content Include="ReleaseNotes.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="ParallelBuildsMonitorLicense.txt">
+    <Content Include="License.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Resources\ParallelBuildsMonitorWindowCommand.png">
+    <Content Include="Resources\Command.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Resources\ParallelBuildsMonitorWindowPackage.ico">
+    <Content Include="Resources\Package.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Resources\ParallelBuildsMonitorWindowPreview.png">
+    <Content Include="Resources\Preview.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="stylesheet.css" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="ParallelBuildsMonitorWindowControl.xaml">
+    <Page Include="PBMControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -237,6 +237,7 @@
     <EmbeddedResource Include="VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
       <ManifestResourceName>VSPackage</ManifestResourceName>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
