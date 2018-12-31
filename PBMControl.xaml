@@ -8,13 +8,8 @@
              Foreground="{DynamicResource VsBrush.WindowText}"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300"
-             Name="MyToolWindow">
+             Name="MyToolWindow" MouseRightButtonDown="MyToolWindow_MouseRightButtonDown">
     <Grid>
-        <Grid.ContextMenu>
-            <ContextMenu>
-                <MenuItem Header="_Save" Click="MenuItem_ClickSaveGraph" IsEnabled="{Binding IsGraphDrawn, Mode = OneWay}" />
-            </ContextMenu>
-        </Grid.ContextMenu>
         <DockPanel>
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" VerticalAlignment="Stretch" VerticalContentAlignment="Top" ScrollChanged="ScrollViewer_ScrollChanged">
                 <local:GraphControl x:Name="graph" Height="100" VerticalAlignment="Top">

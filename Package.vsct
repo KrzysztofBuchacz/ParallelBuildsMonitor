@@ -31,6 +31,20 @@
     group; your package should define its own command set in order to avoid collisions
     with command ids defined by other packages. -->
 
+        <Groups>
+            <Group guid="guidShortcutMenuPackageCmdSet" id="idContextMenuGroup" priority="0x0200">
+                <Parent guid="guidShortcutMenuPackageCmdSet" id="idContextMenu"/>
+            </Group>
+        </Groups>
+
+        <Menus>
+            <Menu guid="guidShortcutMenuPackageCmdSet" id="idContextMenu" type="Context">
+                <Strings>
+                    <ButtonText></ButtonText>
+                </Strings>
+            </Menu>
+        </Menus>
+
         <!--Buttons section. -->
         <!--This section defines the elements the user can interact with, like a menu command or a button
         or combo box in a toolbar. -->
@@ -49,6 +63,12 @@
                     <ButtonText>Parallel Builds Monitor</ButtonText>
                 </Strings>
             </Button>
+            <Button guid="guidShortcutMenuPackageCmdSet" id="cmdidSave" priority="0x0101" type="Button">
+                <Parent guid="guidShortcutMenuPackageCmdSet" id="idContextMenuGroup" />
+                <Strings>
+                    <ButtonText>Save</ButtonText>
+                </Strings>
+            </Button>
         </Buttons>
 
         <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
@@ -65,6 +85,13 @@
     <Symbols>
         <!-- This is the package guid. -->
         <GuidSymbol name="guidParallelBuildsMonitorWindowPackage" value="{3fe81f94-00df-4a3d-bff1-ae20f305aedb}" />
+
+        <GuidSymbol name="guidShortcutMenuPackageCmdSet" value="{048AF9A5-402D-4441-B221-5EEC9ACD93DB}">
+            <IDSymbol name="ShortcutMenuCommandId" value="0x0100" />
+            <IDSymbol name="idContextMenu" value="0x1000"/>
+            <IDSymbol name="idContextMenuGroup" value="0x1100"/>
+            <IDSymbol name="cmdidSave" value="0x101"/>
+        </GuidSymbol>
 
         <!-- This is the guid used to group the menu commands together -->
         <GuidSymbol name="guidParallelBuildsMonitorWindowPackageCmdSet" value="{0617d7cf-8a0f-436f-8b05-4be366046686}">

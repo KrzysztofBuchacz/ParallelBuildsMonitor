@@ -1,15 +1,13 @@
 ﻿using System;
 using System.ComponentModel.Design;
-using System.Globalization;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Timers;
 using EnvDTE;
 using EnvDTE80;
-using System.Diagnostics;
 
 namespace ParallelBuildsMonitor
 {
@@ -18,17 +16,24 @@ namespace ParallelBuildsMonitor
     /// </summary>
     internal sealed class PBMCommand
     {
+        #region Constants
+
+        [Guid("0617d7cf-8a0f-436f-8b05-4be366046686")]
+        public enum MainMenuCommandSet
+        {
+            ShowToolWindow = 0x0100
+        }
+
+        [Guid("048AF9A5-402D-4441-B221-5EEC9ACD93DB")]
+        public enum ContextMenuCommandSet
+        {
+            idContextMenu = 0x1000,
+            Save = 0x0101
+        }
+
+        #endregion Constants
+
         #region Members
-
-        /// <summary>
-        /// Command ID.
-        /// </summary>
-        public const int CommandId = 0x0100;
-
-        /// <summary>
-        /// Command menu group (command set GUID).
-        /// </summary>
-        public static readonly Guid CommandSet = new Guid("0617d7cf-8a0f-436f-8b05-4be366046686");
 
         /// <summary>
         /// VS Package that provides this command, not null.
@@ -80,9 +85,14 @@ namespace ParallelBuildsMonitor
             OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
             {
-                var menuCommandID = new CommandID(CommandSet, CommandId);
-                var menuItem = new MenuCommand(this.ShowToolWindow, menuCommandID);
+                var menuCommandID = new CommandID(typeof(MainMenuCommandSet).GUID, (int)MainMenuCommandSet.ShowToolWindow);
+                var menuItem = new OleMenuCommand(this.ShowToolWindow, menuCommandID);
                 commandService.AddCommand(menuItem);
+
+                var contextCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.Save);
+                var menuItemSave = new OleMenuCommand(this.SaveGraph, contextCommandID);
+                menuItemSave.BeforeQueryStatus += MenuItemSave_BeforeQueryStatus;
+                commandService.AddCommand(menuItemSave);
             }
             DTE2 dte = (DTE2)(package as IServiceProvider).GetService(typeof(SDTE));
             solutionEvents = dte.Events.SolutionEvents;
@@ -92,6 +102,15 @@ namespace ParallelBuildsMonitor
             buildEvents.OnBuildDone += new _dispBuildEvents_OnBuildDoneEventHandler(BuildEvents_OnBuildDone);
             buildEvents.OnBuildProjConfigBegin += new _dispBuildEvents_OnBuildProjConfigBeginEventHandler(BuildEvents_OnBuildProjConfigBegin);
             buildEvents.OnBuildProjConfigDone += new _dispBuildEvents_OnBuildProjConfigDoneEventHandler(BuildEvents_OnBuildProjConfigDone);
+        }
+
+        private void MenuItemSave_BeforeQueryStatus(object sender, EventArgs e)
+        {
+            var myCommand = sender as OleMenuCommand;
+            if (null != myCommand)
+            {
+                myCommand.Enabled = ViewModel.Instance.IsGraphDrawn;
+            }
         }
 
 
@@ -104,6 +123,13 @@ namespace ParallelBuildsMonitor
             Instance = new PBMCommand(package);
         }
         #endregion Initialization
+
+        private void SaveGraph(object sender, EventArgs e)
+        {
+            PBMWindow window = this.package.FindToolWindow(typeof(PBMWindow), 0, true) as PBMWindow;
+            PBMControl control = window.Content as PBMControl;
+            control?.SaveGraph();
+        }
 
         /// <summary>
         /// Shows the tool window when the menu item is clicked.
