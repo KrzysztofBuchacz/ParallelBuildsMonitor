@@ -90,7 +90,7 @@ namespace ParallelBuildsMonitor
         {
             refreshTimer.Stop();
             isBuilding = false;
-            InvalidateVisual();
+            InvalidateVisual(); // When solution build finished, refresh graph manually, since refreshTimer has stopped.
         }
 
         private void RefreshTimerEventTick(object sender, ElapsedEventArgs e)
@@ -102,7 +102,7 @@ namespace ParallelBuildsMonitor
                  }));
         }
 
-        void drawGraph(string title, System.Windows.Media.DrawingContext drawingContext, ReadOnlyCollection<Tuple<long, float>> data, Pen pen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, long nowTick, Typeface fontFace, bool showAverage)
+        void DrawGraph(string title, System.Windows.Media.DrawingContext drawingContext, ReadOnlyCollection<Tuple<long, float>> data, Pen pen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, long nowTick, Typeface fontFace, bool showAverage)
         {
             // Status separator
             drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
@@ -164,7 +164,8 @@ namespace ParallelBuildsMonitor
 
                 if (showAverage)
                 {
-                    FormattedText avg = new FormattedText("Avg. " + ((long)(sumValues / 2 / sumTicks)).ToString() + "%", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                    long average = (long)(sumValues / 2 / sumTicks);
+                    FormattedText avg = new FormattedText("Avg. " + average.ToString() + "%", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                     double m = avg.Width;
                     drawingContext.DrawText(avg, new Point(RenderSize.Width - m, i * rowHeight));
                 }
@@ -290,7 +291,7 @@ namespace ParallelBuildsMonitor
                         Brush gradientBrush = item.success ? greenGradientBrush : redGradientBrush;
                         DateTime span = new DateTime(item.end - item.begin);
                         string time = PBMCommand.SecondsToString(span.Ticks);
-                        FormattedText itext = new FormattedText((i + 1).ToString(intFormat) + " " + item.name, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, solidBrush);
+                        FormattedText itext = new FormattedText((i).ToString(intFormat) + " " + item.name, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, solidBrush);
                         drawingContext.DrawText(itext, new Point(1, i * rowHeight));
                         Rect r = new Rect();
                         r.X = maxStringLength + (int)((item.begin) * (long)(RenderSize.Width - maxStringLength) / maxTick);
@@ -315,7 +316,7 @@ namespace ParallelBuildsMonitor
                     Brush blueGradientBrush = new LinearGradientBrush(Colors.LightBlue, Colors.DarkBlue, new Point(0, 0), new Point(0, 1));
                     foreach (KeyValuePair<string, DateTime> item in DataModel.CurrentBuilds)
                     {
-                        FormattedText itext = new FormattedText((i + 1).ToString(intFormat) + " " + item.Key, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blueSolidBrush);
+                        FormattedText itext = new FormattedText((i).ToString(intFormat) + " " + item.Key, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blueSolidBrush);
                         drawingContext.DrawText(itext, new Point(1, i * rowHeight));
                         Rect r = new Rect();
                         r.X = maxStringLength + (int)((item.Value.Ticks - DataModel.StartTime.Ticks) * (long)(RenderSize.Width - maxStringLength) / maxTick);
@@ -331,8 +332,8 @@ namespace ParallelBuildsMonitor
                         i++;
                     }
 
-                    drawGraph("CPU usage", drawingContext, DataModel.CpuUsage, cpuPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace, true /*showAverage*/);
-                    drawGraph("HDD usage", drawingContext, DataModel.HddUsage, hddPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace, false /*showAverage - Probably there is no max value for HDD that is why we can't cound average*/);
+                    DrawGraph("CPU usage", drawingContext, DataModel.CpuUsage, cpuPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace, true /*showAverage*/);
+                    DrawGraph("HDD usage", drawingContext, DataModel.HddUsage, hddPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace, false /*showAverage - Probably there is no max value for HDD that is why we can't cound average*/);
 
                     if (DataModel.CurrentBuilds.Count > 0 || DataModel.FinishedBuilds.Count > 0)
                     {

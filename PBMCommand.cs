@@ -135,10 +135,7 @@ namespace ParallelBuildsMonitor
         void BuildEvents_OnBuildProjConfigDone(string Project, string ProjectConfig, string Platform, string SolutionConfig, bool Success)
         {
             string projectKey = MakeKey(Project, ProjectConfig, Platform);
-            if (DataModel.FinishCurrentBuild(projectKey, Success))
-            {
-                GraphControl.Instance.InvalidateVisual(); //TODO. When GraphControl observe DataModel this is redundant
-            }
+            DataModel.FinishCurrentBuild(projectKey, Success);
         }
 
         void BuildEvents_OnBuildBegin(vsBuildScope Scope, vsBuildAction Action)
@@ -157,6 +154,12 @@ namespace ParallelBuildsMonitor
             GraphControl.Instance.BuildDone();
         }
 
+        /// <summary>
+        /// Event called on Closing Solution without closing VS ("VS -> File -> Close Solution").
+        /// </summary>
+        /// <remarks>
+        /// Clear data and graph from prevously executed build.
+        /// </remarks>
         void solutionEvents_AfterClosing()
         {
             DataModel.Reset();
