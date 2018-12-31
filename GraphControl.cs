@@ -116,7 +116,7 @@ namespace ParallelBuildsMonitor
                 double pixelsRange = RenderSize.Width - maxStringLength;
 
                 double sumValues = 0;
-                long sumTicks = 0;
+                long nbrOfValues = 0;
                 long previousTick = DataModel.StartTime.Ticks;
                 float previousValue = 0.0f;
 
@@ -154,17 +154,18 @@ namespace ParallelBuildsMonitor
 
                     if (showAverage)
                     {
-                        sumValues += (previousValue + data[nbr].Item2) * (data[nbr].Item1 - previousTick);
-                        sumTicks += data[nbr].Item1 - previousTick;
+                        sumValues += data[nbr].Item2;
+                        nbrOfValues++;
                     }
 
                     previousTick = data[nbr].Item1;
                     previousValue = data[nbr].Item2;
                 }
 
-                if (showAverage)
+                if (showAverage && (nbrOfValues > 0))
                 {
-                    FormattedText avg = new FormattedText("Avg. " + ((long)(sumValues / 2 / sumTicks)).ToString() + "%", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                    long average = (long)(sumValues / nbrOfValues);
+                    FormattedText avg = new FormattedText("Avg. " + average.ToString() + "%", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                     double m = avg.Width;
                     drawingContext.DrawText(avg, new Point(RenderSize.Width - m, i * rowHeight));
                 }
