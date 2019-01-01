@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Timers;
 
 namespace ParallelBuildsMonitor
@@ -11,16 +12,24 @@ namespace ParallelBuildsMonitor
     /// </summary>
     public struct BuildInfo
     {
-        public BuildInfo(string n, long b, long e, bool s)
+        public BuildInfo(string projectUniqueName, string projectName, long b, long e, bool s)
         {
-            name = n;
+            ProjectUniqueName = projectUniqueName;
+            ProjectName = projectName;
             begin = b;
             end = e;
             success = s;
         }
+        /// <summary>
+        /// Project stored in <c>Project.UniqueName</c> format.
+        /// </summary>
+        public string ProjectUniqueName { get; set; } // Probably should be renamed to ProjectUniqueName and BuildInfo into ProjectBuildInfo
+        /// <summary>
+        /// Project name in human readable format
+        /// </summary>
+        public string ProjectName { get; set; } // Probably should be renamed to ProjectUniqueName and BuildInfo into ProjectBuildInfo
         public long begin;
         public long end;
-        public string name;
         public bool success;
     }
 
@@ -38,6 +47,8 @@ namespace ParallelBuildsMonitor
         public DateTime StartTime { get; private set; }
         public ReadOnlyDictionary<string, DateTime> CurrentBuilds { get { return new ReadOnlyDictionary<string, DateTime>(currentBuilds); } }
         public ReadOnlyCollection<BuildInfo> FinishedBuilds { get { return finishedBuilds.AsReadOnly(); } }
+        public ReadOnlyDictionary<string, List<string>> ProjectDependenies { get { return new ReadOnlyDictionary<string, List<string>>(projectDependenies); } }
+        public ReadOnlyCollection<BuildInfo> CriticalPath { get { return criticalPath.AsReadOnly(); } }
 
         public ReadOnlyCollection<Tuple<long, float>> CpuUsage { get { return cpuUsage.AsReadOnly(); } }
         public ReadOnlyCollection<Tuple<long, float>> HddUsage { get { return hddUsage.AsReadOnly(); } }
@@ -48,15 +59,17 @@ namespace ParallelBuildsMonitor
 
         #region Members
 
-        private Dictionary<string, DateTime> currentBuilds = new Dictionary<string, DateTime>();
+        private Dictionary<string, DateTime> currentBuilds = new Dictionary<string, DateTime>(); //<c>string</c> is ProjectUniqueName, <c>DateTime</c> is when particular project start building
         private List<BuildInfo> finishedBuilds = new List<BuildInfo>();
+        private Dictionary<string, List<string>> projectDependenies = new Dictionary<string, List<string>>(); //<c>string</c> is ProjectUniqueName, <c>List<string></c> is list of projects that <c>Key</c> project depends on
+        private List<BuildInfo> criticalPath = new List<BuildInfo>();
 
         private List<Tuple<long, float>> cpuUsage = new List<Tuple<long, float>>();
         private List<Tuple<long, float>> hddUsage = new List<Tuple<long, float>>();
 
         private PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
         private PerformanceCounter hddCounter = new PerformanceCounter("PhysicalDisk", "% Disk Time", "_Total");
-        private static double performanceTimerInterval = 1000; // 1000 means collect data every 1s.
+        private static readonly double performanceTimerInterval = 1000; // 1000 means collect data every 1s.
         private System.Timers.Timer performanceTimer = new System.Timers.Timer(performanceTimerInterval);
 
         #endregion Members
@@ -89,12 +102,18 @@ namespace ParallelBuildsMonitor
             AllProjectsCount = 0;
             currentBuilds.Clear();
             finishedBuilds.Clear();
+            criticalPath.Clear();
             cpuUsage.Clear();
             hddUsage.Clear();
         }
         #endregion
 
         #region Manipulation
+
+        public void SetProjectDependenies(Dictionary<string, List<string>> dependenies)
+        {
+            projectDependenies = dependenies;
+        }
 
         /// <summary>
         /// Call this method when starting colleting statistics for solution (.sln)
@@ -112,6 +131,7 @@ namespace ParallelBuildsMonitor
         public void BuildDone()
         {
             performanceTimer.Stop();
+            FindCriticalPath();
         }
 
         /// <summary>
@@ -130,17 +150,17 @@ namespace ParallelBuildsMonitor
         /// <summary>
         /// This method move project from CurrentBuilds to FinishedBuilds array
         /// </summary>
-        /// <param name="projectKey"></param>
+        /// <param name="ProjectUniqueName">ProjectUniqueName in <c>Project.UniqueName</c> format</param>
         /// <returns>true on success (when project was successfully moved from CurrentBuilds to FinishedBuilds array</returns>
-        public bool FinishCurrentBuild(string projectKey, bool wasBuildSucceessful)
+        public bool FinishCurrentBuild(string ProjectUniqueName, bool wasBuildSucceessful)
         {
-            if (!CurrentBuilds.ContainsKey(projectKey))
+            if (!CurrentBuilds.ContainsKey(ProjectUniqueName))
                 return false;
 
-            DateTime start = new DateTime(CurrentBuilds[projectKey].Ticks - StartTime.Ticks);
-            currentBuilds.Remove(projectKey);
+            DateTime start = new DateTime(CurrentBuilds[ProjectUniqueName].Ticks - StartTime.Ticks);
+            currentBuilds.Remove(ProjectUniqueName);
             DateTime end = new DateTime(DateTime.Now.Ticks - StartTime.Ticks);
-            finishedBuilds.Add(new BuildInfo(projectKey, start.Ticks, end.Ticks, wasBuildSucceessful));
+            finishedBuilds.Add(new BuildInfo(ProjectUniqueName, GetHumanReadableProjectName(ProjectUniqueName), start.Ticks, end.Ticks, wasBuildSucceessful));
             TimeSpan s = end - start;
             DateTime t = new DateTime(s.Ticks);
 
@@ -183,6 +203,78 @@ namespace ParallelBuildsMonitor
                 }
             }
             return percentage;
+        }
+
+        private BuildInfo? GetFinishedProject(string ProjectUniqueName)
+        {
+            foreach (BuildInfo proj in finishedBuilds)
+            {
+                if (proj.ProjectUniqueName == ProjectUniqueName)
+                    return proj;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Find critical path and store it in <c>criticalPath</c> list.
+        /// </summary>
+        /// <remarks>
+        /// <c>ProjectDependenies</c> need to be initialized before calling this method.
+        /// </remarks>
+        /// <returns><c>true</c> when successfully critical path found and stored in <c>CriticalPath</c> property.</returns>
+        private bool FindCriticalPath()
+        {
+            criticalPath.Clear();
+
+            if ((finishedBuilds.Count < 1) || (ProjectDependenies.Count < 1))
+                return false;
+
+            BuildInfo lastProject = finishedBuilds[finishedBuilds.Count-1];
+            criticalPath.Add(lastProject);
+            while (true)
+            {
+                List<string> precedentProjects = ProjectDependenies[lastProject.ProjectUniqueName];
+                if (precedentProjects.Count < 1)
+                {
+                    criticalPath.Reverse();
+                    return true; // No precendent project means that this is first project.
+                }
+
+                double minDiff = double.MaxValue;
+                BuildInfo minProject = new BuildInfo();
+                foreach (string precendentProjectUN in precedentProjects)
+                {
+                    BuildInfo? precendentProject = GetFinishedProject(precendentProjectUN);
+                    if (precendentProject == null)
+                    {
+                        Debug.Assert(false, "Missing project in finishedBuilds collection. Critical path will be drawn incorrectly!");
+                        continue;
+                    }
+
+                    long diff = lastProject.begin - precendentProject.Value.end;
+                    if (diff < minDiff)
+                    {
+                        minDiff = diff;
+                        minProject = precendentProject.Value;
+                    }
+                }
+
+                criticalPath.Add(minProject);
+                lastProject = minProject;
+            }
+        }
+
+        /// <summary>
+        /// Convert <c>Project.UniqueName</c> into short human readable string
+        /// </summary>
+        /// <param name="ProjectUniqueName">Project name in <c>Project.UniqueName</c> format</param>
+        /// <returns>Human readable project name</returns>
+        static public string GetHumanReadableProjectName(string ProjectUniqueName)
+        {
+            FileInfo fi = new FileInfo(ProjectUniqueName);
+            string key = fi.Name;
+            return key;
         }
 
         #endregion HelperMethods
