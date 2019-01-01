@@ -152,7 +152,7 @@ namespace ParallelBuildsMonitor
                     drawingContext.DrawGeometry(pen.Brush, pen, streamGeometry);
                     //drawingContext.DrawLine(pen, p1, p2);
 
-                    if (showAverage)
+                    if (showAverage && nbr > 0)
                     {
                         sumValues += (previousValue + data[nbr].Item2) * (data[nbr].Item1 - previousTick);
                         sumTicks += data[nbr].Item1 - previousTick;
@@ -162,7 +162,7 @@ namespace ParallelBuildsMonitor
                     previousValue = data[nbr].Item2;
                 }
 
-                if (showAverage)
+                if (showAverage && sumTicks > 0)
                 {
                     long average = (long)(sumValues / 2 / sumTicks);
                     FormattedText avg = new FormattedText("Avg. " + average.ToString() + "%", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
