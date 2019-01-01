@@ -82,6 +82,9 @@
     </Compile>
     <Compile Include="Package.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SaveCsv.cs" />
+    <Compile Include="SavePng.cs" />
+    <Compile Include="Utils.cs" />
     <Compile Include="ViewModel.cs" />
   </ItemGroup>
   <ItemGroup>

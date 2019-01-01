@@ -172,6 +172,16 @@ namespace ParallelBuildsMonitor
         #region HelperMethods
 
         /// <summary>
+        /// Return common part for PBM file names, so they are unambiguous and can be sorted on HDD in easy way.
+        /// </summary>
+        /// <returns></returns>
+        public string GetSaveFileNamePrefix()
+        {
+            string date = StartTime.ToString("yyyy-MM-dd HH.mm.ss"); //Format "2018-05-08 01.09.07" to preserve correct sorting
+            return "PBM " + SolutionName + " " + date;
+        }
+
+        /// <summary>
         /// Number of time (in %) for how long max parallel builds were run during solution buils.
         /// </summary>
         /// <returns></returns>

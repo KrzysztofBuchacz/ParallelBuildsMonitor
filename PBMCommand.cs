@@ -261,37 +261,5 @@ namespace ParallelBuildsMonitor
         }
 
         #endregion HelperMethods
-
-
-        public static string SecondsToString(long ticks)
-        {
-            long seconds = ticks / 10000000;
-            string ret;
-            if (seconds > 9)
-            {
-                ret = (seconds % 60).ToString() + "s";
-            }
-            else if (seconds > 0)
-            {
-                long dsecs = ticks / 1000000;
-                ret = (seconds % 60).ToString() + "." + (dsecs % 10).ToString() + "s";
-            }
-            else
-            {
-                long csecs = ticks / 100000;
-                ret = (seconds % 60).ToString() + "." + ((csecs % 100) < 10 ? "0" : "") + (csecs % 100).ToString() + "s";
-            }
-            long minutes = seconds / 60;
-            if (minutes > 0)
-            {
-                ret = (minutes % 60).ToString() + "m" + ret;
-                long hours = minutes / 60;
-                if (hours > 0)
-                {
-                    ret = hours.ToString() + "h" + ret;
-                }
-            }
-            return ret;
-        }
     }
 }
