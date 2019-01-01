@@ -8,6 +8,7 @@ using System.Text;
 using System.Timers;
 using EnvDTE;
 using EnvDTE80;
+using System.Collections.Generic;
 
 namespace ParallelBuildsMonitor
 {
