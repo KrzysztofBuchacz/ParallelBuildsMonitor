@@ -8,6 +8,7 @@ using System.Text;
 using System.Timers;
 using EnvDTE;
 using EnvDTE80;
+using System.Collections.Generic;
 
 namespace ParallelBuildsMonitor
 {
@@ -149,15 +150,28 @@ namespace ParallelBuildsMonitor
 
         #region IdeEvents
 
-        void BuildEvents_OnBuildProjConfigBegin(string Project, string ProjectConfig, string Platform, string SolutionConfig)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ProjectUniqueName">The same as <c>Project.UniqueName</c> property</param>
+        /// <param name="ProjectConfig"></param>
+        /// <param name="Platform"></param>
+        /// <param name="SolutionConfig"></param>
+        void BuildEvents_OnBuildProjConfigBegin(string ProjectUniqueName, string ProjectConfig, string Platform, string SolutionConfig)
         {
-            DataModel.AddCurrentBuild(MakeKey(Project, ProjectConfig, Platform));
+            DataModel.AddCurrentBuild(ProjectUniqueName);
         }
-
-        void BuildEvents_OnBuildProjConfigDone(string Project, string ProjectConfig, string Platform, string SolutionConfig, bool Success)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ProjectUniqueName">The same as <c>Project.UniqueName</c> property</param>
+        /// <param name="ProjectConfig"></param>
+        /// <param name="Platform"></param>
+        /// <param name="SolutionConfig"></param>
+        /// <param name="Success"></param>
+        void BuildEvents_OnBuildProjConfigDone(string ProjectUniqueName, string ProjectConfig, string Platform, string SolutionConfig, bool Success)
         {
-            string projectKey = MakeKey(Project, ProjectConfig, Platform);
-            DataModel.FinishCurrentBuild(projectKey, Success);
+            DataModel.FinishCurrentBuild(ProjectUniqueName, Success);
         }
 
         void BuildEvents_OnBuildBegin(vsBuildScope Scope, vsBuildAction Action)
@@ -166,12 +180,46 @@ namespace ParallelBuildsMonitor
             int allProjectsCount = 0;
             foreach (Project project in dte.Solution.Projects)
                 allProjectsCount += GetProjectsCount(project);
+
             DataModel.BuildBegin(System.IO.Path.GetFileName(dte.Solution.FileName), allProjectsCount);
             GraphControl.Instance.BuildBegin();
         }
 
+        /// <summary>
+        /// Get build dependencies.
+        /// </summary>
+        /// <returns>Dictionary where key is <c>Project.UniqueName</c> 
+        /// and value is list of projects that this projects depend on in <c>Project.UniqueName</c> form</returns>
+        private Dictionary<string, List<string>> GetProjectDependenies()
+        {
+            Dictionary<string, List<string>> deps = new Dictionary<string, List<string>>();
+
+            DTE2 dte = (DTE2)(package as IServiceProvider).GetService(typeof(SDTE));
+            foreach (BuildDependency bd in dte.Solution.SolutionBuild.BuildDependencies)
+            {
+                string name = bd.Project.UniqueName;
+                List<string> RequiredProjects = new List<string>();
+                if (bd.RequiredProjects is Array dep)
+                {
+                    foreach (Project proj in dep)
+                        RequiredProjects.Add(proj.UniqueName);
+                }
+
+                deps.Add(name, RequiredProjects);
+            }
+
+            return deps;
+        }
+
+
+        /// <summary>
+        /// <c>BuildEvents_OnBuildDone</c> is called when solution build is finished.
+        /// </summary>
+        /// <param name="Scope"></param>
+        /// <param name="Action"></param>
         void BuildEvents_OnBuildDone(vsBuildScope Scope, vsBuildAction Action)
         {
+            DataModel.SetProjectDependenies(GetProjectDependenies());
             DataModel.BuildDone();
             GraphControl.Instance.BuildDone();
         }
@@ -191,13 +239,6 @@ namespace ParallelBuildsMonitor
         #endregion IdeEvents
 
         #region HelperMethods
-
-        string MakeKey(string Project, string ProjectConfig, string Platform)
-        {
-            FileInfo fi = new FileInfo(Project);
-            string key = fi.Name;// + "|" + ProjectConfig + "|" + Platform;
-            return key;
-        }
 
         int GetProjectsCount(Project project)
         {
