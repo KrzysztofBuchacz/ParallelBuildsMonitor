@@ -41,10 +41,6 @@ namespace ParallelBuildsMonitor
         private readonly Microsoft.VisualStudio.Shell.Package package;
         public EnvDTE.SolutionEvents solutionEvents;
         public EnvDTE.BuildEvents buildEvents;
-        public static string addinName = "VSBuildMonitor";  //is it used anywhere?
-        public static string commandToggle = "ToggleCPPH";  //is it used anywhere?
-        public static string commandFixIncludes = "FixIncludes";   //is it used anywhere?
-        public static string commandFindReplaceGUIDsInSelection = "FindReplaceGUIDsInSelection";   //is it used anywhere?
 
         #endregion Members
 
