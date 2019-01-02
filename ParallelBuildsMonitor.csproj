@@ -71,6 +71,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="BuildInfo.cs" />
     <Compile Include="DataModel.cs" />
     <Compile Include="DetectSsd.cs" />
     <Compile Include="GraphControl.cs" />

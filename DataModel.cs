@@ -8,32 +8,6 @@ using System.Timers;
 namespace ParallelBuildsMonitor
 {
     /// <summary>
-    /// Container to hold information about build for one project
-    /// </summary>
-    public struct BuildInfo
-    {
-        public BuildInfo(string projectUniqueName, string projectName, long b, long e, bool s)
-        {
-            ProjectUniqueName = projectUniqueName;
-            ProjectName = projectName;
-            begin = b;
-            end = e;
-            success = s;
-        }
-        /// <summary>
-        /// Project stored in <c>Project.UniqueName</c> format.
-        /// </summary>
-        public string ProjectUniqueName { get; set; } // Probably should be renamed to ProjectUniqueName and BuildInfo into ProjectBuildInfo
-        /// <summary>
-        /// Project name in human readable format
-        /// </summary>
-        public string ProjectName { get; set; } // Probably should be renamed to ProjectUniqueName and BuildInfo into ProjectBuildInfo
-        public long begin;
-        public long end;
-        public bool success;
-    }
-
-    /// <summary>
     /// Container to holds all build statistics data
     /// </summary>
     class DataModel
@@ -170,6 +144,15 @@ namespace ParallelBuildsMonitor
         #endregion Manipulation
 
         #region HelperMethods
+
+        /// <summary>
+        /// Return common string with solution name, build start time and machine info.
+        /// </summary>
+        /// <returns></returns>
+        public string GetSolutionNameWithMachineInfo(string Separator, bool WithBuildStartedStr)
+        {
+            return SolutionName + Separator + ((WithBuildStartedStr) ? "Build Started: " : "") + StartTime.ToString("yyyy-MM-dd HH:mm:ss") + Separator + MachineInfo.Instance.ToString(Separator); // Data format "2018-05-08 01.09.07" to preserve correct sorting
+        }
 
         /// <summary>
         /// Return common part for PBM file names, so they are unambiguous and can be sorted on HDD in easy way.

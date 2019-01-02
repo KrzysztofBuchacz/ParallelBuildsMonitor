@@ -29,7 +29,8 @@ namespace ParallelBuildsMonitor
         public enum ContextMenuCommandSet
         {
             idContextMenu = 0x1000,
-            Save = 0x0101
+            SaveAsPng = 0x0101,
+            SaveAsCsv = 0x0102
         }
 
         #endregion Constants
@@ -65,6 +66,7 @@ namespace ParallelBuildsMonitor
         #endregion Properties
 
         #region Initialization
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PBMCommand"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
@@ -79,18 +81,8 @@ namespace ParallelBuildsMonitor
 
             this.package = package;
 
-            OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (commandService != null)
-            {
-                var menuCommandID = new CommandID(typeof(MainMenuCommandSet).GUID, (int)MainMenuCommandSet.ShowToolWindow);
-                var menuItem = new OleMenuCommand(this.ShowToolWindow, menuCommandID);
-                commandService.AddCommand(menuItem);
+            CreateMenu();
 
-                var contextCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.Save);
-                var menuItemSave = new OleMenuCommand(this.SaveGraph, contextCommandID);
-                menuItemSave.BeforeQueryStatus += MenuItemSave_BeforeQueryStatus;
-                commandService.AddCommand(menuItemSave);
-            }
             DTE2 dte = (DTE2)(package as IServiceProvider).GetService(typeof(SDTE));
             solutionEvents = dte.Events.SolutionEvents;
             solutionEvents.AfterClosing += new _dispSolutionEvents_AfterClosingEventHandler(solutionEvents_AfterClosing);
@@ -99,6 +91,44 @@ namespace ParallelBuildsMonitor
             buildEvents.OnBuildDone += new _dispBuildEvents_OnBuildDoneEventHandler(BuildEvents_OnBuildDone);
             buildEvents.OnBuildProjConfigBegin += new _dispBuildEvents_OnBuildProjConfigBeginEventHandler(BuildEvents_OnBuildProjConfigBegin);
             buildEvents.OnBuildProjConfigDone += new _dispBuildEvents_OnBuildProjConfigDoneEventHandler(BuildEvents_OnBuildProjConfigDone);
+        }
+
+        /// <summary>
+        /// Initializes the singleton instance of the command.
+        /// </summary>
+        /// <param name="package">Owner package, not null.</param>
+        public static void Initialize(Microsoft.VisualStudio.Shell.Package package)
+        {
+            Instance = new PBMCommand(package);
+        }
+
+        #endregion Initialization
+
+        #region Menu
+
+        private bool CreateMenu()
+        {
+            OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            if (commandService == null)
+                return false;
+
+            var menuCommandID = new CommandID(typeof(MainMenuCommandSet).GUID, (int)MainMenuCommandSet.ShowToolWindow);
+            var menuItem = new OleMenuCommand(this.ShowToolWindow, menuCommandID);
+            commandService.AddCommand(menuItem);
+
+            // Save As .png
+            var SaveAsPngCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.SaveAsPng);
+            var menuItemSaveAsPng = new OleMenuCommand(this.SaveGraph, SaveAsPngCommandID);
+            menuItemSaveAsPng.BeforeQueryStatus += MenuItemSave_BeforeQueryStatus;
+            commandService.AddCommand(menuItemSaveAsPng);
+
+            // Save As .csv
+            var SaveAsCsvCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.SaveAsCsv);
+            var menuItemSaveAsCsv = new OleMenuCommand(this.SaveAsCsv, SaveAsCsvCommandID);
+            menuItemSaveAsCsv.BeforeQueryStatus += MenuItemSave_BeforeQueryStatus;
+            commandService.AddCommand(menuItemSaveAsCsv);
+
+            return true;
         }
 
         private void MenuItemSave_BeforeQueryStatus(object sender, EventArgs e)
@@ -110,23 +140,19 @@ namespace ParallelBuildsMonitor
             }
         }
 
-
-        /// <summary>
-        /// Initializes the singleton instance of the command.
-        /// </summary>
-        /// <param name="package">Owner package, not null.</param>
-        public static void Initialize(Microsoft.VisualStudio.Shell.Package package)
-        {
-            Instance = new PBMCommand(package);
-        }
-        #endregion Initialization
-
         private void SaveGraph(object sender, EventArgs e)
         {
             PBMWindow window = this.package.FindToolWindow(typeof(PBMWindow), 0, true) as PBMWindow;
             PBMControl control = window.Content as PBMControl;
             control?.SaveGraph();
         }
+
+        private void SaveAsCsv(object sender, EventArgs e)
+        {
+            SaveCsv.SaveAsCsv();
+        }
+
+        #endregion Menu
 
         /// <summary>
         /// Shows the tool window when the menu item is clicked.

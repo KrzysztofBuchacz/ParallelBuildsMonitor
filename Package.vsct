@@ -63,10 +63,16 @@
                     <ButtonText>Parallel Builds Monitor</ButtonText>
                 </Strings>
             </Button>
-            <Button guid="guidShortcutMenuPackageCmdSet" id="cmdidSave" priority="0x0101" type="Button">
+            <Button guid="guidShortcutMenuPackageCmdSet" id="cmdidSaveAsPng" priority="0x0101" type="Button">
                 <Parent guid="guidShortcutMenuPackageCmdSet" id="idContextMenuGroup" />
                 <Strings>
-                    <ButtonText>Save</ButtonText>
+                    <ButtonText>Save As .png</ButtonText>
+                </Strings>
+            </Button>
+            <Button guid="guidShortcutMenuPackageCmdSet" id="cmdidSaveAsCsv" priority="0x0102" type="Button">
+                <Parent guid="guidShortcutMenuPackageCmdSet" id="idContextMenuGroup" />
+                <Strings>
+                    <ButtonText>Save As .csv</ButtonText>
                 </Strings>
             </Button>
         </Buttons>
@@ -90,7 +96,8 @@
             <IDSymbol name="ShortcutMenuCommandId" value="0x0100" />
             <IDSymbol name="idContextMenu" value="0x1000"/>
             <IDSymbol name="idContextMenuGroup" value="0x1100"/>
-            <IDSymbol name="cmdidSave" value="0x101"/>
+            <IDSymbol name="cmdidSaveAsPng" value="0x0101"/>
+            <IDSymbol name="cmdidSaveAsCsv" value="0x0102"/>
         </GuidSymbol>
 
         <!-- This is the guid used to group the menu commands together -->

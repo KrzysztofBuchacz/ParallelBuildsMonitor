@@ -265,9 +265,7 @@ namespace ParallelBuildsMonitor
 
                     i = 0;
                     { // Draw header
-                        string headerSeparator = "  |  ";
-                        string headerText = DataModel.SolutionName + headerSeparator + DataModel.StartTime.ToString("yyyy-MM-dd HH:mm:ss") + headerSeparator + MachineInfo.Instance.ToString(headerSeparator); // Data format "2018-05-08 01.09.07" to preserve correct sorting
-
+                        string headerText = DataModel.GetSolutionNameWithMachineInfo("  |  ", false /*WithBuildStartedStr*/);
                         // Draw text
                         FormattedText itext = new FormattedText(headerText, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                         {

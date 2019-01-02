@@ -33,7 +33,7 @@ namespace ParallelBuildsMonitor
             Rect bounds = VisualTreeHelper.GetDescendantBounds(target);
             if (bounds.IsEmpty)
             {
-                Debug.Assert(false, "How it happen that save was not dissabled? Disable Save button to avoid wrong call.");
+                Debug.Assert(false, "How it happen that save was not dissabled? Disable SaveAsPng button to avoid wrong call.");
                 return;
             }
 
