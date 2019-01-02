@@ -265,9 +265,7 @@ namespace ParallelBuildsMonitor
 
                     i = 0;
                     { // Draw header
-                        string headerSeparator = "  |  ";
-                        string headerText = DataModel.SolutionName + headerSeparator + DataModel.StartTime.ToString("yyyy-MM-dd HH:mm:ss") + headerSeparator + MachineInfo.Instance.ToString(headerSeparator); // Data format "2018-05-08 01.09.07" to preserve correct sorting
-
+                        string headerText = DataModel.GetSolutionNameWithMachineInfo("  |  ", false /*WithBuildStartedStr*/);
                         // Draw text
                         FormattedText itext = new FormattedText(headerText, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                         {
@@ -291,7 +289,7 @@ namespace ParallelBuildsMonitor
                         Brush solidBrush = item.success ? greenSolidBrush : redSolidBrush;
                         Brush gradientBrush = item.success ? greenGradientBrush : redGradientBrush;
                         DateTime span = new DateTime(item.end - item.begin);
-                        string time = PBMCommand.SecondsToString(span.Ticks);
+                        string time = Utils.SecondsToString(span.Ticks);
                         FormattedText itext = new FormattedText((i).ToString(intFormat) + " " + item.ProjectName, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, solidBrush);
                         drawingContext.DrawText(itext, new Point(1, i * rowHeight)); //Write project name
                         Rect r = new Rect();
@@ -372,7 +370,7 @@ namespace ParallelBuildsMonitor
                     drawingContext.DrawLine(new Pen(atLeastOneError ? redSolidBrush : greenSolidBrush, 1), new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
 
                     DateTime dt = new DateTime(maxTick);
-                    string s = PBMCommand.SecondsToString(dt.Ticks);
+                    string s = Utils.SecondsToString(dt.Ticks);
                     FormattedText maxTime = new FormattedText(s, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                     double m = maxTime.Width;
                     drawingContext.DrawText(maxTime, new Point(RenderSize.Width - m, i * rowHeight));

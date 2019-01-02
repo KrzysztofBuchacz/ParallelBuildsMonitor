@@ -29,7 +29,8 @@ namespace ParallelBuildsMonitor
         public enum ContextMenuCommandSet
         {
             idContextMenu = 0x1000,
-            Save = 0x0101
+            SaveAsPng = 0x0101,
+            SaveAsCsv = 0x0102
         }
 
         #endregion Constants
@@ -65,6 +66,7 @@ namespace ParallelBuildsMonitor
         #endregion Properties
 
         #region Initialization
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PBMCommand"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
@@ -79,18 +81,8 @@ namespace ParallelBuildsMonitor
 
             this.package = package;
 
-            OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (commandService != null)
-            {
-                var menuCommandID = new CommandID(typeof(MainMenuCommandSet).GUID, (int)MainMenuCommandSet.ShowToolWindow);
-                var menuItem = new OleMenuCommand(this.ShowToolWindow, menuCommandID);
-                commandService.AddCommand(menuItem);
+            CreateMenu();
 
-                var contextCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.Save);
-                var menuItemSave = new OleMenuCommand(this.SaveGraph, contextCommandID);
-                menuItemSave.BeforeQueryStatus += MenuItemSave_BeforeQueryStatus;
-                commandService.AddCommand(menuItemSave);
-            }
             DTE2 dte = (DTE2)(package as IServiceProvider).GetService(typeof(SDTE));
             solutionEvents = dte.Events.SolutionEvents;
             solutionEvents.AfterClosing += new _dispSolutionEvents_AfterClosingEventHandler(solutionEvents_AfterClosing);
@@ -101,16 +93,6 @@ namespace ParallelBuildsMonitor
             buildEvents.OnBuildProjConfigDone += new _dispBuildEvents_OnBuildProjConfigDoneEventHandler(BuildEvents_OnBuildProjConfigDone);
         }
 
-        private void MenuItemSave_BeforeQueryStatus(object sender, EventArgs e)
-        {
-            var myCommand = sender as OleMenuCommand;
-            if (null != myCommand)
-            {
-                myCommand.Enabled = ViewModel.Instance.IsGraphDrawn;
-            }
-        }
-
-
         /// <summary>
         /// Initializes the singleton instance of the command.
         /// </summary>
@@ -119,14 +101,61 @@ namespace ParallelBuildsMonitor
         {
             Instance = new PBMCommand(package);
         }
+
         #endregion Initialization
 
-        private void SaveGraph(object sender, EventArgs e)
+        #region Menu
+
+        private bool CreateMenu()
+        {
+            OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            if (commandService == null)
+                return false;
+
+            var menuCommandID = new CommandID(typeof(MainMenuCommandSet).GUID, (int)MainMenuCommandSet.ShowToolWindow);
+            var menuItem = new OleMenuCommand(this.ShowToolWindow, menuCommandID);
+            commandService.AddCommand(menuItem);
+
+            // Save As .png
+            var SaveAsPngCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.SaveAsPng);
+            var menuItemSaveAsPng = new OleMenuCommand(this.SaveAsPng, SaveAsPngCommandID);
+            menuItemSaveAsPng.BeforeQueryStatus += MenuItemSaveAsPng_BeforeQueryStatus;
+            commandService.AddCommand(menuItemSaveAsPng);
+
+            // Save As .csv
+            var SaveAsCsvCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.SaveAsCsv);
+            var menuItemSaveAsCsv = new OleMenuCommand(this.SaveAsCsv, SaveAsCsvCommandID);
+            menuItemSaveAsCsv.BeforeQueryStatus += MenuItemSaveAsCsv_BeforeQueryStatus;
+            commandService.AddCommand(menuItemSaveAsCsv);
+
+            return true;
+        }
+
+        private void MenuItemSaveAsPng_BeforeQueryStatus(object sender, EventArgs e)
+        {
+            if (sender is OleMenuCommand myCommand)
+                myCommand.Enabled = ViewModel.Instance.IsGraphDrawn;
+        }
+
+        private void SaveAsPng(object sender, EventArgs e)
         {
             PBMWindow window = this.package.FindToolWindow(typeof(PBMWindow), 0, true) as PBMWindow;
             PBMControl control = window.Content as PBMControl;
             control?.SaveGraph();
         }
+
+        private void MenuItemSaveAsCsv_BeforeQueryStatus(object sender, EventArgs e)
+        {
+            if (sender is OleMenuCommand myCommand)
+                myCommand.Enabled = (DataModel.CriticalPath.Count > 0);
+        }
+
+        private void SaveAsCsv(object sender, EventArgs e)
+        {
+            SaveCsv.SaveAsCsv();
+        }
+
+        #endregion Menu
 
         /// <summary>
         /// Shows the tool window when the menu item is clicked.
@@ -261,37 +290,5 @@ namespace ParallelBuildsMonitor
         }
 
         #endregion HelperMethods
-
-
-        public static string SecondsToString(long ticks)
-        {
-            long seconds = ticks / 10000000;
-            string ret;
-            if (seconds > 9)
-            {
-                ret = (seconds % 60).ToString() + "s";
-            }
-            else if (seconds > 0)
-            {
-                long dsecs = ticks / 1000000;
-                ret = (seconds % 60).ToString() + "." + (dsecs % 10).ToString() + "s";
-            }
-            else
-            {
-                long csecs = ticks / 100000;
-                ret = (seconds % 60).ToString() + "." + ((csecs % 100) < 10 ? "0" : "") + (csecs % 100).ToString() + "s";
-            }
-            long minutes = seconds / 60;
-            if (minutes > 0)
-            {
-                ret = (minutes % 60).ToString() + "m" + ret;
-                long hours = minutes / 60;
-                if (hours > 0)
-                {
-                    ret = hours.ToString() + "h" + ret;
-                }
-            }
-            return ret;
-        }
     }
 }
