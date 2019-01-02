@@ -118,33 +118,36 @@ namespace ParallelBuildsMonitor
 
             // Save As .png
             var SaveAsPngCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.SaveAsPng);
-            var menuItemSaveAsPng = new OleMenuCommand(this.SaveGraph, SaveAsPngCommandID);
-            menuItemSaveAsPng.BeforeQueryStatus += MenuItemSave_BeforeQueryStatus;
+            var menuItemSaveAsPng = new OleMenuCommand(this.SaveAsPng, SaveAsPngCommandID);
+            menuItemSaveAsPng.BeforeQueryStatus += MenuItemSaveAsPng_BeforeQueryStatus;
             commandService.AddCommand(menuItemSaveAsPng);
 
             // Save As .csv
             var SaveAsCsvCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.SaveAsCsv);
             var menuItemSaveAsCsv = new OleMenuCommand(this.SaveAsCsv, SaveAsCsvCommandID);
-            menuItemSaveAsCsv.BeforeQueryStatus += MenuItemSave_BeforeQueryStatus;
+            menuItemSaveAsCsv.BeforeQueryStatus += MenuItemSaveAsCsv_BeforeQueryStatus;
             commandService.AddCommand(menuItemSaveAsCsv);
 
             return true;
         }
 
-        private void MenuItemSave_BeforeQueryStatus(object sender, EventArgs e)
+        private void MenuItemSaveAsPng_BeforeQueryStatus(object sender, EventArgs e)
         {
-            var myCommand = sender as OleMenuCommand;
-            if (null != myCommand)
-            {
+            if (sender is OleMenuCommand myCommand)
                 myCommand.Enabled = ViewModel.Instance.IsGraphDrawn;
-            }
         }
 
-        private void SaveGraph(object sender, EventArgs e)
+        private void SaveAsPng(object sender, EventArgs e)
         {
             PBMWindow window = this.package.FindToolWindow(typeof(PBMWindow), 0, true) as PBMWindow;
             PBMControl control = window.Content as PBMControl;
             control?.SaveGraph();
+        }
+
+        private void MenuItemSaveAsCsv_BeforeQueryStatus(object sender, EventArgs e)
+        {
+            if (sender is OleMenuCommand myCommand)
+                myCommand.Enabled = (DataModel.CriticalPath.Count > 0);
         }
 
         private void SaveAsCsv(object sender, EventArgs e)

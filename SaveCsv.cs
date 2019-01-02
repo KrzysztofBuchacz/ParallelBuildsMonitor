@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -29,7 +30,10 @@ namespace ParallelBuildsMonitor
         {
             ReadOnlyCollection<BuildInfo> criticalPath = DataModel.Instance.CriticalPath;
             if (criticalPath.Count < 1)
+            {
+                Debug.Assert(false, "SaveCriticalPathAsCsv() failed! No data in DataModel.CriticalPath. Fix data or disable command.");
                 return false;
+            }
 
             // Sort by Build time descending
             List<BuildInfo> criticalPathSorted = new List<BuildInfo>(criticalPath);
