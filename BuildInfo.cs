@@ -23,12 +23,12 @@ namespace ParallelBuildsMonitor
         /// <summary>
         /// Project stored in <c>Project.UniqueName</c> format.
         /// </summary>
-        public string ProjectUniqueName { get; set; } // Probably should be renamed to ProjectUniqueName and BuildInfo into ProjectBuildInfo
+        public string ProjectUniqueName { get; set; } // Probably should be renamed to UniqueName and BuildInfo into ProjectBuildInfo
 
         /// <summary>
         /// Project name in human readable format
         /// </summary>
-        public string ProjectName { get; set; } // Probably should be renamed to ProjectUniqueName and BuildInfo into ProjectBuildInfo
+        public string ProjectName { get; set; } // Probably should be renamed to Name and BuildInfo into ProjectBuildInfo
 
         /// <summary>
         /// Start project building time in <c>DateTime.Ticks</c> units
