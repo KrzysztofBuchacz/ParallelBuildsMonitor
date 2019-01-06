@@ -102,14 +102,12 @@ namespace ParallelBuildsMonitor
                  }));
         }
 
-        void DrawGraph(string title, System.Windows.Media.DrawingContext drawingContext, ReadOnlyCollection<Tuple<long, float>> data, Pen pen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, long nowTick, Typeface fontFace, bool showAverage)
+        void DrawGraph(string title, System.Windows.Media.DrawingContext drawingContext, ReadOnlyCollection<Tuple<long, float>> data, Pen pen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, long nowTick, Typeface fontFace)
         {
             // Status separator
             drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
 
             // Draw graph
-            FormattedText itext = new FormattedText(title, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-            drawingContext.DrawText(itext, new Point(1, i * rowHeight));
 
             if (data.Count > 0)
             {
@@ -152,7 +150,7 @@ namespace ParallelBuildsMonitor
                     drawingContext.DrawGeometry(pen.Brush, pen, streamGeometry);
                     //drawingContext.DrawLine(pen, p1, p2);
 
-                    if (showAverage && nbr > 0)
+                    if (nbr > 0)
                     {
                         sumValues += (previousValue + data[nbr].Item2) * (data[nbr].Item1 - previousTick);
                         sumTicks += data[nbr].Item1 - previousTick;
@@ -162,13 +160,15 @@ namespace ParallelBuildsMonitor
                     previousValue = data[nbr].Item2;
                 }
 
-                if (showAverage && sumTicks > 0)
+                if (sumTicks > 0)
                 {
                     long average = (long)(sumValues / 2 / sumTicks);
-                    FormattedText avg = new FormattedText("Avg. " + average.ToString() + "%", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                    double m = avg.Width;
-                    drawingContext.DrawText(avg, new Point(RenderSize.Width - m, i * rowHeight));
+                    FormattedText avg = new FormattedText(" (Avg. " + average.ToString() + "%)", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                    title += avg.Text;
                 }
+
+                FormattedText itext = new FormattedText(title, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                drawingContext.DrawText(itext, new Point(1, i * rowHeight));
             }
             i++;
         }
@@ -342,8 +342,8 @@ namespace ParallelBuildsMonitor
                         i++;
                     }
 
-                    DrawGraph("CPU usage", drawingContext, DataModel.CpuUsage, cpuPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace, true /*showAverage*/);
-                    DrawGraph("HDD usage", drawingContext, DataModel.HddUsage, hddPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace, false /*showAverage - Probably there is no max value for HDD that is why we can't cound average*/);
+                    DrawGraph("CPU usage", drawingContext, DataModel.CpuUsage, cpuPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace);
+                    DrawGraph("HDD usage", drawingContext, DataModel.HddUsage, hddPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace);
 
                     if (DataModel.CurrentBuilds.Count > 0 || DataModel.FinishedBuilds.Count > 0)
                     {
