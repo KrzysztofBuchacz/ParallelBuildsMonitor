@@ -32,6 +32,8 @@ namespace ParallelBuildsMonitor
         Pen grid = new Pen(new SolidColorBrush(Colors.LightGray), 1.0);
         Pen cpuPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
         Pen hddPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
+        Pen cpuSoftPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
+        Pen hddSoftPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
         private static double refreshTimerInterval = 1000; // 1000 means collect data every 1s.
         private System.Timers.Timer refreshTimer = new System.Timers.Timer(refreshTimerInterval);
 
@@ -69,8 +71,10 @@ namespace ParallelBuildsMonitor
             blueSolidBrush = new SolidColorBrush(isDark ? Color.FromRgb(81, 156, 245) : Colors.DarkBlue);
             blackPen = new Pen(new SolidColorBrush(isDark ? Colors.White : Colors.Black), 1.0);
             grid = new Pen(new SolidColorBrush(isDark ? Color.FromRgb(66, 66, 66) : Colors.LightGray), 1.0);
-            cpuPen = new Pen(new SolidColorBrush(isDark ? Colors.LightSeaGreen : Colors.DarkTurquoise), 1.0);
-            hddPen = new Pen(new SolidColorBrush(isDark ? Colors.LightSkyBlue : Colors.DarkViolet), 1.0);
+            cpuPen = new Pen(new SolidColorBrush(isDark ? Color.FromRgb(200, 135, 200) : Color.FromRgb(90, 40, 90)), 1.0);
+            cpuSoftPen = new Pen(new SolidColorBrush(isDark ? Color.FromRgb(90, 40, 90) : Color.FromRgb(200, 135, 200)), 1.0);
+            hddPen = new Pen(new SolidColorBrush(isDark ? Color.FromRgb(130, 196, 255) : Color.FromRgb(0, 56, 106)), 1.0);
+            hddSoftPen = new Pen(new SolidColorBrush(isDark ? Color.FromRgb(0, 56, 106) : Color.FromRgb(130, 196, 255)), 1.0);
         }
 
         public static GraphControl Instance
@@ -102,15 +106,15 @@ namespace ParallelBuildsMonitor
                  }));
         }
 
-        void DrawGraph(string title, System.Windows.Media.DrawingContext drawingContext, ReadOnlyCollection<Tuple<long, float>> data, Pen pen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, long nowTick, Typeface fontFace)
+        void DrawGraph(string title, System.Windows.Media.DrawingContext drawingContext, ReadOnlyCollection<Tuple<long, float>> data, Pen pen, Pen softPen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, long nowTick, Typeface fontFace)
         {
             // Status separator
             drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
 
             // Draw graph
-
             if (data.Count > 0)
             {
+                drawingContext.PushClip(new RectangleGeometry(new Rect(0, i * rowHeight, RenderSize.Width, rowHeight)));
                 double pixelsRange = RenderSize.Width - maxStringLength;
 
                 double sumValues = 0;
@@ -126,6 +130,7 @@ namespace ParallelBuildsMonitor
                         step = 1;
                 }
 
+                var allPoints = new List<Point>();
                 for (int nbr = 0; nbr < data.Count; nbr += step)
                 {
                     long spanL = previousTick - DataModel.StartTime.Ticks;
@@ -134,8 +139,8 @@ namespace ParallelBuildsMonitor
                         spanR = nowTick - DataModel.StartTime.Ticks;
                     double shiftL = (int)(spanL * (long)(RenderSize.Width - maxStringLength) / maxTick);
                     double shiftR = (int)(spanR * (long)(RenderSize.Width - maxStringLength) / maxTick);
-                    Point p1 = new Point(maxStringLength + shiftL, (i + 1) * rowHeight - Math.Min(previousValue, 100.0) * (rowHeight - 2) / 100 - 1);
-                    Point p2 = new Point(maxStringLength + shiftR, (i + 1) * rowHeight - Math.Min(data[nbr].Item2, 100.0) * (rowHeight - 2) / 100 - 1);
+                    Point p1 = new Point(maxStringLength + shiftL, (i + 1) * rowHeight - previousValue * (rowHeight - 2) / 100 - 1);
+                    Point p2 = new Point(maxStringLength + shiftR, (i + 1) * rowHeight - data[nbr].Item2 * (rowHeight - 2) / 100 - 1);
 
                     StreamGeometry streamGeometry = new StreamGeometry();
                     using (StreamGeometryContext geometryContext = streamGeometry.Open())
@@ -147,8 +152,11 @@ namespace ParallelBuildsMonitor
                         geometryContext.PolyLineTo(points, true, true);
                     }
 
-                    drawingContext.DrawGeometry(pen.Brush, pen, streamGeometry);
-                    //drawingContext.DrawLine(pen, p1, p2);
+                    drawingContext.DrawGeometry(softPen.Brush, softPen, streamGeometry);
+
+                    if (nbr == 0)
+                        allPoints.Add(p1);
+                    allPoints.Add(p2);
 
                     if (nbr > 0)
                     {
@@ -160,6 +168,9 @@ namespace ParallelBuildsMonitor
                     previousValue = data[nbr].Item2;
                 }
 
+                for (int nbr = 1; nbr < allPoints.Count; ++nbr)
+                    drawingContext.DrawLine(pen, allPoints[nbr-1], allPoints[nbr]);
+
                 if (sumTicks > 0)
                 {
                     long average = (long)(sumValues / 2 / sumTicks);
@@ -169,6 +180,7 @@ namespace ParallelBuildsMonitor
 
                 FormattedText itext = new FormattedText(title, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                 drawingContext.DrawText(itext, new Point(1, i * rowHeight));
+                drawingContext.Pop();
             }
             i++;
         }
@@ -342,8 +354,8 @@ namespace ParallelBuildsMonitor
                         i++;
                     }
 
-                    DrawGraph("CPU usage", drawingContext, DataModel.CpuUsage, cpuPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace);
-                    DrawGraph("HDD usage", drawingContext, DataModel.HddUsage, hddPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace);
+                    DrawGraph("CPU usage", drawingContext, DataModel.CpuUsage, cpuPen, cpuSoftPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace);
+                    DrawGraph("HDD usage", drawingContext, DataModel.HddUsage, hddPen, hddSoftPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace);
 
                     if (DataModel.CurrentBuilds.Count > 0 || DataModel.FinishedBuilds.Count > 0)
                     {
