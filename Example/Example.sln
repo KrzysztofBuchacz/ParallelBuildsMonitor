@@ -1,0 +1,71 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.168
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "constexpr_templates", "constexpr_templates\constexpr_templates.vcxproj", "{3982C5EC-7B79-41B1-B5C8-700E57723704}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiskPerformance", "DiskPerformance\DiskPerformance.csproj", "{34AAC5B7-BDBB-4671-A6FB-EAB482135B6B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "junk-finddir", "junk-finddir\junk-finddir.vcxproj", "{2076BD99-2EBE-4026-AE0B-8A3A85183AA3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "junk-vector-const", "junk-vector-const\junk-vector-const.vcxproj", "{A2FD53C9-7BFD-4DA2-B486-22D86277B8BB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "variadic-macros-v1", "variadic-macros-v1\variadic-macros-v1.vcxproj", "{95A0AA1F-4910-42AF-9310-0D34DCBCA526}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
+		{D9CC08BF-961F-4AA7-8F99-32C79D07B55C} = {D9CC08BF-961F-4AA7-8F99-32C79D07B55C}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfToolTip", "WpfToolTip\WpfToolTip.csproj", "{D9CC08BF-961F-4AA7-8F99-32C79D07B55C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3982C5EC-7B79-41B1-B5C8-700E57723704}.Debug|x64.ActiveCfg = Debug|x64
+		{3982C5EC-7B79-41B1-B5C8-700E57723704}.Debug|x64.Build.0 = Debug|x64
+		{3982C5EC-7B79-41B1-B5C8-700E57723704}.Release|x64.ActiveCfg = Release|x64
+		{3982C5EC-7B79-41B1-B5C8-700E57723704}.Release|x64.Build.0 = Release|x64
+		{34AAC5B7-BDBB-4671-A6FB-EAB482135B6B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{34AAC5B7-BDBB-4671-A6FB-EAB482135B6B}.Debug|x64.Build.0 = Debug|Any CPU
+		{34AAC5B7-BDBB-4671-A6FB-EAB482135B6B}.Release|x64.ActiveCfg = Release|Any CPU
+		{34AAC5B7-BDBB-4671-A6FB-EAB482135B6B}.Release|x64.Build.0 = Release|Any CPU
+		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3}.Debug|x64.ActiveCfg = Debug|x64
+		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3}.Debug|x64.Build.0 = Debug|x64
+		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3}.Release|x64.ActiveCfg = Release|x64
+		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3}.Release|x64.Build.0 = Release|x64
+		{A2FD53C9-7BFD-4DA2-B486-22D86277B8BB}.Debug|x64.ActiveCfg = Debug|x64
+		{A2FD53C9-7BFD-4DA2-B486-22D86277B8BB}.Debug|x64.Build.0 = Debug|x64
+		{A2FD53C9-7BFD-4DA2-B486-22D86277B8BB}.Release|x64.ActiveCfg = Release|x64
+		{A2FD53C9-7BFD-4DA2-B486-22D86277B8BB}.Release|x64.Build.0 = Release|x64
+		{95A0AA1F-4910-42AF-9310-0D34DCBCA526}.Debug|x64.ActiveCfg = Debug|x64
+		{95A0AA1F-4910-42AF-9310-0D34DCBCA526}.Debug|x64.Build.0 = Debug|x64
+		{95A0AA1F-4910-42AF-9310-0D34DCBCA526}.Release|x64.ActiveCfg = Release|x64
+		{95A0AA1F-4910-42AF-9310-0D34DCBCA526}.Release|x64.Build.0 = Release|x64
+		{D9CC08BF-961F-4AA7-8F99-32C79D07B55C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D9CC08BF-961F-4AA7-8F99-32C79D07B55C}.Debug|x64.Build.0 = Debug|Any CPU
+		{D9CC08BF-961F-4AA7-8F99-32C79D07B55C}.Release|x64.ActiveCfg = Release|Any CPU
+		{D9CC08BF-961F-4AA7-8F99-32C79D07B55C}.Release|x64.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EECD8846-77FC-4B3E-9F19-B823B9774E82}
+	EndGlobalSection
+EndGlobal
