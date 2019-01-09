@@ -152,10 +152,13 @@ namespace ParallelBuildsMonitor
 
         private void SaveAsCsv(object sender, EventArgs e)
         {
-            SaveCsv.SaveAsCsv();
+            string outputPaneContent = GetAllTextFromPane(GetOutputBuildPane()); // Output Build Pane/Window can be cleared even during build, so this is not perfect solution...
+            SaveCsv.SaveAsCsv(outputPaneContent);
         }
 
         #endregion Menu
+
+        #region Others
 
         /// <summary>
         /// Shows the tool window when the menu item is clicked.
@@ -177,24 +180,7 @@ namespace ParallelBuildsMonitor
             Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(windowFrame.Show());
         }
 
-        //void OutputTaskItemStringExExample(string buildMessage)
-        //{
-        //    EnvDTE80.DTE2 dte = (EnvDTE80.DTE2)ServiceProvider.GetService(typeof(EnvDTE.DTE));
-
-        //    EnvDTE.OutputWindowPanes panes =
-        //        dte.ToolWindows.OutputWindow.OutputWindowPanes;
-        //    foreach (EnvDTE.OutputWindowPane pane in panes)
-        //    {
-        //        if (pane.Name.Contains("Build"))
-        //        {
-        //            pane.OutputString(buildMessage + "\n");
-        //            pane.Activate();
-        //            return;
-        //        }
-        //    }
-        //}
-
-        EnvDTE.OutputWindowPane GetOutputBuildPane()
+        public EnvDTE.OutputWindowPane GetOutputBuildPane()
         {
             EnvDTE80.DTE2 dte = (EnvDTE80.DTE2)ServiceProvider.GetService(typeof(EnvDTE.DTE));
 
@@ -208,30 +194,7 @@ namespace ParallelBuildsMonitor
             return null;
         }
 
-        string GetAllTextFromPane(EnvDTE.OutputWindowPane Pane)
-        {
-            //pane.OutputString(buildMessage + "\n");
-            //pane.Activate();
-
-            //' Retrieve the text from Pane1.  
-            //Dim doc As TextDocument = pane1.TextDocument
-            //Dim sel As TextSelection = doc.Selection
-            //sel.StartOfDocument()
-            //sel.EndOfDocument(True)
-            //MsgBox("Text in Pane1:" & vbCrLf & vbCrLf & sel.Text)
-
-            if (Pane == null)
-                return null;
-
-            TextDocument doc = Pane.TextDocument;
-            TextSelection sel = doc.Selection;
-            sel.StartOfDocument(false);
-            sel.EndOfDocument(true);
-
-            string content = sel.Text;
-
-            return content;
-        }
+        #endregion Others
 
         #region IdeEvents
 
@@ -244,7 +207,6 @@ namespace ParallelBuildsMonitor
         /// <param name="SolutionConfig"></param>
         void BuildEvents_OnBuildProjConfigBegin(string ProjectUniqueName, string ProjectConfig, string Platform, string SolutionConfig)
         {
-            //OutputTaskItemStringExExample("WWWWWWWWWWWWWWWWWW");
             DataModel.AddCurrentBuild(ProjectUniqueName);
         }
         /// <summary>
@@ -297,7 +259,6 @@ namespace ParallelBuildsMonitor
             return deps;
         }
 
-
         /// <summary>
         /// <c>BuildEvents_OnBuildDone</c> is called when solution build is finished.
         /// </summary>
@@ -308,8 +269,6 @@ namespace ParallelBuildsMonitor
             DataModel.SetProjectDependenies(GetProjectDependenies());
             DataModel.BuildDone();
             GraphControl.Instance.BuildDone();
-
-            string content = GetAllTextFromPane(GetOutputBuildPane());
         }
 
         /// <summary>
@@ -346,6 +305,21 @@ namespace ParallelBuildsMonitor
                 }
             }
             return count;
+        }
+
+        public static string GetAllTextFromPane(EnvDTE.OutputWindowPane Pane)
+        {
+            if (Pane == null)
+                return null;
+
+            TextDocument doc = Pane.TextDocument;
+            TextSelection sel = doc.Selection;
+            sel.StartOfDocument(false);
+            sel.EndOfDocument(true);
+
+            string content = sel.Text;
+
+            return content;
         }
 
         #endregion HelperMethods
