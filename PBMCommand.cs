@@ -139,9 +139,15 @@ namespace ParallelBuildsMonitor
 
         private void SaveAsPng(object sender, EventArgs e)
         {
-            PBMWindow window = this.package.FindToolWindow(typeof(PBMWindow), 0, true) as PBMWindow;
-            PBMControl control = window.Content as PBMControl;
-            control?.SaveGraph();
+            try
+            {
+                PBMWindow window = this.package.FindToolWindow(typeof(PBMWindow), 0, true) as PBMWindow;
+                PBMControl control = window.Content as PBMControl;
+                control?.SaveGraph();
+            }
+            catch
+            {
+            }
         }
 
         private void MenuItemSaveAsCsv_BeforeQueryStatus(object sender, EventArgs e)
@@ -152,8 +158,14 @@ namespace ParallelBuildsMonitor
 
         private void SaveAsCsv(object sender, EventArgs e)
         {
-            string outputPaneContent = GetAllTextFromPane(GetOutputBuildPane()); // Output Build Pane/Window can be cleared even during build, so this is not perfect solution...
-            SaveCsv.SaveAsCsv(outputPaneContent);
+            try
+            {
+                string outputPaneContent = GetAllTextFromPane(GetOutputBuildPane()); // Output Build Pane/Window can be cleared even during build, so this is not perfect solution...
+                SaveCsv.SaveAsCsv(outputPaneContent);
+            }
+            catch
+            {
+            }
         }
 
         #endregion Menu

@@ -13,23 +13,17 @@ namespace ParallelBuildsMonitor
     {
         static public void SaveAsCsv(string outputPaneContent)
         {
-            try
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog
             {
-                Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog
-                {
-                    FileName = DataModel.Instance.GetSaveFileNamePrefix(),
-                    DefaultExt = ".csv",                      // Default file extension
-                    Filter = "Comma-separated values|*.csv"   // Filter files by extension
-                };
+                FileName = DataModel.Instance.GetSaveFileNamePrefix(),
+                DefaultExt = ".csv",                      // Default file extension
+                Filter = "Comma-separated values|*.csv"   // Filter files by extension
+            };
 
-                if (dlg.ShowDialog() != true)
-                    return;
+            if (dlg.ShowDialog() != true)
+                return;
 
-                SaveCsv.SaveCriticalPathAsCsv(dlg.FileName);
-            }
-            catch
-            {
-            }
+            SaveCsv.SaveCriticalPathAsCsv(dlg.FileName);
         }
 
         static public bool SaveCriticalPathAsCsv(string FileName)

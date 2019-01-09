@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26430.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelBuildsMonitor", "ParallelBuildsMonitor.csproj", "{D045634D-A98B-4D34-9B92-2C1F2D45CB8F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelBuildsMonitorTests", "Tests\ParallelBuildsMonitorTests.csproj", "{0A39C616-6716-4530-BBAE-A15C0CFCE0B0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{D045634D-A98B-4D34-9B92-2C1F2D45CB8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D045634D-A98B-4D34-9B92-2C1F2D45CB8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D045634D-A98B-4D34-9B92-2C1F2D45CB8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A39C616-6716-4530-BBAE-A15C0CFCE0B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A39C616-6716-4530-BBAE-A15C0CFCE0B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A39C616-6716-4530-BBAE-A15C0CFCE0B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A39C616-6716-4530-BBAE-A15C0CFCE0B0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
