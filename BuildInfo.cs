@@ -11,10 +11,11 @@ namespace ParallelBuildsMonitor
     /// </summary>
     public struct BuildInfo
     {
-        public BuildInfo(string projectUniqueName, string projectName, long b, long e, bool s)
+        public BuildInfo(string projectUniqueName, string projectName, uint projectBuildOrderNumber, long b, long e, bool s)
         {
             ProjectUniqueName = projectUniqueName;
             ProjectName = projectName;
+            ProjectBuildOrderNumber = projectBuildOrderNumber;
             begin = b;
             end = e;
             success = s;
@@ -29,6 +30,11 @@ namespace ParallelBuildsMonitor
         /// Project name in human readable format
         /// </summary>
         public string ProjectName { get; set; } // Probably should be renamed to Name and BuildInfo into ProjectBuildInfo
+
+        /// <summary>
+        /// Project build order number, e.g. "1>..." that shows in the Output Build Pane/Window during build.
+        /// </summary>
+        public uint ProjectBuildOrderNumber { get; set; } // Probably should be renamed to BuildOrderNumber and BuildInfo into ProjectBuildInfo
 
         /// <summary>
         /// Start project building time in <c>DateTime.Ticks</c> units

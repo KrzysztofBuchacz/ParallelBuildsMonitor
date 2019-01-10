@@ -259,7 +259,7 @@ namespace ParallelBuildsMonitor
                             maxStringLength = l;
                         }
                     }
-                    foreach (KeyValuePair<string, DateTime> item in DataModel.CurrentBuilds)
+                    foreach (KeyValuePair<string, Tuple<uint, long>> item in DataModel.CurrentBuilds)
                     {
                         FormattedText iname = new FormattedText(item.Key, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                         double l = iname.Width;
@@ -272,7 +272,7 @@ namespace ParallelBuildsMonitor
                     {
                         maxTick = (maxTick / tickStep + 1) * tickStep;
                     }
-                    FormattedText iint = new FormattedText(i.ToString(intFormat) + " ", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                    FormattedText iint = new FormattedText(i.ToString(intFormat) + "> ", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                     maxStringLength += 5 + iint.Width;
 
                     i = 0;
@@ -302,7 +302,7 @@ namespace ParallelBuildsMonitor
                         Brush gradientBrush = item.success ? greenGradientBrush : redGradientBrush;
                         DateTime span = new DateTime(item.end - item.begin);
                         string time = Utils.SecondsToString(span.Ticks);
-                        FormattedText itext = new FormattedText((i).ToString(intFormat) + " " + item.ProjectName, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, solidBrush);
+                        FormattedText itext = new FormattedText((item.ProjectBuildOrderNumber).ToString(intFormat) + "> " + item.ProjectName, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, solidBrush);
                         drawingContext.DrawText(itext, new Point(1, i * rowHeight)); //Write project name
                         Rect r = new Rect();
                         r.X = maxStringLength + (int)((item.begin) * (long)(RenderSize.Width - maxStringLength) / maxTick);
@@ -336,12 +336,12 @@ namespace ParallelBuildsMonitor
                     }
 
                     Brush blueGradientBrush = new LinearGradientBrush(Colors.LightBlue, Colors.DarkBlue, new Point(0, 0), new Point(0, 1));
-                    foreach (KeyValuePair<string, DateTime> item in DataModel.CurrentBuilds)
+                    foreach (KeyValuePair<string, Tuple<uint, long>> item in DataModel.CurrentBuilds)
                     {
-                        FormattedText itext = new FormattedText((i).ToString(intFormat) + " " + DataModel.GetHumanReadableProjectName(item.Key), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blueSolidBrush);
+                        FormattedText itext = new FormattedText((item.Value.Item1).ToString(intFormat) + "> " + DataModel.GetHumanReadableProjectName(item.Key), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blueSolidBrush);
                         drawingContext.DrawText(itext, new Point(1, i * rowHeight));
                         Rect r = new Rect();
-                        r.X = maxStringLength + (int)((item.Value.Ticks - DataModel.StartTime.Ticks) * (long)(RenderSize.Width - maxStringLength) / maxTick);
+                        r.X = maxStringLength + (int)((item.Value.Item2) * (long)(RenderSize.Width - maxStringLength) / maxTick);
                         r.Width = maxStringLength + (int)((nowTick - DataModel.StartTime.Ticks) * (long)(RenderSize.Width - maxStringLength) / maxTick) - r.X;
                         if (r.Width == 0)
                         {

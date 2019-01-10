@@ -19,7 +19,7 @@ namespace ParallelBuildsMonitor
         /// Holds point in time when entire build started (Solution).
         /// </summary>
         public DateTime StartTime { get; private set; }
-        public ReadOnlyDictionary<string, DateTime> CurrentBuilds { get { return new ReadOnlyDictionary<string, DateTime>(currentBuilds); } }
+        public ReadOnlyDictionary<string, Tuple<uint, long>> CurrentBuilds { get { return new ReadOnlyDictionary<string, Tuple<uint, long>>(currentBuilds); } }
         public ReadOnlyCollection<BuildInfo> FinishedBuilds { get { return finishedBuilds.AsReadOnly(); } }
         public ReadOnlyDictionary<string, List<string>> ProjectDependenies { get { return new ReadOnlyDictionary<string, List<string>>(projectDependenies); } }
         public ReadOnlyCollection<BuildInfo> CriticalPath { get { return criticalPath.AsReadOnly(); } }
@@ -33,7 +33,7 @@ namespace ParallelBuildsMonitor
 
         #region Members
 
-        private Dictionary<string, DateTime> currentBuilds = new Dictionary<string, DateTime>(); //<c>string</c> is ProjectUniqueName, <c>DateTime</c> is when particular project start building
+        private Dictionary<string, Tuple<uint, long>> currentBuilds = new Dictionary<string, Tuple<uint, long>>(); //<c>string</c> is ProjectUniqueName, <c>uint</c> is project build order number, <c>long</c> is relative time counted since <c>DataModel.StartTime</c> in <c>DateTime.Ticks</c> units.
         private List<BuildInfo> finishedBuilds = new List<BuildInfo>();
         private Dictionary<string, List<string>> projectDependenies = new Dictionary<string, List<string>>(); //<c>string</c> is ProjectUniqueName, <c>List<string></c> is list of projects that <c>Key</c> project depends on
         private List<BuildInfo> criticalPath = new List<BuildInfo>();
@@ -45,6 +45,8 @@ namespace ParallelBuildsMonitor
         private PerformanceCounter hddCounter = new PerformanceCounter("PhysicalDisk", "% Disk Time", "_Total");
         private static readonly double performanceTimerInterval = 1000; // 1000 means collect data every 1s.
         private System.Timers.Timer performanceTimer = new System.Timers.Timer(performanceTimerInterval);
+
+        static uint projectBuildOrderNumber = 1;
 
         #endregion Members
 
@@ -75,6 +77,7 @@ namespace ParallelBuildsMonitor
             MaxParallelBuilds = 0;
             AllProjectsCount = 0;
             currentBuilds.Clear();
+            projectBuildOrderNumber = 0;
             finishedBuilds.Clear();
             criticalPath.Clear();
             cpuUsage.Clear();
@@ -114,7 +117,8 @@ namespace ParallelBuildsMonitor
         /// <param name="projectKey"></param>
         public void AddCurrentBuild(string projectKey)
         {
-            currentBuilds[projectKey] = DateTime.Now;
+            // It is assumed that OnBuildProjConfigBegin event come in the same order as numbering (1>...) shows in the Output Build Pane/Window
+            currentBuilds[projectKey] = new Tuple<uint, long>(++projectBuildOrderNumber, DateTime.Now.Ticks - StartTime.Ticks);
             if (currentBuilds.Count > MaxParallelBuilds)
             {
                 MaxParallelBuilds = currentBuilds.Count;
@@ -131,12 +135,11 @@ namespace ParallelBuildsMonitor
             if (!CurrentBuilds.ContainsKey(ProjectUniqueName))
                 return false;
 
-            DateTime start = new DateTime(CurrentBuilds[ProjectUniqueName].Ticks - StartTime.Ticks);
+            uint projectBuildOrderNumber = CurrentBuilds[ProjectUniqueName].Item1;
+            long start = CurrentBuilds[ProjectUniqueName].Item2;
+            long end = DateTime.Now.Ticks - StartTime.Ticks;
             currentBuilds.Remove(ProjectUniqueName);
-            DateTime end = new DateTime(DateTime.Now.Ticks - StartTime.Ticks);
-            finishedBuilds.Add(new BuildInfo(ProjectUniqueName, GetHumanReadableProjectName(ProjectUniqueName), start.Ticks, end.Ticks, wasBuildSucceessful));
-            TimeSpan s = end - start;
-            DateTime t = new DateTime(s.Ticks);
+            finishedBuilds.Add(new BuildInfo(ProjectUniqueName, GetHumanReadableProjectName(ProjectUniqueName), projectBuildOrderNumber, start, end, wasBuildSucceessful));
 
             return true;
         }
@@ -184,10 +187,10 @@ namespace ParallelBuildsMonitor
                         maxTick = info.end;
                     }
                 }
-                foreach (DateTime start in CurrentBuilds.Values)
+                foreach (Tuple<uint, long> start in CurrentBuilds.Values)
                 {
                     maxTick = nowTicks - StartTime.Ticks;
-                    totTicks += nowTicks - start.Ticks;
+                    totTicks += nowTicks - (start.Item2 + StartTime.Ticks);
                 }
                 totTicks /= MaxParallelBuilds;
                 if (maxTick > 0)
