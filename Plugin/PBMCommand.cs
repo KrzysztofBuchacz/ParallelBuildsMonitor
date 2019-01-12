@@ -9,6 +9,7 @@ using System.Timers;
 using EnvDTE;
 using EnvDTE80;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ParallelBuildsMonitor
 {
@@ -147,6 +148,7 @@ namespace ParallelBuildsMonitor
             }
             catch
             {
+                Debug.Assert(false, "Saving Gantt chart as .png failed! Exception thrown while trying save .png file.");
             }
         }
 
@@ -165,6 +167,7 @@ namespace ParallelBuildsMonitor
             }
             catch
             {
+                Debug.Assert(false, "Saving .csv failure! Exception thrown while trying save .csv file.");
             }
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 
 
@@ -52,7 +53,10 @@ namespace ParallelBuildsMonitor
                     TotalPhysicalMemoryInGB = (Int32)Math.Round(Convert.ToDouble(item.Properties["TotalPhysicalMemory"].Value) / 1048576 / 1024, 0);
                 }
             }
-            catch { }
+            catch
+            {
+                Debug.Assert(false, "Getting Physical Processors Number or Total Physical Memory failed! Exception thrown while trying to possess those values.");
+            }
 
             try
             { // Not sure if try{} catch{} is needed here
@@ -63,7 +67,11 @@ namespace ParallelBuildsMonitor
                     cpusSpeedInMHz.Add((UInt32)item["MaxClockSpeed"]);
                 }
             }
-            catch { }
+            catch
+            {
+                Debug.Assert(false, "Getting Physical Cores Number, Logical Cores Number or CPU Speed failed! Exception thrown while trying to possess those values.");
+            }
+
 
             if (PhysicalCoresNumber != LogicalCoresNumber)
                 HyperThreadingEnabled = true;
@@ -75,7 +83,11 @@ namespace ParallelBuildsMonitor
                     PhysicalHDDsNumber += 1;
                 }
             }
-            catch { }
+            catch
+            {
+                Debug.Assert(false, "Getting Physical HDDs Number failed! Exception thrown while trying to possess those values.");
+            }
+
 
             if (PhysicalHDDsNumber > 0)
             {
@@ -88,6 +100,7 @@ namespace ParallelBuildsMonitor
                     }
                     catch
                     {
+                        Debug.Assert(false, "Getting Type of HDDs failed! Exception thrown while trying to to determine HDD type.");
                         hddsTypes.Add(DetectSsd.DriveType.Unknown);
                     }
                 }

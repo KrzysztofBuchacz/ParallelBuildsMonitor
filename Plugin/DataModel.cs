@@ -10,7 +10,7 @@ namespace ParallelBuildsMonitor
     /// <summary>
     /// Container to holds all build statistics data
     /// </summary>
-    class DataModel
+    public class DataModel
     {
         #region Properties
 
@@ -49,6 +49,17 @@ namespace ParallelBuildsMonitor
         static uint projectBuildOrderNumber = 1;
 
         #endregion Members
+
+        #region For Testing Only
+
+        // Better option is [assembly: InternalsVisibleTo("ParallelBuildsMonitorTests")]...
+
+        public void SetCriticalPath(List<BuildInfo> CriticalPath)
+        {
+            criticalPath = CriticalPath;
+        }
+
+        #endregion For Testing Only
 
         #region Creator and Constructors
 
@@ -108,7 +119,7 @@ namespace ParallelBuildsMonitor
         public void BuildDone()
         {
             performanceTimer.Stop();
-            FindCriticalPath();
+            FindAndSetCriticalPath();
         }
 
         /// <summary>
@@ -219,7 +230,7 @@ namespace ParallelBuildsMonitor
         /// <c>ProjectDependenies</c> need to be initialized before calling this method.
         /// </remarks>
         /// <returns><c>true</c> when successfully critical path found and stored in <c>CriticalPath</c> property.</returns>
-        private bool FindCriticalPath()
+        private bool FindAndSetCriticalPath()
         {
             criticalPath.Clear();
 
