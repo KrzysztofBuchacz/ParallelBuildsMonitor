@@ -135,25 +135,6 @@ namespace ParallelBuildsMonitor.Tests
         {
             return (new DictionaryComparer<T, Dictionary<U, W>>(new DictionaryComparer<U, W>())).Equals(dict1, dict2);
         }
-
-        #region Not Working Correctly
-
-        //public static bool ContentEquals<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, Dictionary<TKey, TValue> otherDictionary)
-        //{
-        //    if ((dictionary == null) && (otherDictionary == null))
-        //        return true;
-
-        //    if ((dictionary == null) || (otherDictionary == null))
-        //        return false;
-
-        //    // Probably needed when we have types that allow null as key
-        //    //if (dictionary.Keys.Any(x => x == null) != otherDictionary.Keys.Any(x => x == null))
-        //    //    return false;
-
-        //    return otherDictionary.OrderBy(kvp => kvp.Key).SequenceEqual(dictionary.OrderBy(kvp => kvp.Key));
-        //}
-
-        #endregion Not Working Correctly
     }
 
     /// <summary>
@@ -183,37 +164,6 @@ namespace ParallelBuildsMonitor.Tests
     [TestClass()]
     public class TestHelperMethodsTests
     {
-        #region Not Working Correctly
-
-        //[TestMethod()]
-        //public void ContentEqualsTest()
-        //{
-        //    // null checks
-        //    Assert.IsTrue(CM.ContentEquals<string, int>(null, null));
-        //    Assert.IsFalse(CM.ContentEquals<string, int>(null, new Dictionary<string, int>()));
-        //    Assert.IsFalse(CM.ContentEquals<string, int>(null, new Dictionary<string, int> { { "A", 0 } }));
-        //    //Assert.IsFalse(CM.ContentEquals(new Dictionary<string, int> { { "A", 0 } }, new Dictionary<string, int> { { null, 0 } }));             // generic collections does not allow string as null. "new Dictionary<string, int> { { null, 0 } }" is runtime exception. CORRECT
-        //    Assert.IsFalse(CM.ContentEquals(new Dictionary<string, string> { { "A", "A" } }, new Dictionary<string, string> { { "A", null } }));
-
-        //    // Difference in length
-        //    Assert.IsFalse(CM.ContentEquals(new Dictionary<string, int>(), new Dictionary<string, int> { { "A", 0 } }));
-        //    Assert.IsFalse(CM.ContentEquals(new Dictionary<string, int> { { "A", 0 } }, new Dictionary<string, int> { { "A", 0 }, { "B", 1 } }));
-
-        //    // Difference in key/value
-        //    Assert.IsTrue(CM.ContentEquals(new Dictionary<string, int> { { "A", 0 } }, new Dictionary<string, int> { { "A", 0 } }));
-        //    Assert.IsFalse(CM.ContentEquals(new Dictionary<string, int> { { "A", 0 } }, new Dictionary<string, int> { { "A", 1 } }));
-        //    Assert.IsFalse(CM.ContentEquals(new Dictionary<string, int> { { "A", 0 } }, new Dictionary<string, int> { { "B", 0 } }));
-
-        //    // Different order - Dictionary doesn't maintain order
-        //    Assert.IsTrue(CM.ContentEquals(new Dictionary<string, int> { { "B", 1 }, { "A", 0 } }, new Dictionary<string, int> { { "A", 0 }, { "B", 1 } }));
-
-        //    // Different types
-        //    //Assert.IsTrue(CM.ContentEquals(new Dictionary<string, int> { { "A", 0 } }, new Dictionary<string, string> { { "A", null } }));   // does not compile. CORRECT
-        //    //Assert.IsTrue(CM.ContentEquals(new Dictionary<string, int> { { "A", 0 } }, new Dictionary<string, long> { { "A", 0 } }));        // does not compile. CORRECT
-        //}
-
-        #endregion Not Working Correctly
-
         [TestMethod()]
         public void CollectionAssertAreEqualTest_Simple()
         {
@@ -244,37 +194,6 @@ namespace ParallelBuildsMonitor.Tests
             CollectionAssert.AreNotEqual(new Dictionary<string, int> { { "A", 0 } }, new Dictionary<string, string> { { "A", "0" } });
         }
 
-        #region Not Working Correctly
-
-        //[TestMethod()]
-        //public void CollectionAssertAreEqualTest_NestedCollection()
-        //{
-        //    // null checks
-        //    CollectionAssert.AreEqual(null, null);
-        //    CollectionAssert.AreNotEqual(null, new Dictionary<string, List<int>>());
-        //    CollectionAssert.AreNotEqual(null, new Dictionary<string, List<int>> { { "A", new List<int> { 0 } } });
-        //    //CollectionAssert.AreNotEqual(new Dictionary<string, int> { { "A", 0 } }, new Dictionary<string, int> { { null, 0 } });             // generic collections does not allow string as null. "new Dictionary<string, int> { { null, 0 } }" is runtime exception. CORRECT
-        //    CollectionAssert.AreNotEqual(new Dictionary<string, List<int>> { { "A", new List<int>() } }, new Dictionary<string, List<int>> { { "A", null } });
-
-        //    // Difference in length
-        //    CollectionAssert.AreNotEqual(new Dictionary<string, List<int>> { { "A", new List<int>() } }, new Dictionary<string, List<int>> { { "A", new List<int> { 0 } } });
-        //    CollectionAssert.AreNotEqual(new Dictionary<string, List<int>> { { "A", new List<int> { 0 } } }, new Dictionary<string, List<int>> { { "A", new List<int> { 0, 0 } } });
-
-        //    //// Difference in key/value
-        //    CollectionAssert.AreEqual(new Dictionary<string, List<int>> { { "A", new List<int> { 2, 5 } } }, new Dictionary<string, List<int>> { { "A", new List<int> { 2, 5 } } }); // Wrong result! CollectionAssert.AreEqual() can't be used to nested colections! THIS IS WRONG!!!
-        //    //CollectionAssert.AreNotEqual(new Dictionary<string, int> { { "A", 0 } }, new Dictionary<string, int> { { "A", 1 } });
-        //    //CollectionAssert.AreNotEqual(new Dictionary<string, int> { { "A", 0 } }, new Dictionary<string, int> { { "B", 0 } });
-
-        //    //// Different order - actually Dictionary has order
-        //    //CollectionAssert.AreNotEqual(new Dictionary<string, int> { { "B", 1 }, { "A", 0 } }, new Dictionary<string, int> { { "A", 0 }, { "B", 1 } });
-        //    //CollectionAssert.AreEquivalent(new Dictionary<string, int> { { "B", 1 }, { "A", 0 } }, new Dictionary<string, int> { { "A", 0 }, { "B", 1 } });
-
-        //    //// Different types
-        //    ////Assert.IsTrue(CM.ContentEquals(new Dictionary<string, int> { { "A", 0 } }, new Dictionary<string, string> { { "A", null } }));   // does not compile. CORRECT
-        //    ////Assert.IsTrue(CM.ContentEquals(new Dictionary<string, int> { { "A", 0 } }, new Dictionary<string, long> { { "A", 0 } }));        // does not compile. CORRECT
-        //}
-
-        #endregion Not Working Correctly
 
         [TestMethod()]
         public void CollectionAreEqualsTest_NestedCollection()
