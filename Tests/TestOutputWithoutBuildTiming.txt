@@ -1,0 +1,47 @@
+1>------ Rebuild All started: Project: junk-finddir, Configuration: Debug x64 ------
+1>stdafx.cpp
+1>junk-finddir.cpp
+1>junk-finddir.vcxproj -> C:\ParallelBuildsMonitor\Example\x64\Debug\junk-finddir.exe
+2>------ Rebuild All started: Project: WpfToolTip, Configuration: Debug Any CPU ------
+3>------ Rebuild All started: Project: constexpr_templates, Configuration: Debug x64 ------
+4>------ Rebuild All started: Project: DiskPerformance, Configuration: Debug Any CPU ------
+5>------ Rebuild All started: Project: junk-vector-const, Configuration: Debug x64 ------
+5>stdafx.cpp
+3>Compiler Passes:
+3> C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX64\x64\CL.exe:        Version 19.16.27025.1
+3> C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX64\x64\c1.dll:        Version 19.16.27025.1
+3> C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX64\x64\c1xx.dll:      Version 19.16.27025.1
+3> C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX64\x64\c2.dll:        Version 19.16.27025.1
+3> C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX64\x64\link.exe:      Version 14.16.27025.1
+3> C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX64\x64\mspdb140.dll:  Version 14.16.27025.1
+3> C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX64\x64\1033\clui.dll: Version 19.16.27025.1
+3>
+3>stdafx.cpp
+3>Compiler Passes:
+3> C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX64\x64\CL.exe:        Version 19.16.27025.1
+3> C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX64\x64\c1.dll:        Version 19.16.27025.1
+3> C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX64\x64\c1xx.dll:      Version 19.16.27025.1
+3> C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX64\x64\c2.dll:        Version 19.16.27025.1
+3> C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX64\x64\link.exe:      Version 14.16.27025.1
+3> C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX64\x64\mspdb140.dll:  Version 14.16.27025.1
+3> C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX64\x64\1033\clui.dll: Version 19.16.27025.1
+3>
+3>constexpr_templates.cpp
+5>junk-vector-const.cpp
+4>  DiskPerformance -> C:\ParallelBuildsMonitor\Example\DiskPerformance\bin\Debug\DiskPerformance.exe
+5>junk-vector-const.vcxproj -> C:\ParallelBuildsMonitor\Example\x64\Debug\junk-vector-const.exe
+3>left.cpp
+3>Old Trials.cpp
+3>Problem.cpp
+3>Generating Code...
+3>constexpr_templates.vcxproj -> C:\ParallelBuildsMonitor\Example\x64\Debug\constexpr_templates.exe
+3>PostBuildEvent.bat Begin
+2>  PreBuildEvent.bat Begin
+2>  PreBuildEvent.bat End
+2>  WpfToolTip -> C:\ParallelBuildsMonitor\Example\WpfToolTip\bin\Debug\WpfToolTip.exe
+6>------ Rebuild All started: Project: variadic-macros-v1, Configuration: Debug x64 ------
+3>PostBuildEvent.bat End
+6>stdafx.cpp
+6>variadic-macros-v1.cpp
+6>variadic-macros-v1.vcxproj -> C:\ParallelBuildsMonitor\Example\x64\Debug\variadic-macros-v1.exe
+========== Rebuild All: 6 succeeded, 0 failed, 0 skipped ==========
