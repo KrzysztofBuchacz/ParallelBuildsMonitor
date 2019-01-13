@@ -319,29 +319,29 @@ namespace ParallelBuildsMonitor.Tests
             HashSet<int> only1 = null;
             bool res1 = SaveCsv.GetBuildTimingsFromOutput(outputStr1, only1, out Dictionary<int, Dictionary<string, int>> all1, out Dictionary<string, int> sums1);
             Assert.IsTrue(res1);
-            Assert.IsTrue(all1.Count == 0);
-            Assert.IsTrue(sums1.Count == 0);
+            Assert.IsNull(all1);
+            Assert.IsNull(sums1);
 
             string outputStr2 = "";
             HashSet<int> only2 = null;
             bool res2 = SaveCsv.GetBuildTimingsFromOutput(outputStr2, only2, out Dictionary<int, Dictionary<string, int>> all2, out Dictionary<string, int> sums2);
             Assert.IsTrue(res2);
-            Assert.IsTrue(all2.Count == 0);
-            Assert.IsTrue(sums2.Count == 0);
+            Assert.IsNull(all2);
+            Assert.IsNull(sums2);
 
             string outputStr3 = "";
             HashSet<int> only3 = new HashSet<int>();
             bool res3 = SaveCsv.GetBuildTimingsFromOutput(outputStr3, only3, out Dictionary<int, Dictionary<string, int>> all3, out Dictionary<string, int> sums3);
             Assert.IsTrue(res3);
-            Assert.IsTrue(all3.Count == 0);
-            Assert.IsTrue(sums3.Count == 0);
+            Assert.IsNull(all3);
+            Assert.IsNull(sums3);
 
             string outputStr4 = null;
             HashSet<int> only4 = new HashSet<int>();
             bool res4 = SaveCsv.GetBuildTimingsFromOutput(outputStr4, only4, out Dictionary<int, Dictionary<string, int>> all4, out Dictionary<string, int> sums4);
             Assert.IsTrue(res4);
-            Assert.IsTrue(all4.Count == 0);
-            Assert.IsTrue(sums4.Count == 0);
+            Assert.IsNull(all4);
+            Assert.IsNull(sums4);
 
             string outputStr5 = ""
                 //+ "1>Task Performance Summary:\r\n"
@@ -351,8 +351,8 @@ namespace ParallelBuildsMonitor.Tests
             HashSet<int> only5 = new HashSet<int>();
             bool res5 = SaveCsv.GetBuildTimingsFromOutput(outputStr5, only5, out Dictionary<int, Dictionary<string, int>> all5, out Dictionary<string, int> sums5);
             Assert.IsTrue(res5);
-            Assert.IsTrue(all5.Count == 0);
-            Assert.IsTrue(sums5.Count == 0);
+            Assert.IsNull(all5);
+            Assert.IsNull(sums5);
         }
 
         [TestMethod()]
@@ -434,7 +434,7 @@ namespace ParallelBuildsMonitor.Tests
         [TestMethod()]
         public void GetBuildTimingsFromOutputTest_RealOutput()
         {
-            string outputStr1 = File.ReadAllText(TestUtils.GetTestFile("TestOutput.txt"));
+            string outputStr1 = File.ReadAllText(TestUtils.GetTestFile("TestOutputWithBuildTiming.txt"));
             HashSet<int> only1 = null;
             bool res1 = SaveCsv.GetBuildTimingsFromOutput(outputStr1, only1, out Dictionary<int, Dictionary<string, int>> all1, out Dictionary<string, int> sums1);
             Assert.IsTrue(res1);
@@ -687,7 +687,7 @@ namespace ParallelBuildsMonitor.Tests
             //
             // Step 1: Parse string from Output pane
             //
-            string outputStr1 = File.ReadAllText(TestUtils.GetTestFile("TestOutput.txt"));
+            string outputStr1 = File.ReadAllText(TestUtils.GetTestFile("TestOutputWithBuildTiming.txt"));
             HashSet<int> only1 = null;
             bool resG1 = SaveCsv.GetBuildTimingsFromOutput(outputStr1, only1, out Dictionary<int, Dictionary<string, int>> all1, out Dictionary<string, int> sums1);
             Assert.IsTrue(resG1);
@@ -723,7 +723,7 @@ namespace ParallelBuildsMonitor.Tests
             //
             // Step 1: Parse string from Output pane
             //
-            string outputStr1 = File.ReadAllText(TestUtils.GetTestFile("TestOutput.txt"));
+            string outputStr1 = File.ReadAllText(TestUtils.GetTestFile("TestOutputWithBuildTiming.txt"));
             HashSet<int> only1 = new HashSet<int> { 5, 3 };
             bool resG1 = SaveCsv.GetBuildTimingsFromOutput(outputStr1, only1, out Dictionary<int, Dictionary<string, int>> all1, out Dictionary<string, int> sums1);
             Assert.IsTrue(resG1);
@@ -773,9 +773,9 @@ namespace ParallelBuildsMonitor.Tests
         }
 
         [TestMethod()]
-        public void SaveCriticalPathAsCsvTest()
+        public void SaveCriticalPathAsCsvWithBuildTimingTest()
         {
-            string outputStr1 = File.ReadAllText(TestUtils.GetTestFile("TestOutput.txt"));
+            string outputStr1 = File.ReadAllText(TestUtils.GetTestFile("TestOutputWithBuildTiming.txt"));
             string tmpFileName = Path.GetTempFileName(); //this method Create file in temp directory
 
             List<BuildInfo> criticalPath = new List<BuildInfo>
@@ -790,7 +790,31 @@ namespace ParallelBuildsMonitor.Tests
             Assert.IsTrue(res1);
 
             string current = File.ReadAllText(TestUtils.GetTestFile(tmpFileName));
-            string expected = File.ReadAllText(TestUtils.GetTestFile("PBM Example.sln CP.csv"));
+            string expected = File.ReadAllText(TestUtils.GetTestFile("PBM Example.sln CP WithBuildTiming.csv"));
+            Assert.IsTrue(current == expected);
+
+            File.Delete(tmpFileName);
+        }
+
+        [TestMethod()]
+        public void SaveCriticalPathAsCsvWithoutBuildTimingTest()
+        {
+            string outputStr1 = File.ReadAllText(TestUtils.GetTestFile("TestOutputWithoutBuildTiming.txt"));
+            string tmpFileName = Path.GetTempFileName(); //this method Create file in temp directory
+
+            List<BuildInfo> criticalPath = new List<BuildInfo>
+            {
+                new BuildInfo("junk-finddir\\junk-finddir.vcxproj", "junk-finddir.vcxproj", 1, 59992, 40783233, true),
+                new BuildInfo("WpfToolTip\\WpfToolTip.csproj", "WpfToolTip.csproj", 2, 40808204, 102393597, true),
+                new BuildInfo("variadic-macros-v1\\variadic-macros-v1.vcxproj", "variadic-macros-v1.vcxproj", 6, 102473587, 149216287, true),
+            };
+            DataModel.Instance.SetCriticalPath(criticalPath);
+
+            bool res1 = SaveCsv.SaveCriticalPathAsCsv(tmpFileName, outputStr1);
+            Assert.IsTrue(res1);
+
+            string current = File.ReadAllText(TestUtils.GetTestFile(tmpFileName));
+            string expected = File.ReadAllText(TestUtils.GetTestFile("PBM Example.sln CP WithoutBuildTiming.csv"));
             Assert.IsTrue(current == expected);
 
             File.Delete(tmpFileName);

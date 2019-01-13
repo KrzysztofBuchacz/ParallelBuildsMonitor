@@ -63,12 +63,18 @@
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="PBM Example.sln CP WithBuildTiming.csv" />
+    <None Include="PBM Example.sln CP WithoutBuildTiming.csv" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Plugin\ParallelBuildsMonitor.csproj">
       <Project>{d045634d-a98b-4d34-9b92-2c1f2d45cb8f}</Project>
       <Name>ParallelBuildsMonitor</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="TestOutputWithBuildTiming.txt" />
+    <Content Include="TestOutputWithoutBuildTiming.txt" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

@@ -94,9 +94,10 @@ namespace ParallelBuildsMonitor
                         file.WriteLine(EscapeRow(null));
                     }
 
-                    List<object> summaryDetailedPreHeader = new List<object> { "Summary Report:", null, null, null, null};
+                    List<object> summaryDetailedPreHeader = new List<object> { "Summary Report:" };
                     if (detailedReport != null)
                     {
+                        summaryDetailedPreHeader.AddRange(new List<object> { null, null, null, null }); // rest columns for "Summary Report:" 
                         summaryDetailedPreHeader.Add(sdColumnSeparator);
                         summaryDetailedPreHeader.Add("Detailed Report: (Columns Sorted Descending according to sum for column)");
                     }
@@ -172,18 +173,23 @@ namespace ParallelBuildsMonitor
         ///                    When contain project build order number collect only "Build Timing" for mentioned projects.</param>
         /// <param name="all">Output dictionary, where outer dictioanry key (<c>int</c>) is project build order number.
         ///                   Inner dictionary contain parameters, as <c>string</c> keys
-        ///                   and their corresponding values values, as <c>int</c> values.</param>
+        ///                   and their corresponding values values, as <c>int</c> values in [ms] units.</param>
         /// <param name="sums">Output dictionary, where key (<c>string</c>) is parameter name, which is also column name, 
         ///                    value (<c>int</c>) which is sum of this parameter across all projects.</param>
         /// <returns>false when there were problems with parsing (e.g. could not cast to int)</returns>
         public static bool GetBuildTimingsFromOutput(string outputStr, HashSet<int> only, out Dictionary<int, Dictionary<string, int>> all, out Dictionary<string, int> sums)
         {
             bool wasAllParseOK = true;
-            all = new Dictionary<int, Dictionary<string, int>>(); // <c>int</c> is project order e.g. 2, <c>string</c> is key e.g. "ClCompile", <c>int</c> is value e.g. "3960"
-            sums = new Dictionary<string, int>();
 
             if (outputStr == null)
+            {
+                all = null;
+                sums = null;
                 return true;
+            }
+
+            all = new Dictionary<int, Dictionary<string, int>>(); // <c>int</c> is project order e.g. 2, <c>string</c> is key e.g. "ClCompile", <c>int</c> is value e.g. "3960"
+            sums = new Dictionary<string, int>();
 
             string[] output = outputStr.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
 
@@ -248,6 +254,15 @@ namespace ParallelBuildsMonitor
 
             if (collect)
                 wasAllParseOK = false;
+
+            if ((all.Count == 0) != (sums.Count == 0))
+                Debug.Assert(false, "Detailed Report will be inacurate or missing! Failure when processing Build from Output Pane/Window.");
+
+            if (all.Count == 0)
+                all = null;
+
+            if (sums.Count == 0)
+                sums = null;
 
             return wasAllParseOK;
         }
