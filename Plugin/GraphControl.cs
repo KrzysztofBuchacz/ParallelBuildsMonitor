@@ -54,6 +54,8 @@ namespace ParallelBuildsMonitor
 
         #region Members Visual
 
+        public static readonly double minGanttWidth = 4.0; // don't draw Gantt and Graphs when there is less space than minGanttWidth
+
         public static readonly double penThickness = 1.0;
         // put any colors here, set final theme dependent colors in OnForegroundChanged
         static Pen blackPen = new Pen(new SolidColorBrush(Colors.Black), penThickness);
@@ -153,8 +155,14 @@ namespace ParallelBuildsMonitor
             if (data.Count < 1)
                 return;
 
-            drawingContext.PushClip(new RectangleGeometry(new Rect(0, rowNbr * rowHeight, RenderSize.Width, rowHeight)));
             double pixelRange = RenderSize.Width - spacings.lGanttC - Spacings.rGanttC;
+            if (pixelRange < minGanttWidth)
+            {
+                DrawText(drawingContext, title, rowNbr, Spacings.lOrder, blackBrush);
+                return;
+            }
+
+            drawingContext.PushClip(new RectangleGeometry(new Rect(0, rowNbr * rowHeight, RenderSize.Width, rowHeight)));
 
             double sumValues = 0;
             long sumTicks = 0;
@@ -221,25 +229,23 @@ namespace ParallelBuildsMonitor
                 title += avg.Text;
             }
 
-            FormattedText itext = new FormattedText(title, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-            drawingContext.DrawText(itext, new Point(Spacings.lOrder, rowNbr * rowHeight));
+            DrawText(drawingContext, title, rowNbr, Spacings.lOrder, blackBrush);
             drawingContext.Pop();
         }
 
-        private FormattedText CreateFormattedText(string caption, Brush textColor)
+        private void DrawText(DrawingContext drawingContext, string caption, int rowNbr, double xPos, Brush textColor)
         {
-            return new FormattedText(caption, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, textColor);
+            FormattedText captionFT = new FormattedText(caption, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, textColor);
+            drawingContext.DrawText(captionFT, new Point(xPos, rowNbr * rowHeight));
         }
 
         private void DrawOrderAndProjectNameText(DrawingContext drawingContext, int rowNbr, uint projectBuildOrderNumber, string projectName, Spacings margins, Brush textColor)
         {
             // project build Order
-            FormattedText pBOrder = CreateFormattedText(projectBuildOrderNumber.ToString() + ">", textColor);
-            drawingContext.DrawText(pBOrder, new Point(Spacings.lOrder, rowNbr * rowHeight));  // Order number should be right or left aligned?
+            DrawText(drawingContext, projectBuildOrderNumber.ToString() + ">", rowNbr, Spacings.lOrder, textColor);
 
             // project Name
-            FormattedText pName = CreateFormattedText(projectName, textColor);
-            drawingContext.DrawText(pName, new Point(margins.lProjName, rowNbr * rowHeight)); // write project name
+            DrawText(drawingContext, projectName, rowNbr, margins.lProjName, textColor);
         }
 
         /// <summary>
@@ -266,6 +272,8 @@ namespace ParallelBuildsMonitor
         private void DrawBar(DrawingContext drawingContext, int rowNbr, long startTime, long endTime, long maxTick, Spacings spacings, Brush color, bool markAsCriticalPath)
         {
             double pixelRange = RenderSize.Width - spacings.lGanttC - Spacings.rGanttC;
+            if (pixelRange < minGanttWidth)
+                return;
 
             Rect r = new Rect();
             // Why (int) and (long) is needed here? Let's try to simplify
@@ -406,7 +414,7 @@ namespace ParallelBuildsMonitor
                         {
                             // Cut text when it is too long for window. Probably correct solution is to add horizontal scrollbar to window.
                             // Set a maximum width and height. If the text overflows these values, an ellipsis "..." appears.
-                            itext.MaxTextWidth = RenderSize.Width - Spacings.rGanttC;
+                            itext.MaxTextWidth = RenderSize.Width - Spacings.lOrder - Spacings.rGanttC;
                             itext.MaxTextHeight = rowHeight;
                         }
                         drawingContext.DrawText(itext, new Point(Spacings.lOrder, rowNbr * rowHeight));
@@ -446,8 +454,7 @@ namespace ParallelBuildsMonitor
                         if (DataModel.MaxParallelBuilds > 0)
                             status += " (" + DataModel.PercentageProcessorUse().ToString() + "% of " + DataModel.MaxParallelBuilds.ToString() + " CPUs)";
 
-                        FormattedText itext = new FormattedText(status, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                        drawingContext.DrawText(itext, new Point(Spacings.lOrder, rowNbr * rowHeight));
+                        DrawText(drawingContext, status, rowNbr, Spacings.lOrder, blackBrush);
                     }
 
                     DrawVerticalSeparator(drawingContext, spacings.lGanttC - penThickness, rowNbr, false /*wholeSize*/);
