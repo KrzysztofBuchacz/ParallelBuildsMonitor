@@ -33,7 +33,7 @@ namespace ParallelBuildsMonitor
 
         #region Members
 
-        private Dictionary<string, Tuple<uint, long>> currentBuilds = new Dictionary<string, Tuple<uint, long>>(); //<c>string</c> is ProjectUniqueName, <c>uint</c> is project build order number, <c>long</c> is relative time counted since <c>DataModel.StartTime</c> in <c>DateTime.Ticks</c> units.
+        private Dictionary<string, Tuple<uint, long>> currentBuilds = new Dictionary<string, Tuple<uint, long>>(); //<c>string</c> is ProjectUniqueName, <c>uint</c> is project build order number, <c>long</c> is project Start time, relative, counted since <c>DataModel.StartTime</c> in <c>DateTime.Ticks</c> units.
         private List<BuildInfo> finishedBuilds = new List<BuildInfo>();
         private Dictionary<string, List<string>> projectDependenies = new Dictionary<string, List<string>>(); //<c>string</c> is ProjectUniqueName, <c>List<string></c> is list of projects that <c>Key</c> project depends on
         private List<BuildInfo> criticalPath = new List<BuildInfo>();

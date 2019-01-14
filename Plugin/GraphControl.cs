@@ -17,28 +17,69 @@ namespace ParallelBuildsMonitor
 {
     public class GraphControl : ContentControl
     {
+        #region Internal classes
+
+        private class Spacings
+        {
+            /// <summary>
+            /// Distance from left window border to project order number text.
+            /// </summary>
+            static readonly public double lOrder = 2.0 + GraphControl.penThickness;
+
+            /// <summary>
+            /// Distance from left window border to project name text. Set dynamically depending on project order number length text (number of projects).
+            /// </summary>
+            public double lProjName = 20.0;
+
+            /// <summary>
+            /// Distance from left window border to Gantt chart. Set dynamically depending on project name length text.
+            /// </summary>
+            public double lGanttC = 70.0;
+
+            /// <summary>
+            /// Distance from Gantt chart to right window border.
+            /// </summary>
+            static readonly public double rGanttC = 2.0 + GraphControl.penThickness;
+        }
+
+        #endregion Internal classes
+
         #region Members
 
-        public bool scrollLast = true;
-        public string intFormat = "D3";
-        public bool isBuilding = false;
+        #endregion Members
 
-        // put any colors here, set final theme dependent colors in OnForegroundChanged
-        Brush blueSolidBrush = new SolidColorBrush(Colors.DarkBlue);
-        Pen blackPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
-        Brush blackBrush = new SolidColorBrush(Colors.Black);
-        Brush greenSolidBrush = new SolidColorBrush(Colors.DarkGreen);
-        Brush redSolidBrush = new SolidColorBrush(Colors.DarkRed);
-        Brush whiteBrush = new SolidColorBrush(Colors.White);
-        Pen grid = new Pen(new SolidColorBrush(Colors.LightGray), 1.0);
-        Pen cpuPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
-        Pen hddPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
-        Pen cpuSoftPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
-        Pen hddSoftPen = new Pen(new SolidColorBrush(Colors.Black), 1.0);
-        private static double refreshTimerInterval = 1000; // 1000 means collect data every 1s.
+        public bool isBuilding = false;
+        private static readonly double refreshTimerInterval = 1000; // 1000 means collect data every 1s.
         private System.Timers.Timer refreshTimer = new System.Timers.Timer(refreshTimerInterval);
 
-        #endregion Members
+        #region Members Visual
+
+        public static readonly double minGanttWidth = 4.0; // don't draw Gantt and Graphs when there is less space than minGanttWidth
+
+        public static readonly double penThickness = 1.0;
+        // put any colors here, set final theme dependent colors in OnForegroundChanged
+        static Pen blackPen = new Pen(new SolidColorBrush(Colors.Black), penThickness);
+        static Pen grid = new Pen(new SolidColorBrush(Colors.LightGray), penThickness);
+        static Pen cpuPen = new Pen(new SolidColorBrush(Colors.Black), penThickness);
+        static Pen hddPen = new Pen(new SolidColorBrush(Colors.Black), penThickness);
+        static Pen cpuSoftPen = new Pen(new SolidColorBrush(Colors.Black), penThickness);
+        static Pen hddSoftPen = new Pen(new SolidColorBrush(Colors.Black), penThickness);
+        static Brush blueSolidBrush = new SolidColorBrush(Colors.DarkBlue);
+        static Brush blackBrush = new SolidColorBrush(Colors.Black);
+        static Brush greenSolidBrush = new SolidColorBrush(Colors.DarkGreen);
+        static Brush redSolidBrush = new SolidColorBrush(Colors.DarkRed);
+        static Brush whiteBrush = new SolidColorBrush(Colors.White);
+        static Brush greenGradientBrush = new LinearGradientBrush(Colors.MediumSeaGreen, Colors.DarkGreen, new Point(0, 0), new Point(0, 1));
+        static Brush blueGradientBrush = new LinearGradientBrush(Colors.LightBlue, Colors.DarkBlue, new Point(0, 0), new Point(0, 1));
+        static Brush redGradientBrush = new LinearGradientBrush(Colors.IndianRed, Colors.DarkRed, new Point(0, 0), new Point(0, 1));
+        static Brush criticalPathGradientBrush = new LinearGradientBrush(Colors.LightYellow, Colors.Yellow, new Point(0, 0), new Point(0, 1));
+
+        readonly Typeface fontFace = null; // it is set in constructor
+        readonly double rowHeight = 0;     // it is set in constructor
+
+        public bool scrollLast = true;
+
+        #endregion Members Visual
 
         #region Properties
 
@@ -52,6 +93,8 @@ namespace ParallelBuildsMonitor
         public GraphControl()
         {
             Instance = this;
+            fontFace = new Typeface(FontFamily.Source);
+            rowHeight = (new FormattedText("A0", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush)).Height + penThickness;
             OnForegroundChanged();
             refreshTimer.Elapsed += new ElapsedEventHandler(RefreshTimerEventTick); // Are we sure there is only one instance of GraphControl? If not operator += will multiply calls...
         }
@@ -107,84 +150,166 @@ namespace ParallelBuildsMonitor
                  }));
         }
 
-        void DrawGraph(string title, System.Windows.Media.DrawingContext drawingContext, ReadOnlyCollection<Tuple<long, float>> data, Pen pen, Pen softPen, ref int i, Size RenderSize, double rowHeight, double maxStringLength, long maxTick, long nowTick, Typeface fontFace)
+        void DrawGraph(string title, DrawingContext drawingContext, ReadOnlyCollection<Tuple<long, float>> data, Pen pen, Pen softPen, int rowNbr, Size RenderSize, double rowHeight, Spacings spacings, long maxTick, long nowTick, Typeface fontFace)
         {
-            // Status separator
-            drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
+            if (data.Count < 1)
+                return;
 
-            // Draw graph
-            if (data.Count > 0)
+            double pixelRange = RenderSize.Width - spacings.lGanttC - Spacings.rGanttC;
+            if (pixelRange < minGanttWidth)
             {
-                drawingContext.PushClip(new RectangleGeometry(new Rect(0, i * rowHeight, RenderSize.Width, rowHeight)));
-                double pixelsRange = RenderSize.Width - maxStringLength;
-
-                double sumValues = 0;
-                long sumTicks = 0;
-                long previousTick = DataModel.StartTime.Ticks;
-                float previousValue = 0.0f;
-
-                int step = 1;
-                if (data.Count > 10) // Do rarefy only when more than 10 samples
-                {
-                    step = (int)(data.Count / (pixelsRange / 10)); // Draw no frequent than 10 pixels
-                    if (step < 1)
-                        step = 1;
-                }
-
-                var allPoints = new List<Point>();
-                for (int nbr = 0; nbr < data.Count; nbr += step)
-                {
-                    long spanL = previousTick - DataModel.StartTime.Ticks;
-                    long spanR = data[nbr].Item1 - DataModel.StartTime.Ticks;
-                    if (isBuilding && nbr >= data.Count - step)
-                        spanR = nowTick - DataModel.StartTime.Ticks;
-                    double shiftL = (int)(spanL * (long)(RenderSize.Width - maxStringLength) / maxTick);
-                    double shiftR = (int)(spanR * (long)(RenderSize.Width - maxStringLength) / maxTick);
-                    Point p1 = new Point(maxStringLength + shiftL, (i + 1) * rowHeight - previousValue * (rowHeight - 2) / 100 - 1);
-                    Point p2 = new Point(maxStringLength + shiftR, (i + 1) * rowHeight - data[nbr].Item2 * (rowHeight - 2) / 100 - 1);
-
-                    StreamGeometry streamGeometry = new StreamGeometry();
-                    using (StreamGeometryContext geometryContext = streamGeometry.Open())
-                    {
-                        geometryContext.BeginFigure(p1, true, true);
-                        Point p3 = new Point(p2.X, (i + 1) * rowHeight);
-                        Point p4 = new Point(p1.X, (i + 1) * rowHeight);
-                        PointCollection points = new PointCollection { p2, p3, p4 };
-                        geometryContext.PolyLineTo(points, true, true);
-                    }
-
-                    drawingContext.DrawGeometry(softPen.Brush, softPen, streamGeometry);
-
-                    if (nbr == 0)
-                        allPoints.Add(p1);
-                    allPoints.Add(p2);
-
-                    if (nbr > 0)
-                    {
-                        sumValues += (previousValue + data[nbr].Item2) * (data[nbr].Item1 - previousTick);
-                        sumTicks += data[nbr].Item1 - previousTick;
-                    }
-
-                    previousTick = data[nbr].Item1;
-                    previousValue = data[nbr].Item2;
-                }
-
-                for (int nbr = 1; nbr < allPoints.Count; ++nbr)
-                    drawingContext.DrawLine(pen, allPoints[nbr-1], allPoints[nbr]);
-
-                if (sumTicks > 0)
-                {
-                    long average = (long)(sumValues / 2 / sumTicks);
-                    FormattedText avg = new FormattedText(" (Avg. " + average.ToString() + "%)", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                    title += avg.Text;
-                }
-
-                FormattedText itext = new FormattedText(title, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                drawingContext.DrawText(itext, new Point(1, i * rowHeight));
-                drawingContext.Pop();
+                DrawText(drawingContext, title, rowNbr, Spacings.lOrder, blackBrush);
+                return;
             }
-            i++;
+
+            drawingContext.PushClip(new RectangleGeometry(new Rect(0, rowNbr * rowHeight, RenderSize.Width, rowHeight)));
+
+            double sumValues = 0;
+            long sumTicks = 0;
+            long previousTick = DataModel.StartTime.Ticks;
+            float previousValue = 0.0f;
+
+            int step = 1;
+            if (data.Count > 10) // Do rarefy only when more than 10 samples
+            {
+                step = (int)(data.Count / (pixelRange / 10)); // Draw no frequent than 10 pixels
+                if (step < 1)
+                    step = 1;
+            }
+
+            var allPoints = new List<Point>();
+            for (int nbr = 0; nbr < data.Count; nbr += step)
+            {
+                long spanL = previousTick - DataModel.StartTime.Ticks;
+                long spanR = data[nbr].Item1 - DataModel.StartTime.Ticks;
+                if (isBuilding && nbr >= data.Count - step)
+                    spanR = nowTick - DataModel.StartTime.Ticks;
+
+                // Why (int) and (long) is needed here? Let's try to simplify
+                //double shiftL = (int)(spanL * (long)pixelRange / maxTick);
+                //double shiftR = (int)(spanR * (long)pixelRange / maxTick);
+                double shiftL = spanL * pixelRange / maxTick;
+                double shiftR = spanR * pixelRange / maxTick;
+                Point p1 = new Point(spacings.lGanttC + shiftL, (rowNbr + 1) * rowHeight - previousValue * (rowHeight - 2) / 100 - 1);
+                Point p2 = new Point(spacings.lGanttC + shiftR, (rowNbr + 1) * rowHeight - data[nbr].Item2 * (rowHeight - 2) / 100 - 1);
+
+                StreamGeometry streamGeometry = new StreamGeometry();
+                using (StreamGeometryContext geometryContext = streamGeometry.Open())
+                {
+                    geometryContext.BeginFigure(p1, true, true);
+                    Point p3 = new Point(p2.X, (rowNbr + 1) * rowHeight);
+                    Point p4 = new Point(p1.X, (rowNbr + 1) * rowHeight);
+                    PointCollection points = new PointCollection { p2, p3, p4 };
+                    geometryContext.PolyLineTo(points, true, true);
+                }
+
+                drawingContext.DrawGeometry(softPen.Brush, softPen, streamGeometry);
+
+                if (nbr == 0)
+                    allPoints.Add(p1);
+                allPoints.Add(p2);
+
+                if (nbr > 0)
+                {
+                    sumValues += (previousValue + data[nbr].Item2) * (data[nbr].Item1 - previousTick);
+                    sumTicks += data[nbr].Item1 - previousTick;
+                }
+
+                previousTick = data[nbr].Item1;
+                previousValue = data[nbr].Item2;
+            }
+
+            for (int nbr = 1; nbr < allPoints.Count; ++nbr)
+                drawingContext.DrawLine(pen, allPoints[nbr-1], allPoints[nbr]);
+
+            if (sumTicks > 0)
+            {
+                long average = (long)(sumValues / 2 / sumTicks);
+                FormattedText avg = new FormattedText(" (Avg. " + average.ToString() + "%)", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                title += avg.Text;
+            }
+
+            DrawText(drawingContext, title, rowNbr, Spacings.lOrder, blackBrush);
+            drawingContext.Pop();
         }
+
+        private void DrawText(DrawingContext drawingContext, string caption, int rowNbr, double xPos, Brush textColor)
+        {
+            FormattedText captionFT = new FormattedText(caption, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, textColor);
+            drawingContext.DrawText(captionFT, new Point(xPos, rowNbr * rowHeight));
+        }
+
+        private void DrawOrderAndProjectNameText(DrawingContext drawingContext, int rowNbr, uint projectBuildOrderNumber, string projectName, Spacings margins, Brush textColor)
+        {
+            // project build Order
+            DrawText(drawingContext, projectBuildOrderNumber.ToString() + ">", rowNbr, Spacings.lOrder, textColor);
+
+            // project Name
+            DrawText(drawingContext, projectName, rowNbr, margins.lProjName, textColor);
+        }
+
+        /// <summary>
+        /// Draw separator at the bottom of rowNbr.
+        /// </summary>
+        /// <param name="drawingContext"></param>
+        /// <param name="rowNbr"></param>
+        private void DrawSeparator(DrawingContext drawingContext, int rowNbr)
+        {
+            drawingContext.DrawLine(grid, new Point(0, (rowNbr + 1) * rowHeight), new Point(RenderSize.Width, (rowNbr + 1) * rowHeight));
+        }
+
+        /// <summary>
+        /// Draw vertical separator for Gantt chart - it omit first row.
+        /// </summary>
+        /// <param name="drawingContext"></param>
+        /// <param name="x"></param>
+        /// <param name="totalRowNbr"></param>
+        private void DrawVerticalSeparator(DrawingContext drawingContext, double x, int totalRowNbr, bool wholeSize)
+        {
+            drawingContext.DrawLine(grid, new Point(x, (wholeSize ? 0 : 1) * rowHeight), new Point(x, (wholeSize ? totalRowNbr + 1 : totalRowNbr) * rowHeight));
+        }
+
+        private void DrawBar(DrawingContext drawingContext, int rowNbr, long startTime, long endTime, long maxTick, Spacings spacings, Brush color, bool markAsCriticalPath)
+        {
+            double pixelRange = RenderSize.Width - spacings.lGanttC - Spacings.rGanttC;
+            if (pixelRange < minGanttWidth)
+                return;
+
+            Rect r = new Rect();
+            // Why (int) and (long) is needed here? Let's try to simplify
+            //r.X = spacings.lGanttC + (int)(startTime * (long)(pixelRange) / maxTick);
+            //r.Width = spacings.lGanttC + (int)(endTime * (long)(pixelRange) / maxTick) - r.X;
+            r.X = spacings.lGanttC + (startTime * pixelRange / maxTick);
+            r.Width = spacings.lGanttC + (endTime * pixelRange / maxTick) - r.X;
+            if (r.Width == 0)
+                r.Width = 1;
+
+            r.Y = rowNbr * rowHeight + 1;
+            r.Height = rowHeight - 1;
+            drawingContext.DrawRectangle(color, null, r); //Draw Gantt graph
+
+            if (markAsCriticalPath)
+            {
+                Rect cPR = new Rect(r.Location, r.Size);
+                double cPRLHeight = r.Height / 8;
+                cPR.Height = cPRLHeight;
+
+                drawingContext.DrawRectangle(criticalPathGradientBrush, null, cPR); //Draw top yellow line in Gantt graph
+
+                cPR.Y += (rowHeight - cPRLHeight - penThickness);
+                drawingContext.DrawRectangle(criticalPathGradientBrush, null, cPR); //Draw bottom yellow line in Gantt graph
+            }
+
+            string time = Utils.SecondsToString(endTime - startTime);
+            FormattedText itime = new FormattedText(time, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, whiteBrush);
+            double timeLen = itime.Width;
+            if (r.Width > timeLen)
+            {
+                drawingContext.DrawText(itime, new Point(r.Right - timeLen, rowNbr * rowHeight)); //Write elapsed time
+            }
+        }
+
+
 
         /// <summary>
         /// This class ensure that IsGraphDrawn is always correctly set according to current visual.
@@ -199,16 +324,14 @@ namespace ParallelBuildsMonitor
             }
         }
 
-        protected override void OnRender(System.Windows.Media.DrawingContext drawingContext)
+        protected override void OnRender(DrawingContext drawingContext)
         {
             try
             {
                 using (IsGraphDrawnScope isGraphDrawnScope = new IsGraphDrawnScope())
                 {
                     if (RenderSize.Width < 10.0 || RenderSize.Height < 10.0)
-                    {
                         return;
-                    }
 
                     if (PBMCommand.Instance == null)
                         return;
@@ -221,17 +344,11 @@ namespace ParallelBuildsMonitor
                     if (DataModel.Instance.AllProjectsCount == 0)
                         return;
 
-                    Typeface fontFace = new Typeface(FontFamily.Source);
-
-                    FormattedText dummyText = new FormattedText("A0", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-
-                    double rowHeight = dummyText.Height + 1;
                     int linesCount = DataModel.CurrentBuilds.Count + DataModel.FinishedBuilds.Count + 1 + 1 + 1 + 1; // 1 for header, 1 for status, 1 for CPU, 1 for HDD
                     double totalHeight = rowHeight * linesCount;
 
-                    Height = totalHeight;
+                    Height = totalHeight + penThickness;
 
-                    double maxStringLength = 0.0;
                     long tickStep = 100000000;
                     long maxTick = tickStep;
                     long nowTick = DateTime.Now.Ticks;
@@ -243,150 +360,119 @@ namespace ParallelBuildsMonitor
                             maxTick = t;
                         }
                     }
-                    int i;
+                    int ii;
                     bool atLeastOneError = false;
-                    for (i = 0; i < DataModel.FinishedBuilds.Count; i++)
+                    uint maxBuildOrderNbr = 1;
+                    double projectNameMaxLen = 10;
+                    for (ii = 0; ii < DataModel.FinishedBuilds.Count; ii++)
                     {
-                        FormattedText iname = new FormattedText(DataModel.FinishedBuilds[i].ProjectName, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                        double l = iname.Width;
-                        t = DataModel.FinishedBuilds[i].end;
-                        atLeastOneError = atLeastOneError || !DataModel.FinishedBuilds[i].success;
+                        FormattedText iname = new FormattedText(DataModel.FinishedBuilds[ii].ProjectName, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                        double ll = iname.Width;
+                        t = DataModel.FinishedBuilds[ii].end;
+                        atLeastOneError = atLeastOneError || !DataModel.FinishedBuilds[ii].success;
                         if (t > maxTick)
-                        {
                             maxTick = t;
-                        }
-                        if (l > maxStringLength)
-                        {
-                            maxStringLength = l;
-                        }
+
+                        if (ll > projectNameMaxLen)
+                            projectNameMaxLen = ll;
+
+                        if (DataModel.FinishedBuilds[ii].ProjectBuildOrderNumber > maxBuildOrderNbr)
+                            maxBuildOrderNbr = DataModel.FinishedBuilds[ii].ProjectBuildOrderNumber;
                     }
                     foreach (KeyValuePair<string, Tuple<uint, long>> item in DataModel.CurrentBuilds)
                     {
-                        FormattedText iname = new FormattedText(item.Key, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                        double l = iname.Width;
-                        if (l > maxStringLength)
-                        {
-                            maxStringLength = l;
-                        }
+                        FormattedText iname = new FormattedText(DataModel.GetHumanReadableProjectName(item.Key), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                        double ll = iname.Width;
+                        if (ll > projectNameMaxLen)
+                            projectNameMaxLen = ll;
+
+                        if (item.Value.Item1 > maxBuildOrderNbr)
+                            maxBuildOrderNbr = item.Value.Item1;
                     }
                     if (isBuilding)
                     {
                         maxTick = (maxTick / tickStep + 1) * tickStep;
                     }
-                    FormattedText iint = new FormattedText(i.ToString(intFormat) + "> ", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                    maxStringLength += 5 + iint.Width;
 
-                    i = 0;
+                    Spacings spacings = new Spacings();
+                    { //setting spacings
+                        string pattern = "> ";
+                        int len = maxBuildOrderNbr.ToString().Length + pattern.Length;
+                        pattern = pattern.PadLeft(len, '8'); // let's assume that 8 is the widest char
+                        FormattedText bn = new FormattedText(pattern, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+
+                        spacings.lProjName = Spacings.lOrder + bn.Width + 3; // let's add 3 pix just in case 8 is not the widest
+                        spacings.lGanttC = spacings.lProjName + projectNameMaxLen + penThickness + 3; // let's add 3 pix just in case
+                    }
+
+                    int rowNbr = 0; //first row has number 0
                     { // Draw header
+                        DrawSeparator(drawingContext, rowNbr); // draw backgroud things first due to anty-aliasing
                         string headerText = DataModel.GetSolutionNameWithMachineInfo("  |  ", false /*WithBuildStartedStr*/);
                         // Draw text
                         FormattedText itext = new FormattedText(headerText, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                         {
                             // Cut text when it is too long for window. Probably correct solution is to add horizontal scrollbar to window.
                             // Set a maximum width and height. If the text overflows these values, an ellipsis "..." appears.
-                            itext.MaxTextWidth = RenderSize.Width;
+                            itext.MaxTextWidth = RenderSize.Width - Spacings.lOrder - Spacings.rGanttC;
                             itext.MaxTextHeight = rowHeight;
                         }
-                        drawingContext.DrawText(itext, new Point(1, i * rowHeight));
+                        drawingContext.DrawText(itext, new Point(Spacings.lOrder, rowNbr * rowHeight));
 
-                        // Draw separator
-                        drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
-                        i++;
+                        rowNbr++;
                     }
 
-                    Brush greenGradientBrush = new LinearGradientBrush(Colors.MediumSeaGreen, Colors.DarkGreen, new Point(0, 0), new Point(0, 1));
-                    Brush redGradientBrush = new LinearGradientBrush(Colors.IndianRed, Colors.DarkRed, new Point(0, 0), new Point(0, 1));
-                    Brush criticalPathGradientBrush = new LinearGradientBrush(Colors.LightYellow, Colors.Yellow, new Point(0, 0), new Point(0, 1));
                     foreach (BuildInfo item in DataModel.FinishedBuilds)
                     {
-                        Brush solidBrush = item.success ? greenSolidBrush : redSolidBrush;
-                        Brush gradientBrush = item.success ? greenGradientBrush : redGradientBrush;
-                        DateTime span = new DateTime(item.end - item.begin);
-                        string time = Utils.SecondsToString(span.Ticks);
-                        FormattedText itext = new FormattedText((item.ProjectBuildOrderNumber).ToString(intFormat) + "> " + item.ProjectName, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, solidBrush);
-                        drawingContext.DrawText(itext, new Point(1, i * rowHeight)); //Write project name
-                        Rect r = new Rect();
-                        r.X = maxStringLength + (int)((item.begin) * (long)(RenderSize.Width - maxStringLength) / maxTick);
-                        r.Width = maxStringLength + (int)((item.end) * (long)(RenderSize.Width - maxStringLength) / maxTick) - r.X;
-                        if (r.Width == 0)
-                        {
-                            r.Width = 1;
-                        }
-                        r.Y = i * rowHeight + 1;
-                        r.Height = rowHeight - 1;
-                        drawingContext.DrawRectangle(gradientBrush, null, r); //Draw Gantt graph
-                        if (DataModel.CriticalPath.Contains(item))
-                        {
-                            Rect cPR = new Rect(r.Location, r.Size);
-                            double cPRLHeight = r.Height / 8;
-                            cPR.Height = cPRLHeight;
+                        DrawSeparator(drawingContext, rowNbr); // draw backgroud things first due to anty-aliasing
+                        DrawOrderAndProjectNameText(drawingContext, rowNbr, item.ProjectBuildOrderNumber, item.ProjectName, spacings, (item.success ? greenSolidBrush : redSolidBrush));
+                        DrawBar(drawingContext, rowNbr, item.begin, item.end, maxTick, spacings, (item.success ? greenGradientBrush : redGradientBrush), DataModel.CriticalPath.Contains(item));
 
-                            drawingContext.DrawRectangle(criticalPathGradientBrush, null, cPR); //Draw top yellow line in Gantt graph
-
-                            cPR.Y += (rowHeight - cPRLHeight - 1); // Probably -1 for separator
-                            drawingContext.DrawRectangle(criticalPathGradientBrush, null, cPR); //Draw bottom yellow line in Gantt graph
-                        }
-                        FormattedText itime = new FormattedText(time, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, whiteBrush);
-                        double timeLen = itime.Width;
-                        if (r.Width > timeLen)
-                        {
-                            drawingContext.DrawText(itime, new Point(r.Right - timeLen, i * rowHeight)); //Write elapsed time
-                        }
-                        drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight)); //Draw separation line
-                        i++;
+                        rowNbr++;
                     }
 
-                    Brush blueGradientBrush = new LinearGradientBrush(Colors.LightBlue, Colors.DarkBlue, new Point(0, 0), new Point(0, 1));
                     foreach (KeyValuePair<string, Tuple<uint, long>> item in DataModel.CurrentBuilds)
                     {
-                        FormattedText itext = new FormattedText((item.Value.Item1).ToString(intFormat) + "> " + DataModel.GetHumanReadableProjectName(item.Key), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blueSolidBrush);
-                        drawingContext.DrawText(itext, new Point(1, i * rowHeight));
-                        Rect r = new Rect();
-                        r.X = maxStringLength + (int)((item.Value.Item2) * (long)(RenderSize.Width - maxStringLength) / maxTick);
-                        r.Width = maxStringLength + (int)((nowTick - DataModel.StartTime.Ticks) * (long)(RenderSize.Width - maxStringLength) / maxTick) - r.X;
-                        if (r.Width == 0)
-                        {
-                            r.Width = 1;
-                        }
-                        r.Y = i * rowHeight + 1;
-                        r.Height = rowHeight - 1;
-                        drawingContext.DrawRectangle(blueGradientBrush, null, r);
-                        drawingContext.DrawLine(grid, new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
-                        i++;
+                        DrawSeparator(drawingContext, rowNbr); // draw backgroud things first due to anty-aliasing
+                        DrawOrderAndProjectNameText(drawingContext, rowNbr, item.Value.Item1, DataModel.GetHumanReadableProjectName(item.Key), spacings, blueSolidBrush);
+                        DrawBar(drawingContext, rowNbr, item.Value.Item2, (nowTick - DataModel.StartTime.Ticks), maxTick, spacings, blueGradientBrush, false /*markAsCriticalPath*/);
+
+                        rowNbr++;
                     }
 
-                    DrawGraph("CPU usage", drawingContext, DataModel.CpuUsage, cpuPen, cpuSoftPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace);
-                    DrawGraph("HDD usage", drawingContext, DataModel.HddUsage, hddPen, hddSoftPen, ref i, RenderSize, rowHeight, maxStringLength, maxTick, nowTick, fontFace);
+                    DrawSeparator(drawingContext, rowNbr); // draw backgroud things first due to anty-aliasing
+                    DrawGraph("CPU usage", drawingContext, DataModel.CpuUsage, cpuPen, cpuSoftPen, rowNbr, RenderSize, rowHeight, spacings, maxTick, nowTick, fontFace);
+                    rowNbr++;
+
+                    DrawSeparator(drawingContext, rowNbr); // draw backgroud things first due to anty-aliasing
+                    DrawGraph("HDD usage", drawingContext, DataModel.HddUsage, hddPen, hddSoftPen, rowNbr, RenderSize, rowHeight, spacings, maxTick, nowTick, fontFace);
+                    rowNbr++;
 
                     if (DataModel.CurrentBuilds.Count > 0 || DataModel.FinishedBuilds.Count > 0)
                     {
-                        string line = "";
-                        if (isBuilding)
-                        {
-                            line = "Building...";
-                        }
-                        else
-                        {
-                            line = "Done";
-                        }
+                        string status = (isBuilding ? "Building..." : "Done");
                         if (DataModel.MaxParallelBuilds > 0)
-                        {
-                            line += " (" + DataModel.PercentageProcessorUse().ToString() + "% of " + DataModel.MaxParallelBuilds.ToString() + " CPUs)";
-                        }
-                        FormattedText itext = new FormattedText(line, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                        drawingContext.DrawText(itext, new Point(1, i * rowHeight));
+                            status += " (" + DataModel.PercentageProcessorUse().ToString() + "% of " + DataModel.MaxParallelBuilds.ToString() + " CPUs)";
+
+                        DrawText(drawingContext, status, rowNbr, Spacings.lOrder, blackBrush);
                     }
 
-                    // Draw vertical line that separate project names from Gantt chart
-                    drawingContext.DrawLine(grid, new Point(maxStringLength, 1 * rowHeight), new Point(maxStringLength, i * rowHeight));
+                    DrawVerticalSeparator(drawingContext, spacings.lGanttC - penThickness, rowNbr, false /*wholeSize*/);
 
-                    drawingContext.DrawLine(new Pen(atLeastOneError ? redSolidBrush : greenSolidBrush, 1), new Point(0, i * rowHeight), new Point(RenderSize.Width, i * rowHeight));
+                    drawingContext.DrawLine(new Pen(atLeastOneError ? redSolidBrush : greenSolidBrush, 1), new Point(0, rowNbr * rowHeight), new Point(RenderSize.Width, rowNbr * rowHeight));
 
                     DateTime dt = new DateTime(maxTick);
                     string s = Utils.SecondsToString(dt.Ticks);
                     FormattedText maxTime = new FormattedText(s, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
                     double m = maxTime.Width;
-                    drawingContext.DrawText(maxTime, new Point(RenderSize.Width - m, i * rowHeight));
+                    drawingContext.DrawText(maxTime, new Point(RenderSize.Width - m - Spacings.rGanttC, rowNbr * rowHeight));
+
+                    { // Draw frame around - it looks better in window and definitelly in saved .png. Draw frame as last to be clearly visible
+                        DrawSeparator(drawingContext, -1);                                                                   // Top
+                        DrawSeparator(drawingContext, rowNbr);                                                               // Bottom
+                        DrawVerticalSeparator(drawingContext, 0, rowNbr, true /*wholeSize*/);                                // Left
+                        DrawVerticalSeparator(drawingContext, RenderSize.Width - penThickness, rowNbr, true /*wholeSize*/);  // Right
+                    }
 
                     isGraphDrawnScope.IsDrawn = true;
                 } //End of IsGraphDrawnScope
