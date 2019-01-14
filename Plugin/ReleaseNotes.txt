@@ -1,6 +1,8 @@
 ﻿Parallel Builds Monitor Release Notes
 ==========================================
 
+v. 1.8 2019.01.14 Migration to Visual 2019
+
 v. 1.7 2017.07.05 Displaying seconds in higher precision
 
 v. 1.6 2017.04.27 Migration to Visual 2017
