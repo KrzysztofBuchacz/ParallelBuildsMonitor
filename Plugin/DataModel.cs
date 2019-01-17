@@ -188,25 +188,26 @@ namespace ParallelBuildsMonitor
             if (MaxParallelBuilds > 0)
             {
                 long nowTicks = DateTime.Now.Ticks;
-                long maxTick = 0;
+                long firstTick = long.MaxValue;
+                long lastTick = 0;
                 long totTicks = 0;
                 foreach (BuildInfo info in FinishedBuilds)
                 {
                     totTicks += info.end - info.begin;
-                    if (info.end > maxTick)
-                    {
-                        maxTick = info.end;
-                    }
+                    if (info.end > lastTick)
+                        lastTick = info.end;
+                    if (info.begin < firstTick)
+                        firstTick = info.begin;
                 }
                 foreach (Tuple<uint, long> start in CurrentBuilds.Values)
                 {
-                    maxTick = nowTicks - StartTime.Ticks;
+                    lastTick = nowTicks - StartTime.Ticks;
                     totTicks += nowTicks - (start.Item2 + StartTime.Ticks);
                 }
                 totTicks /= MaxParallelBuilds;
-                if (maxTick > 0)
+                if (lastTick > firstTick)
                 {
-                    percentage = totTicks * 100 / maxTick;
+                    percentage = totTicks * 100 / (lastTick - firstTick);
                 }
             }
             return percentage;

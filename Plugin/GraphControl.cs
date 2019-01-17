@@ -450,9 +450,10 @@ namespace ParallelBuildsMonitor
 
                     if (DataModel.CurrentBuilds.Count > 0 || DataModel.FinishedBuilds.Count > 0)
                     {
-                        string status = (isBuilding ? "Building..." : "Done");
+                        string status = (isBuilding ? "Building..." : "Done.");
                         if (DataModel.MaxParallelBuilds > 0)
-                            status += " (" + DataModel.PercentageProcessorUse().ToString() + "% of " + DataModel.MaxParallelBuilds.ToString() + " CPUs)";
+                            status += " Max. no. of parallel projects: " + DataModel.MaxParallelBuilds.ToString() + " (Avg. " + 
+                                Math.Round(DataModel.MaxParallelBuilds/100.0* DataModel.PercentageProcessorUse(), 1).ToString(format: "0.0") + ")";
 
                         DrawText(drawingContext, status, rowNbr, Spacings.lOrder, blackBrush);
                     }
