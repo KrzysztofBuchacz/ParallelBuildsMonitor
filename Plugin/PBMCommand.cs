@@ -20,12 +20,6 @@ namespace ParallelBuildsMonitor
     {
         #region Constants
 
-        [Guid("0617d7cf-8a0f-436f-8b05-4be366046686")]
-        public enum MainMenuCommandSet
-        {
-            ShowToolWindow = 0x0100
-        }
-
         [Guid("048AF9A5-402D-4441-B221-5EEC9ACD93DB")]
         public enum ContextMenuCommandSet
         {
@@ -113,10 +107,6 @@ namespace ParallelBuildsMonitor
             if (commandService == null)
                 return false;
 
-            var menuCommandID = new CommandID(typeof(MainMenuCommandSet).GUID, (int)MainMenuCommandSet.ShowToolWindow);
-            var menuItem = new OleMenuCommand(this.ShowToolWindow, menuCommandID);
-            commandService.AddCommand(menuItem);
-
             // Save As .png
             var SaveAsPngCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.SaveAsPng);
             var menuItemSaveAsPng = new OleMenuCommand(this.SaveAsPng, SaveAsPngCommandID);
@@ -174,26 +164,6 @@ namespace ParallelBuildsMonitor
         #endregion Menu
 
         #region Others
-
-        /// <summary>
-        /// Shows the tool window when the menu item is clicked.
-        /// </summary>
-        /// <param name="sender">The event sender.</param>
-        /// <param name="e">The event args.</param>
-        private void ShowToolWindow(object sender, EventArgs e)
-        {
-            // Get the instance number 0 of this tool window. This window is single instance so this instance
-            // is actually the only one.
-            // The last flag is set to true so that if the tool window does not exists it will be created.
-            ToolWindowPane window = this.package.FindToolWindow(typeof(PBMWindow), 0, true);
-            if ((null == window) || (null == window.Frame))
-            {
-                throw new NotSupportedException("Cannot create tool window");
-            }
-
-            IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
-            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(windowFrame.Show());
-        }
 
         public EnvDTE.OutputWindowPane GetOutputBuildPane()
         {
