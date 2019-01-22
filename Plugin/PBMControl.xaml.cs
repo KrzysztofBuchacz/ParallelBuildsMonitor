@@ -65,7 +65,7 @@ namespace ParallelBuildsMonitor
 
         private void MyToolWindow_MouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            OleMenuCommandService commandService = PBMCommand.Instance.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            OleMenuCommandService commandService = PBMCommand.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             CommandID menuID = new CommandID(typeof(PBMCommand.ContextMenuCommandSet).GUID, (int)PBMCommand.ContextMenuCommandSet.idContextMenu);
             Point p = this.PointToScreen(e.GetPosition(this));
             commandService?.ShowContextMenu(menuID, (int)p.X, (int)p.Y);

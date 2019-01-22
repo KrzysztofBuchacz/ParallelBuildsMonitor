@@ -152,9 +152,9 @@ namespace ParallelBuildsMonitor
         }
     }
 
-    // see InitializeToolWindowAsync() method for details about this
-    public class PBMWindowState
-    {
-        public EnvDTE80.DTE2 DTE { get; set; }
-    }
+    //// see InitializeToolWindowAsync() method for details about this
+    //public class PBMWindowState
+    //{
+    //    public EnvDTE80.DTE2 DTE { get; set; }
+    //}
 }
