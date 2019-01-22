@@ -336,11 +336,6 @@ namespace ParallelBuildsMonitor
                     if (PBMCommand.Instance == null)
                         return;
 
-                    DTE2 dte = (DTE2)PBMCommand.Instance.ServiceProvider.GetService(typeof(DTE));
-
-                    if (dte == null)
-                        return;
-
                     if (DataModel.Instance.AllProjectsCount == 0)
                         return;
 
