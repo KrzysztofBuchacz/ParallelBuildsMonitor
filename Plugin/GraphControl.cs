@@ -400,7 +400,7 @@ namespace ParallelBuildsMonitor
                         spacings.lGanttC = spacings.lProjName + projectNameMaxLen + penThickness + 3; // let's add 3 pix just in case
                     }
 
-                    // finally check if usage text is longer than the longest project name, and yes, values greater than 1000% are possible
+                    // check if usage text is longer than the longest project name, and yes, values greater than 1000% are possible
                     double usageTextLen = new FormattedText("HDD Usage (Avg. 1000%)", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush).Width;
                     spacings.lGanttC = Math.Max(spacings.lGanttC, Spacings.lOrder + usageTextLen + penThickness);
 
