@@ -14,11 +14,84 @@ using System.Diagnostics;
 namespace ParallelBuildsMonitor
 {
     /// <summary>
-    /// Command handler
+    /// Goal of this class is:
+    ///     - subscrible/unsubscribe to Visual Studio Events
+    ///     - provide access to IServiceProvider interface for other classes
+    ///     - create menu
+    ///     - provide commands and query statuses for menu items
     /// </summary>
-    internal sealed class PBMCommand
+    internal static class PBMCommand
     {
-        #region Constants
+        #region Members
+
+        private static Microsoft.VisualStudio.Shell.Package Package { get; set; }
+        public static IServiceProvider ServiceProvider { get { return Package; } }
+        private static DTE2 Dte { get; set; }
+        private static EnvDTE.SolutionEvents SolutionEvents { get; set; }  //DTE2.Events.SolutionEvents must be called only once. Calling several times makes events stop working. That is why it is kept as member (call like "DTE2.Events.SolutionEvents.AfterClosing += solutionEvents_AfterClosing;" just NOT work)
+        private static EnvDTE.BuildEvents BuildEvents { get; set; }        //DTE2.Events.BuildEvents    must be called only once. Calling several times makes events stop working. That is why it is kept as member (call like "DTE2.Events.BuildEvents.OnBuildBegin += BuildEvents_OnBuildBegin;" just NOT work)
+        private static DataModel DataModel { get { return DataModel.Instance; } } // Convinient accessor to data.
+
+        #endregion Members
+
+        #region Initialize-Uninitialize
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="package">Owner package, not null.</param>
+        public static bool Initialize(Microsoft.VisualStudio.Shell.Package package)
+        {
+            if (package == null)
+                return false;
+
+            Package = package;
+            Dte = (DTE2)ServiceProvider.GetService(typeof(SDTE));
+
+            bool res = SubscribeUnsubscibeApiEvents(true /*subscibe*/);
+            res &= CreateMenu();
+
+            return res;
+        }
+
+        private static bool SubscribeUnsubscibeApiEvents(bool subscibe)
+        {
+            if (Dte == null)
+                return false;
+
+            // Solution Events Callbacks
+            SolutionEvents = Dte.Events.SolutionEvents;
+            if (subscibe)
+            {
+                SolutionEvents.AfterClosing += solutionEvents_AfterClosing;
+            }
+            else
+            {
+                SolutionEvents.AfterClosing -= solutionEvents_AfterClosing;
+            }
+
+            // Project Events Callbacks
+            BuildEvents = Dte.Events.BuildEvents;
+            if (subscibe)
+            {
+                BuildEvents.OnBuildBegin += BuildEvents_OnBuildBegin;
+                BuildEvents.OnBuildDone += BuildEvents_OnBuildDone;
+                BuildEvents.OnBuildProjConfigBegin += BuildEvents_OnBuildProjConfigBegin;
+                BuildEvents.OnBuildProjConfigDone += BuildEvents_OnBuildProjConfigDone;
+            }
+            else
+            {
+                BuildEvents.OnBuildBegin -= BuildEvents_OnBuildBegin;
+                BuildEvents.OnBuildDone -= BuildEvents_OnBuildDone;
+                BuildEvents.OnBuildProjConfigBegin -= BuildEvents_OnBuildProjConfigBegin;
+                BuildEvents.OnBuildProjConfigDone -= BuildEvents_OnBuildProjConfigDone;
+            }
+
+            return true;
+        }
+
+        #endregion Initialize-Uninitialize
+
+        #region Menu
 
         [Guid("048AF9A5-402D-4441-B221-5EEC9ACD93DB")]
         public enum ContextMenuCommandSet
@@ -28,111 +101,39 @@ namespace ParallelBuildsMonitor
             SaveAsCsv = 0x0102
         }
 
-        #endregion Constants
-
-        #region Members
-
-        /// <summary>
-        /// VS Package that provides this command, not null.
-        /// </summary>
-        private readonly Microsoft.VisualStudio.Shell.Package package;
-        public EnvDTE.SolutionEvents solutionEvents;
-        public EnvDTE.BuildEvents buildEvents;
-
-        #endregion Members
-
-        #region Properties
-
-        /// <summary>
-        /// Gets the instance of the command.
-        /// </summary>
-        public static PBMCommand Instance { get; private set; }
-
-        /// <summary>
-        /// Gets the service provider from the owner package.
-        /// </summary>
-        public IServiceProvider ServiceProvider { get { return this.package; } }
-
-        /// <summary>
-        /// Convinient accessor to data.
-        /// </summary>
-        private static DataModel DataModel { get { return DataModel.Instance; } }
-
-        #endregion Properties
-
-        #region Initialization
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PBMCommand"/> class.
-        /// Adds our command handlers for menu (commands must exist in the command table file)
-        /// </summary>
-        /// <param name="package">Owner package, not null.</param>
-        private PBMCommand(Microsoft.VisualStudio.Shell.Package package)
+        //TODO:  Should be reworked to CreateDestroyMenu()
+        private static bool CreateMenu()
         {
-            if (package == null)
-            {
-                throw new ArgumentNullException("package");
-            }
-
-            this.package = package;
-
-            CreateMenu();
-
-            DTE2 dte = (DTE2)(package as IServiceProvider).GetService(typeof(SDTE));
-            solutionEvents = dte.Events.SolutionEvents;
-            solutionEvents.AfterClosing += new _dispSolutionEvents_AfterClosingEventHandler(solutionEvents_AfterClosing);
-            buildEvents = dte.Events.BuildEvents;
-            buildEvents.OnBuildBegin += new _dispBuildEvents_OnBuildBeginEventHandler(BuildEvents_OnBuildBegin);
-            buildEvents.OnBuildDone += new _dispBuildEvents_OnBuildDoneEventHandler(BuildEvents_OnBuildDone);
-            buildEvents.OnBuildProjConfigBegin += new _dispBuildEvents_OnBuildProjConfigBeginEventHandler(BuildEvents_OnBuildProjConfigBegin);
-            buildEvents.OnBuildProjConfigDone += new _dispBuildEvents_OnBuildProjConfigDoneEventHandler(BuildEvents_OnBuildProjConfigDone);
-        }
-
-        /// <summary>
-        /// Initializes the singleton instance of the command.
-        /// </summary>
-        /// <param name="package">Owner package, not null.</param>
-        public static void Initialize(Microsoft.VisualStudio.Shell.Package package)
-        {
-            Instance = new PBMCommand(package);
-        }
-
-        #endregion Initialization
-
-        #region Menu
-
-        private bool CreateMenu()
-        {
-            OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            OleMenuCommandService commandService = ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService == null)
                 return false;
 
             // Save As .png
             var SaveAsPngCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.SaveAsPng);
-            var menuItemSaveAsPng = new OleMenuCommand(this.SaveAsPng, SaveAsPngCommandID);
+            var menuItemSaveAsPng = new OleMenuCommand(SaveAsPng, SaveAsPngCommandID);
             menuItemSaveAsPng.BeforeQueryStatus += MenuItemSaveAsPng_BeforeQueryStatus;
             commandService.AddCommand(menuItemSaveAsPng);
 
             // Save As .csv
             var SaveAsCsvCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.SaveAsCsv);
-            var menuItemSaveAsCsv = new OleMenuCommand(this.SaveAsCsv, SaveAsCsvCommandID);
+            var menuItemSaveAsCsv = new OleMenuCommand(SaveAsCsv, SaveAsCsvCommandID);
             menuItemSaveAsCsv.BeforeQueryStatus += MenuItemSaveAsCsv_BeforeQueryStatus;
             commandService.AddCommand(menuItemSaveAsCsv);
 
             return true;
         }
 
-        private void MenuItemSaveAsPng_BeforeQueryStatus(object sender, EventArgs e)
+        private static void MenuItemSaveAsPng_BeforeQueryStatus(object sender, EventArgs e)
         {
             if (sender is OleMenuCommand myCommand)
                 myCommand.Enabled = ViewModel.Instance.IsGraphDrawn;
         }
 
-        private void SaveAsPng(object sender, EventArgs e)
+        private static void SaveAsPng(object sender, EventArgs e)
         {
             try
             {
-                PBMWindow window = this.package.FindToolWindow(typeof(PBMWindow), 0, true) as PBMWindow;
+                PBMWindow window = Package.FindToolWindow(typeof(PBMWindow), 0, true) as PBMWindow;
                 PBMControl control = window.Content as PBMControl;
                 control?.SaveGraph();
             }
@@ -142,13 +143,13 @@ namespace ParallelBuildsMonitor
             }
         }
 
-        private void MenuItemSaveAsCsv_BeforeQueryStatus(object sender, EventArgs e)
+        private static void MenuItemSaveAsCsv_BeforeQueryStatus(object sender, EventArgs e)
         {
             if (sender is OleMenuCommand myCommand)
                 myCommand.Enabled = (DataModel.CriticalPath.Count > 0);
         }
 
-        private void SaveAsCsv(object sender, EventArgs e)
+        private static void SaveAsCsv(object sender, EventArgs e)
         {
             try
             {
@@ -163,24 +164,6 @@ namespace ParallelBuildsMonitor
 
         #endregion Menu
 
-        #region Others
-
-        public EnvDTE.OutputWindowPane GetOutputBuildPane()
-        {
-            EnvDTE80.DTE2 dte = (EnvDTE80.DTE2)ServiceProvider.GetService(typeof(EnvDTE.DTE));
-
-            EnvDTE.OutputWindowPanes panes = dte.ToolWindows.OutputWindow.OutputWindowPanes;
-            foreach (EnvDTE.OutputWindowPane pane in panes)
-            {
-                if (pane.Name.Contains("Build"))
-                    return pane;
-            }
-
-            return null;
-        }
-
-        #endregion Others
-
         #region IdeEvents
 
         /// <summary>
@@ -190,7 +173,7 @@ namespace ParallelBuildsMonitor
         /// <param name="ProjectConfig"></param>
         /// <param name="Platform"></param>
         /// <param name="SolutionConfig"></param>
-        void BuildEvents_OnBuildProjConfigBegin(string ProjectUniqueName, string ProjectConfig, string Platform, string SolutionConfig)
+        static void BuildEvents_OnBuildProjConfigBegin(string ProjectUniqueName, string ProjectConfig, string Platform, string SolutionConfig)
         {
             DataModel.AddCurrentBuild(ProjectUniqueName);
         }
@@ -202,19 +185,18 @@ namespace ParallelBuildsMonitor
         /// <param name="Platform"></param>
         /// <param name="SolutionConfig"></param>
         /// <param name="Success"></param>
-        void BuildEvents_OnBuildProjConfigDone(string ProjectUniqueName, string ProjectConfig, string Platform, string SolutionConfig, bool Success)
+        static void BuildEvents_OnBuildProjConfigDone(string ProjectUniqueName, string ProjectConfig, string Platform, string SolutionConfig, bool Success)
         {
             DataModel.FinishCurrentBuild(ProjectUniqueName, Success);
         }
 
-        void BuildEvents_OnBuildBegin(vsBuildScope Scope, vsBuildAction Action)
+        static void BuildEvents_OnBuildBegin(vsBuildScope Scope, vsBuildAction Action)
         {
-            DTE2 dte = (DTE2)(package as IServiceProvider).GetService(typeof(SDTE));
             int allProjectsCount = 0;
-            foreach (Project project in dte.Solution.Projects)
+            foreach (Project project in Dte.Solution.Projects)
                 allProjectsCount += GetProjectsCount(project);
 
-            DataModel.BuildBegin(System.IO.Path.GetFileName(dte.Solution.FileName), allProjectsCount);
+            DataModel.BuildBegin(System.IO.Path.GetFileName(Dte.Solution.FileName), allProjectsCount);
             GraphControl.Instance.BuildBegin();
         }
 
@@ -223,12 +205,11 @@ namespace ParallelBuildsMonitor
         /// </summary>
         /// <returns>Dictionary where key is <c>Project.UniqueName</c> 
         /// and value is list of projects that this projects depend on in <c>Project.UniqueName</c> form</returns>
-        private Dictionary<string, List<string>> GetProjectDependenies()
+        static private Dictionary<string, List<string>> GetProjectDependenies()
         {
             Dictionary<string, List<string>> deps = new Dictionary<string, List<string>>();
 
-            DTE2 dte = (DTE2)(package as IServiceProvider).GetService(typeof(SDTE));
-            foreach (BuildDependency bd in dte.Solution.SolutionBuild.BuildDependencies)
+            foreach (BuildDependency bd in Dte.Solution.SolutionBuild.BuildDependencies)
             {
                 string name = bd.Project.UniqueName;
                 List<string> RequiredProjects = new List<string>();
@@ -249,7 +230,7 @@ namespace ParallelBuildsMonitor
         /// </summary>
         /// <param name="Scope"></param>
         /// <param name="Action"></param>
-        void BuildEvents_OnBuildDone(vsBuildScope Scope, vsBuildAction Action)
+        static void BuildEvents_OnBuildDone(vsBuildScope Scope, vsBuildAction Action)
         {
             DataModel.SetProjectDependenies(GetProjectDependenies());
             DataModel.BuildDone();
@@ -262,7 +243,7 @@ namespace ParallelBuildsMonitor
         /// <remarks>
         /// Clear data and graph from prevously executed build.
         /// </remarks>
-        void solutionEvents_AfterClosing()
+        static void solutionEvents_AfterClosing()
         {
             DataModel.Reset();
             GraphControl.Instance.InvalidateVisual();
@@ -272,7 +253,19 @@ namespace ParallelBuildsMonitor
 
         #region HelperMethods
 
-        int GetProjectsCount(Project project)
+        public static EnvDTE.OutputWindowPane GetOutputBuildPane()
+        {
+            EnvDTE.OutputWindowPanes panes = Dte.ToolWindows.OutputWindow.OutputWindowPanes;
+            foreach (EnvDTE.OutputWindowPane pane in panes)
+            {
+                if (pane.Name.Contains("Build"))
+                    return pane;
+            }
+
+            return null;
+        }
+
+        static int GetProjectsCount(Project project)
         {
             int count = 0;
             if (project != null)

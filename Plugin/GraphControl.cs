@@ -333,9 +333,6 @@ namespace ParallelBuildsMonitor
                     if (RenderSize.Width < 10.0 || RenderSize.Height < 10.0)
                         return;
 
-                    if (PBMCommand.Instance == null)
-                        return;
-
                     if (DataModel.Instance.AllProjectsCount == 0)
                         return;
 
