@@ -48,10 +48,22 @@ namespace ParallelBuildsMonitor
             Dte = (DTE2)ServiceProvider.GetService(typeof(SDTE));
 
             bool res = SubscribeUnsubscibeApiEvents(true /*subscibe*/);
-            res &= CreateMenu();
+            res &= CreateDestroyMenu(true /*create*/);
 
             return res;
         }
+
+        public static bool Uninitialize()
+        {
+            bool res = CreateDestroyMenu(false /*create*/);
+            res &= SubscribeUnsubscibeApiEvents(false /*subscibe*/);
+
+            Dte = null;
+            Package = null;
+
+            return res;
+        }
+
 
         private static bool SubscribeUnsubscibeApiEvents(bool subscibe)
         {
@@ -101,8 +113,8 @@ namespace ParallelBuildsMonitor
             SaveAsCsv = 0x0102
         }
 
-        //TODO:  Should be reworked to CreateDestroyMenu()
-        private static bool CreateMenu()
+        //TODO: Is it correct implementation of destroy?
+        private static bool CreateDestroyMenu(bool create)
         {
             OleMenuCommandService commandService = ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService == null)
@@ -112,13 +124,19 @@ namespace ParallelBuildsMonitor
             var SaveAsPngCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.SaveAsPng);
             var menuItemSaveAsPng = new OleMenuCommand(SaveAsPng, SaveAsPngCommandID);
             menuItemSaveAsPng.BeforeQueryStatus += MenuItemSaveAsPng_BeforeQueryStatus;
-            commandService.AddCommand(menuItemSaveAsPng);
+            if (create)
+                commandService.AddCommand(menuItemSaveAsPng);
+            else
+                commandService.RemoveCommand(menuItemSaveAsPng);
 
             // Save As .csv
             var SaveAsCsvCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.SaveAsCsv);
             var menuItemSaveAsCsv = new OleMenuCommand(SaveAsCsv, SaveAsCsvCommandID);
             menuItemSaveAsCsv.BeforeQueryStatus += MenuItemSaveAsCsv_BeforeQueryStatus;
-            commandService.AddCommand(menuItemSaveAsCsv);
+            if (create)
+                commandService.AddCommand(menuItemSaveAsCsv);
+            else
+                commandService.RemoveCommand(menuItemSaveAsCsv);
 
             return true;
         }
@@ -134,7 +152,7 @@ namespace ParallelBuildsMonitor
             try
             {
                 PBMWindow window = Package.FindToolWindow(typeof(PBMWindow), 0, true) as PBMWindow;
-                PBMControl control = window.Content as PBMControl;
+                PBMControl control = window?.Content as PBMControl;
                 control?.SaveGraph();
             }
             catch

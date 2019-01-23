@@ -90,6 +90,12 @@ namespace ParallelBuildsMonitor
             await JoinableTaskFactory.SwitchToMainThreadAsync();
             await ShowToolWindow.InitializeAsync(this);
         }
+
+        protected override int QueryClose(out bool canClose)
+        {
+            return base.QueryClose(out canClose);
+        }
+
     }
 
 
@@ -114,8 +120,6 @@ namespace ParallelBuildsMonitor
             CommandID menuCommandID = new CommandID(typeof(MainMenuCommandSet).GUID, (int)MainMenuCommandSet.ShowToolWindow);
             MenuCommand menuItem = new MenuCommand((s, e) => Execute(package), menuCommandID);
             commandService.AddCommand(menuItem);
-
-            PBMCommand.Initialize(package);
         }
 
         // This is proper initialization since VS2017.
@@ -149,6 +153,9 @@ namespace ParallelBuildsMonitor
 
             IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
             Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(windowFrame.Show());
+
+            // Start listening VS Events...
+            //PBMCommand.Initialize(package);
         }
     }
 

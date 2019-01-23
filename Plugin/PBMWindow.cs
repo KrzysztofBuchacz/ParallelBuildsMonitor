@@ -33,5 +33,21 @@
             this.Content = new PBMControl();
         }
 
+        protected override bool PreProcessMessage(ref System.Windows.Forms.Message m)
+        {
+            return base.PreProcessMessage(ref m);
+        }
+
+        protected override void OnCreate()
+        {
+            // Start listening VS Events...
+            PBMCommand.Initialize(Package as Microsoft.VisualStudio.Shell.Package);
+        }
+
+        protected override void OnClose()
+        {
+            // Stop listening VS Events...
+            PBMCommand.Uninitialize();
+        }
     }
 }
