@@ -23,6 +23,9 @@ namespace ParallelBuildsMonitor
 
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
+            if (GraphControl.Instance == null)
+                return;
+
             ScrollViewer scrollViewer = sender as ScrollViewer;
             if (scrollViewer != null)
             {

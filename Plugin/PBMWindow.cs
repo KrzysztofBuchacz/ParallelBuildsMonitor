@@ -10,6 +10,10 @@
     /// <remarks>
     /// In Visual Studio tool windows are composed of a frame (implemented by the shell) and a pane,
     /// usually implemented by the package implementer.
+    /// IMPORTANT NOTE:
+    ///     "Parallel Builds Monitor" frame header might be visible (e.g.: when tabbed tougheder with "Output" frame),
+    ///     but it does NOT contain PBMWindow object unless it contents is not visible on screen. It means that
+    ///     PBMWindow() constructor, PreProcessMessage() and OnCreate() are never called.
     /// <para>
     /// This class derives from the ToolWindowPane class provided from the MPF in order to use its
     /// implementation of the IVsUIElementPane interface.
@@ -33,21 +37,11 @@
             this.Content = new PBMControl();
         }
 
-        protected override bool PreProcessMessage(ref System.Windows.Forms.Message m)
-        {
-            return base.PreProcessMessage(ref m);
-        }
-
-        protected override void OnCreate()
-        {
-            // Start listening VS Events...
-            PBMCommand.Initialize(Package as Microsoft.VisualStudio.Shell.Package);
-        }
-
-        protected override void OnClose()
-        {
-            // Stop listening VS Events...
-            PBMCommand.Uninitialize();
-        }
+        ///// <summary>
+        ///// This method is called only when Visual Studio is closed, NOT when "Parallel Builds Monitor" pane/frame is closed!
+        ///// </summary>
+        //protected override void OnClose()
+        //{
+        //}
     }
 }

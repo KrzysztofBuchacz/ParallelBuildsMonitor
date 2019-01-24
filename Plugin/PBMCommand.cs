@@ -44,6 +44,9 @@ namespace ParallelBuildsMonitor
             if (package == null)
                 return false;
 
+            if (Package != null)
+                return false; // Protection against double initialization (double subscription to events, double menus etc)
+
             Package = package;
             Dte = (DTE2)ServiceProvider.GetService(typeof(SDTE));
 
@@ -215,7 +218,7 @@ namespace ParallelBuildsMonitor
                 allProjectsCount += GetProjectsCount(project);
 
             DataModel.BuildBegin(System.IO.Path.GetFileName(Dte.Solution.FileName), allProjectsCount);
-            GraphControl.Instance.BuildBegin();
+            GraphControl.Instance?.BuildBegin();
         }
 
         /// <summary>
@@ -252,7 +255,7 @@ namespace ParallelBuildsMonitor
         {
             DataModel.SetProjectDependenies(GetProjectDependenies());
             DataModel.BuildDone();
-            GraphControl.Instance.BuildDone();
+            GraphControl.Instance?.BuildDone();
         }
 
         /// <summary>
@@ -264,7 +267,7 @@ namespace ParallelBuildsMonitor
         static void solutionEvents_AfterClosing()
         {
             DataModel.Reset();
-            GraphControl.Instance.InvalidateVisual();
+            GraphControl.Instance?.InvalidateVisual();
         }
 
         #endregion IdeEvents
