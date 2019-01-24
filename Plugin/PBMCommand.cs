@@ -253,8 +253,8 @@ namespace ParallelBuildsMonitor
         /// <param name="Action"></param>
         static void BuildEvents_OnBuildDone(vsBuildScope Scope, vsBuildAction Action)
         {
-            DataModel.SetProjectDependenies(GetProjectDependenies());
-            DataModel.BuildDone();
+            bool findAndSetCriticalPath = ((Action == vsBuildAction.vsBuildActionBuild) || (Action == vsBuildAction.vsBuildActionRebuildAll)); // There is no Critical Path for vsBuildAction.vsBuildActionClean. Clean is done sequentially.
+            DataModel.BuildDone(GetProjectDependenies(), findAndSetCriticalPath);
             GraphControl.Instance?.BuildDone();
         }
 
