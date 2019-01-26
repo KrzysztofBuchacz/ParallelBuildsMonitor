@@ -6,6 +6,10 @@ using System.Text;
 namespace ParallelBuildsMonitor
 {
     // Code from page: https://emoacht.wordpress.com/2012/11/06/csharp-ssd/
+
+    /// <summary>
+    /// Entry method is IsSsdDrive(). Check its description for details.
+    /// </summary>
     public class DetectSsd
     {
         // For CreateFile to get handle to drive
@@ -318,10 +322,17 @@ namespace ParallelBuildsMonitor
 
 
         /// <summary>
-        /// This method return if questioned HDD is SDD or not.
+        /// This method return if questioned HDD is SSD or not.
         /// </summary>
         /// <remarks>
-        /// There is no perfect method to detect is drive is HDD or not.
+        /// <para>
+        /// There is no perfect method to detect type of HDD drive.
+        /// E.g.: Hybrid drives combine Rotational and SSD together, all hidden behind hardware.
+        /// Another aspect is that methods in this class ask HDD Driver for relevant information.
+        /// If that information is not provided by Driver, e.g. due to using generic HDD Driver
+        /// or because dedicated Driver doesn't provide such information at all, those metods are 
+        /// unable to determine HDD type.
+        /// </para>
         /// Detection algorithm base on Microsoft algorithm:
         /// https://blogs.technet.microsoft.com/filecab/2009/11/25/windows-7-disk-defragmenter-user-interface-overview/
         /// which is:
