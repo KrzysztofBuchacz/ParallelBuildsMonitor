@@ -15,7 +15,7 @@ using System.Diagnostics;
 
 namespace ParallelBuildsMonitor
 {
-    public class GraphControl : ContentControl
+    public class GraphControl : ContentControl, IDisposable
     {
         #region Internal classes
 
@@ -46,11 +46,11 @@ namespace ParallelBuildsMonitor
 
         #region Members
 
-        #endregion Members
-
         public bool isBuilding = false;
         private static readonly double refreshTimerInterval = 1000; // 1000 means collect data every 1s.
         private System.Timers.Timer refreshTimer = new System.Timers.Timer(refreshTimerInterval);
+
+        #endregion Members
 
         #region Members Visual
 
@@ -90,6 +90,8 @@ namespace ParallelBuildsMonitor
 
         #endregion Properties
 
+        #region Creator, Constructors
+
         public GraphControl()
         {
             Instance = this;
@@ -99,33 +101,43 @@ namespace ParallelBuildsMonitor
             refreshTimer.Elapsed += new ElapsedEventHandler(RefreshTimerEventTick); // Are we sure there is only one instance of GraphControl? If not operator += will multiply calls...
         }
 
-        void OnForegroundChanged()
-        {
-            bool isDark = false;
-            SolidColorBrush foreground = Foreground as SolidColorBrush;
-            if (foreground != null)
-            {
-                isDark = foreground.Color.R > 0x80;
-            }
-
-            blackBrush = new SolidColorBrush(isDark ? Colors.White : Colors.Black);
-            Background = Brushes.Transparent;
-            greenSolidBrush = new SolidColorBrush(isDark ? Colors.LightGreen : Colors.DarkGreen);
-            redSolidBrush = new SolidColorBrush(isDark ? Color.FromRgb(249, 33, 33) : Colors.DarkRed);
-            blueSolidBrush = new SolidColorBrush(isDark ? Color.FromRgb(81, 156, 245) : Colors.DarkBlue);
-            blackPen = new Pen(new SolidColorBrush(isDark ? Colors.White : Colors.Black), 1.0);
-            grid = new Pen(new SolidColorBrush(isDark ? Color.FromRgb(66, 66, 66) : Colors.LightGray), 1.0);
-            cpuPen = new Pen(new SolidColorBrush(isDark ? Color.FromRgb(200, 135, 200) : Color.FromRgb(90, 40, 90)), 1.0);
-            cpuSoftPen = new Pen(new SolidColorBrush(isDark ? Color.FromRgb(90, 40, 90) : Color.FromRgb(200, 135, 200)), 1.0);
-            hddPen = new Pen(new SolidColorBrush(isDark ? Color.FromRgb(130, 196, 255) : Color.FromRgb(0, 56, 106)), 1.0);
-            hddSoftPen = new Pen(new SolidColorBrush(isDark ? Color.FromRgb(0, 56, 106) : Color.FromRgb(130, 196, 255)), 1.0);
-        }
-
         public static GraphControl Instance
         {
             get;
             private set;
         }
+
+        #endregion Creator, Constructors
+
+        #region Dispose
+
+        private bool disposed = false; // Flag: Has Dispose already been called?
+
+        // Public implementation of Dispose pattern callable by consumers.
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        // Protected implementation of Dispose pattern.
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+                return;
+
+            if (disposing)
+            {
+                // Free any other managed objects here.
+                refreshTimer.Dispose();
+            }
+
+            disposed = true;
+        }
+
+        #endregion Dispose
+
+        #region Starting, Stopping
 
         public void BuildBegin()
         {
@@ -141,14 +153,9 @@ namespace ParallelBuildsMonitor
             InvalidateVisual(); // When solution build finished, refresh graph manually, since refreshTimer has stopped.
         }
 
-        private void RefreshTimerEventTick(object sender, ElapsedEventArgs e)
-        {
-            GraphControl.Instance.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background,
-                 new System.Action(() =>
-                 {
-                     GraphControl.Instance.InvalidateVisual();
-                 }));
-        }
+        #endregion Starting, Stopping
+
+        #region Helpers - Draw Methods
 
         void DrawGraph(string title, DrawingContext drawingContext, ReadOnlyCollection<Tuple<long, float>> data, Pen pen, Pen softPen, int rowNbr, Size RenderSize, double rowHeight, Spacings spacings, long maxTick, long nowTick, Typeface fontFace)
         {
@@ -309,7 +316,9 @@ namespace ParallelBuildsMonitor
             }
         }
 
+        #endregion Helpers - Draw Methods
 
+        #region Helpers - Utilities
 
         /// <summary>
         /// This class ensure that IsGraphDrawn is always correctly set according to current visual.
@@ -323,6 +332,10 @@ namespace ParallelBuildsMonitor
                 ViewModel.Instance.IsGraphDrawn = IsDrawn;
             }
         }
+
+        #endregion Helpers - Utilities
+
+        #region Main Draw Method
 
         protected override void OnRender(DrawingContext drawingContext)
         {
@@ -482,6 +495,19 @@ namespace ParallelBuildsMonitor
             }
         }
 
+        #endregion Main Draw Method
+
+        #region Events Handling
+
+        private void RefreshTimerEventTick(object sender, ElapsedEventArgs e)
+        {
+            GraphControl.Instance.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background,
+                 new System.Action(() =>
+                 {
+                     GraphControl.Instance.InvalidateVisual();
+                 }));
+        }
+
         protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
         {
             if (e.Property.Name == "Foreground")
@@ -491,5 +517,28 @@ namespace ParallelBuildsMonitor
             base.OnPropertyChanged(e);
         }
 
+        void OnForegroundChanged()
+        {
+            bool isDark = false;
+            SolidColorBrush foreground = Foreground as SolidColorBrush;
+            if (foreground != null)
+            {
+                isDark = foreground.Color.R > 0x80;
+            }
+
+            blackBrush = new SolidColorBrush(isDark ? Colors.White : Colors.Black);
+            Background = Brushes.Transparent;
+            greenSolidBrush = new SolidColorBrush(isDark ? Colors.LightGreen : Colors.DarkGreen);
+            redSolidBrush = new SolidColorBrush(isDark ? Color.FromRgb(249, 33, 33) : Colors.DarkRed);
+            blueSolidBrush = new SolidColorBrush(isDark ? Color.FromRgb(81, 156, 245) : Colors.DarkBlue);
+            blackPen = new Pen(new SolidColorBrush(isDark ? Colors.White : Colors.Black), 1.0);
+            grid = new Pen(new SolidColorBrush(isDark ? Color.FromRgb(66, 66, 66) : Colors.LightGray), 1.0);
+            cpuPen = new Pen(new SolidColorBrush(isDark ? Color.FromRgb(200, 135, 200) : Color.FromRgb(90, 40, 90)), 1.0);
+            cpuSoftPen = new Pen(new SolidColorBrush(isDark ? Color.FromRgb(90, 40, 90) : Color.FromRgb(200, 135, 200)), 1.0);
+            hddPen = new Pen(new SolidColorBrush(isDark ? Color.FromRgb(130, 196, 255) : Color.FromRgb(0, 56, 106)), 1.0);
+            hddSoftPen = new Pen(new SolidColorBrush(isDark ? Color.FromRgb(0, 56, 106) : Color.FromRgb(130, 196, 255)), 1.0);
+        }
+
+        #endregion Events Handling
     }
 }

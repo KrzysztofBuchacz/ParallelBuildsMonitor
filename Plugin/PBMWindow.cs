@@ -29,6 +29,10 @@
         /// </summary>
         public PBMWindow() : base(null)
         {
+        }
+
+        protected override void OnCreate()
+        {
             this.Caption = Title;
 
             // This is the user control hosted by the tool window; Note that, even if this class implements IDisposable,

@@ -10,7 +10,7 @@ namespace ParallelBuildsMonitor
     /// <summary>
     /// Container to holds all build statistics data
     /// </summary>
-    public class DataModel
+    public class DataModel : IDisposable
     {
         #region Properties
 
@@ -61,7 +61,7 @@ namespace ParallelBuildsMonitor
 
         #endregion For Testing Only
 
-        #region Creator and Constructors
+        #region Creator, Constructors
 
         private DataModel()
         {
@@ -94,7 +94,38 @@ namespace ParallelBuildsMonitor
             cpuUsage.Clear();
             hddUsage.Clear();
         }
-        #endregion
+
+        #endregion Creator, Constructors
+
+        #region Dispose
+
+        private bool disposed = false; // Flag: Has Dispose already been called?
+
+        // Public implementation of Dispose pattern callable by consumers.
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        // Protected implementation of Dispose pattern.
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+                return;
+
+            if (disposing)
+            {
+                // Free any other managed objects here.
+                cpuCounter.Dispose();
+                hddCounter.Dispose();
+                performanceTimer.Dispose();
+            }
+
+            disposed = true;
+        }
+
+        #endregion Dispose
 
         #region Manipulation
 
