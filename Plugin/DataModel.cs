@@ -98,11 +98,6 @@ namespace ParallelBuildsMonitor
 
         #region Manipulation
 
-        public void SetProjectDependenies(Dictionary<string, List<string>> dependenies)
-        {
-            projectDependenies = dependenies;
-        }
-
         /// <summary>
         /// Call this method when starting colleting statistics for solution (.sln)
         /// </summary>
@@ -116,10 +111,13 @@ namespace ParallelBuildsMonitor
             CollectPerformanceData(); // Collect 1st sample. Second will be taken after performanceTimerInterval
         }
 
-        public void BuildDone()
+        public void BuildDone(Dictionary<string, List<string>> projectDependenies, bool findAndSetCriticalPath)
         {
+            this.projectDependenies = projectDependenies;
             performanceTimer.Stop();
-            FindAndSetCriticalPath();
+
+            if (findAndSetCriticalPath)
+                FindAndSetCriticalPath();
         }
 
         /// <summary>
@@ -240,6 +238,9 @@ namespace ParallelBuildsMonitor
 
             BuildInfo lastProject = finishedBuilds[finishedBuilds.Count-1];
             criticalPath.Add(lastProject);
+            if (finishedBuilds.Count == 1)
+                return true; // Case when Build/Rebuild only 1 project
+
             while (true)
             {
                 List<string> precedentProjects = ProjectDependenies[lastProject.ProjectUniqueName];
