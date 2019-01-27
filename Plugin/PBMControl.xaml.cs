@@ -51,19 +51,24 @@ namespace ParallelBuildsMonitor
             }
         }
 
-        public void SaveGraph()
+        public bool SaveGraph(string pathToPngFile)
         {
-            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog
+            if (String.IsNullOrEmpty(pathToPngFile))
             {
-                FileName = DataModel.Instance.GetSaveFileNamePrefix(),
-                DefaultExt = ".png",               // Default file extension
-                Filter = "Portable Images|*.png"   // Filter files by extension
-            };
+                Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog
+                {
+                    FileName = DataModel.Instance.GetSaveFileNamePrefix(),
+                    DefaultExt = ".png",               // Default file extension
+                    Filter = "Portable Images|*.png"   // Filter files by extension
+                };
 
-            if (dlg.ShowDialog() != true)
-                return;
+                if (dlg.ShowDialog() != true)
+                    return false;
 
-            SavePng.SaveToPng(this.graph, this.Background, dlg.FileName);
+                pathToPngFile = dlg.FileName;
+            }
+
+            return SavePng.SaveToPng(this.graph, this.Background, pathToPngFile);
         }
 
         private void MyToolWindow_MouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)

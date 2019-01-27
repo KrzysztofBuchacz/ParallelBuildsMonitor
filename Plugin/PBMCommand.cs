@@ -156,7 +156,7 @@ namespace ParallelBuildsMonitor
             {
                 PBMWindow window = Package.FindToolWindow(typeof(PBMWindow), 0, true) as PBMWindow;
                 PBMControl control = window?.Content as PBMControl;
-                control?.SaveGraph();
+                control?.SaveGraph(null /*pathToPngFile*/);
             }
             catch
             {

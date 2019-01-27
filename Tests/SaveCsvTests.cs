@@ -162,7 +162,7 @@ namespace ParallelBuildsMonitor.Tests
     }
 
     [TestClass()]
-    public class TestHelperMethodsTests
+    public class CsvTestHelperMethodsTests
     {
         [TestMethod()]
         public void CollectionAssertAreEqualTest_Simple()
