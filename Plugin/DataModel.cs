@@ -27,7 +27,6 @@ namespace ParallelBuildsMonitor
         public ReadOnlyCollection<Tuple<long, float>> CpuUsage { get { return cpuUsage.AsReadOnly(); } }
         public ReadOnlyCollection<Tuple<long, float>> HddUsage { get { return hddUsage.AsReadOnly(); } }
         public int MaxParallelBuilds { get; private set; } = 0;
-        public int AllProjectsCount { get; private set; } = 0;
 
         #endregion Properties
 
@@ -86,7 +85,6 @@ namespace ParallelBuildsMonitor
 
             StartTime = DateTime.Now;
             MaxParallelBuilds = 0;
-            AllProjectsCount = 0;
             currentBuilds.Clear();
             projectBuildOrderNumber = 0;
             finishedBuilds.Clear();
@@ -132,12 +130,11 @@ namespace ParallelBuildsMonitor
         /// <summary>
         /// Call this method when starting colleting statistics for solution (.sln)
         /// </summary>
-        public void BuildBegin(string solutionName, int allProjectsCount)
+        public void BuildBegin(string solutionName)
         {
             Reset();
             SolutionName = solutionName;
             StartTime = DateTime.Now;
-            this.AllProjectsCount = allProjectsCount;
             performanceTimer.Start();
             CollectPerformanceData(); // Collect 1st sample. Second will be taken after performanceTimerInterval
         }

@@ -367,12 +367,15 @@ namespace ParallelBuildsMonitor
                     if (RenderSize.Width < 10.0 || RenderSize.Height < 10.0)
                         return;
 
-                    //if (DataModel.Instance.AllProjectsCount == 0)  //DO NOT SUBMIT!! remove this since not used.
-                    //    return;
+                    if (IsEmptyBuilds())
+                    { // Case when no single build was started yet  -  display some info to ensure user that everything is OK
+                        FormattedText captionFT = new FormattedText(emptyGanttMsg, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                        drawingContext.DrawText(captionFT, new Point(50.0, rowNbrNoProjectsFiller / 2 * rowHeight));
+
+                        return;
+                    }
 
                     int linesCount = DataModel.CurrentBuilds.Count + DataModel.FinishedBuilds.Count + 1 + 1 + 1 + 1; // 1 for header, 1 for status, 1 for CPU, 1 for HDD
-                    if (IsEmptyBuilds())
-                        linesCount += rowNbrNoProjectsFiller;
                     double totalHeight = rowHeight * linesCount;
 
                     Height = totalHeight + penThickness;
@@ -444,14 +447,6 @@ namespace ParallelBuildsMonitor
                         DrawMachineInfo(drawingContext, rowNbr);
 
                         rowNbr++;
-                    }
-
-                    if (IsEmptyBuilds())
-                    { // Case when no single build was started yet  -  display some info to ensure user that everything is OK
-                        FormattedText captionFT = new FormattedText(emptyGanttMsg, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                        drawingContext.DrawText(captionFT, new Point(50.0, rowNbrNoProjectsFiller / 2 * rowHeight));
-
-                        rowNbr += rowNbrNoProjectsFiller;
                     }
 
                     foreach (BuildInfo item in DataModel.FinishedBuilds)
