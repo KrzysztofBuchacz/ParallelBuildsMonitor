@@ -3,6 +3,16 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
+
+//
+//
+//   NOTE:
+//      This is working solution however NOT used right now!
+//      Now, Windows provide new way of SSD check -> MSFT_PhysicalDisk
+//
+//
+
+
 namespace ParallelBuildsMonitor
 {
     // Code from page: https://emoacht.wordpress.com/2012/11/06/csharp-ssd/
@@ -354,12 +364,21 @@ namespace ParallelBuildsMonitor
         /// <returns></returns>
         public static DriveType IsSsdDrive(int physicalDriveNumber)
         {
-            string physicalDrive = "\\\\.\\PhysicalDrive" + physicalDriveNumber.ToString();
-            DriveType driveType = DetectSsd.NativeMethods.HasNoSeekPenalty(physicalDrive);
-            if (driveType != DriveType.Unknown)
-                return driveType;
+            try
+            { // Not sure if try{} catch{} is needed here
 
-            return DetectSsd.NativeMethods.HasNominalMediaRotationRate(physicalDrive);
+                string physicalDrive = "\\\\.\\PhysicalDrive" + physicalDriveNumber.ToString();
+                DriveType driveType = DetectSsd.NativeMethods.HasNoSeekPenalty(physicalDrive);
+                if (driveType != DriveType.Unknown)
+                    return driveType;
+
+                return DetectSsd.NativeMethods.HasNominalMediaRotationRate(physicalDrive);
+            }
+            catch
+            {
+                System.Diagnostics.Debug.Assert(false, "Getting Type of HDDs failed! Exception thrown while trying to to determine HDD type.");
+                return DetectSsd.DriveType.Unknown;
+            }
         }
     }
 }

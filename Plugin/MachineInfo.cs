@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-
+using System.Management;
 
 namespace ParallelBuildsMonitor
 {
@@ -47,7 +47,7 @@ namespace ParallelBuildsMonitor
 
             try
             { // Not sure if try{} catch{} is needed here
-                foreach (var item in new System.Management.ManagementObjectSearcher("Select NumberOfProcessors, TotalPhysicalMemory from Win32_ComputerSystem").Get())
+                foreach (var item in new ManagementObjectSearcher("Select NumberOfProcessors, TotalPhysicalMemory from Win32_ComputerSystem").Get())
                 {
                     PhysicalProcessorsNumber = (UInt32)item["NumberOfProcessors"];
                     TotalPhysicalMemoryInGB = (Int32)Math.Round(Convert.ToDouble(item.Properties["TotalPhysicalMemory"].Value) / 1048576 / 1024, 0);
@@ -60,7 +60,7 @@ namespace ParallelBuildsMonitor
 
             try
             { // Not sure if try{} catch{} is needed here
-                foreach (var item in new System.Management.ManagementObjectSearcher("Select NumberOfCores, NumberOfLogicalProcessors, MaxClockSpeed from Win32_Processor").Get())
+                foreach (var item in new ManagementObjectSearcher("Select NumberOfCores, NumberOfLogicalProcessors, MaxClockSpeed from Win32_Processor").Get())
                 {
                     PhysicalCoresNumber += (UInt32)item["NumberOfCores"];
                     LogicalCoresNumber += (UInt32)item["NumberOfLogicalProcessors"]; //Environment.ProcessorCount is the same as NumberOfLogicalProcessors
@@ -78,7 +78,7 @@ namespace ParallelBuildsMonitor
 
             try
             { // Not sure if try{} catch{} is needed here
-                foreach (var item in new System.Management.ManagementObjectSearcher("SELECT DeviceID, TotalHeads FROM Win32_DiskDrive").Get())
+                foreach (var item in new ManagementObjectSearcher("SELECT DeviceID, TotalHeads FROM Win32_DiskDrive").Get())
                 {
                     PhysicalHDDsNumber += 1;
                 }
@@ -93,19 +93,41 @@ namespace ParallelBuildsMonitor
             {
                 for (int ii = 0; ii < PhysicalHDDsNumber; ii++)
                 {
-                    try
-                    { // Not sure if try{} catch{} is needed here
-                        DetectSsd.DriveType driveType = DetectSsd.IsSsdDrive(ii);
+                        //DetectSsd.DriveType driveType = DetectSsd.IsSsdDrive(ii); // Temporary removing old way
+                        DetectSsd.DriveType driveType = GetDriveType(ii);
                         hddsTypes.Add(driveType);
-                    }
-                    catch
-                    {
-                        Debug.Assert(false, "Getting Type of HDDs failed! Exception thrown while trying to to determine HDD type.");
-                        hddsTypes.Add(DetectSsd.DriveType.Unknown);
-                    }
                 }
             }
         }
+
+        public static DetectSsd.DriveType GetDriveType(int physicalDriveNumber)
+        {
+            try
+            { // Not sure if try{} catch{} is needed here
+                using (ManagementObjectSearcher physicalDiskSearcher = new ManagementObjectSearcher(
+                            @"\\localhost\ROOT\Microsoft\Windows\Storage",
+                            $"SELECT MediaType FROM MSFT_PhysicalDisk WHERE DeviceID='{physicalDriveNumber}'"))
+                {
+                    ManagementBaseObject physicalDisk = physicalDiskSearcher.Get().Cast<ManagementBaseObject>().Single();
+                    UInt16 mediaType = (UInt16)physicalDisk["MediaType"];
+                    switch (mediaType)
+                    { // According to: https://docs.microsoft.com/en-us/previous-versions/windows/desktop/stormgmt/msft-physicaldisk
+                        case 0: return DetectSsd.DriveType.Unknown;
+                        case 3: return DetectSsd.DriveType.Rotational;  // Is it correct?
+                        case 4: return DetectSsd.DriveType.SSD;
+                        case 5: return DetectSsd.DriveType.Unknown;     // Is it correct?
+                    }
+
+                    return DetectSsd.DriveType.Unknown;
+                }
+            }
+            catch
+            {
+                Debug.Assert(false, "Getting Type of HDDs failed! Exception thrown while trying to to determine HDD type through ManagementObject.");
+                return DetectSsd.DriveType.Unknown;
+            }
+        }
+
 
         public override string ToString()
         {
