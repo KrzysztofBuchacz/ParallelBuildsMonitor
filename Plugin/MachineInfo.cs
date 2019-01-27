@@ -130,7 +130,7 @@ namespace ParallelBuildsMonitor
                 List<string> values = new List<string>();
                 foreach (UInt32 value in CpusSpeedInMHz)
                 {
-                    values.Add(String.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0}GHz", ((double)value) / 1000, 1)); //This also do the rounding
+                    values.Add(String.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0}GHz", ((double)value) / 1000)); //This also do the rounding
                     if (AreAllValuesTheSame)
                         break;
                 }
