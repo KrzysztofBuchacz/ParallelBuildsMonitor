@@ -475,9 +475,7 @@ namespace ParallelBuildsMonitor
                 } //End of IsGraphDrawnScope
             }
             catch (Exception)
-            {   // Keep this try{} catch{}!
-                // Actually code in try{} bail from time to time on windows resize.
-                // I guess because there is division by (x - y), while x equals y, but it might be not the only case.
+            {
                 Debug.Assert(false, "Gantt chart not refreshed! Exception thrown while drawing Gantt chart.");
             }
         }

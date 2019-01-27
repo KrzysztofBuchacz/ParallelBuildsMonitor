@@ -6,6 +6,14 @@ For Visul Studio 2015 2017 2019
 
 https://marketplace.visualstudio.com/items?itemName=ivson4.ParallelBuildsMonitor-18691
 
+
+## Git contents:
+- `Plugin` - contain `Parallel Build Monitor` extension to be installed in Visual Studio.  
+- `Example` - contain some dummy project with irrelevant code just to test `Parallel Build Monitor` plugin.  
+- `Tests` - unit tests for `Plugin`.  
+- `packages` and `TestResults` - dynamically created directories during build or testing.  
+
+
 ## How to debug this project
 
 Uninstall Parallel Build Monitor if installed
