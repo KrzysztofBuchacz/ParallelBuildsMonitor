@@ -213,11 +213,7 @@ namespace ParallelBuildsMonitor
 
         static void BuildEvents_OnBuildBegin(vsBuildScope Scope, vsBuildAction Action)
         {
-            int allProjectsCount = 0;
-            foreach (Project project in Dte.Solution.Projects)
-                allProjectsCount += GetProjectsCount(project);
-
-            DataModel.BuildBegin(System.IO.Path.GetFileName(Dte.Solution.FileName), allProjectsCount);
+            DataModel.BuildBegin(System.IO.Path.GetFileName(Dte.Solution.FileName));
             GraphControl.Instance?.BuildBegin();
         }
 
@@ -284,26 +280,6 @@ namespace ParallelBuildsMonitor
             }
 
             return null;
-        }
-
-        static int GetProjectsCount(Project project)
-        {
-            int count = 0;
-            if (project != null)
-            {
-                if (project.FullName.ToLower().EndsWith(".vcxproj") ||
-                    project.FullName.ToLower().EndsWith(".csproj") ||
-                    project.FullName.ToLower().EndsWith(".vbproj"))
-                    count = 1;
-                if (project.ProjectItems != null)
-                {
-                    foreach (ProjectItem projectItem in project.ProjectItems)
-                    {
-                        count += GetProjectsCount(projectItem.SubProject);
-                    }
-                }
-            }
-            return count;
         }
 
         public static string GetAllTextFromPane(EnvDTE.OutputWindowPane Pane)

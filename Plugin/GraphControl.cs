@@ -74,8 +74,10 @@ namespace ParallelBuildsMonitor
         static Brush redGradientBrush = new LinearGradientBrush(Colors.IndianRed, Colors.DarkRed, new Point(0, 0), new Point(0, 1));
         static Brush criticalPathGradientBrush = new LinearGradientBrush(Colors.LightYellow, Colors.Yellow, new Point(0, 0), new Point(0, 1));
 
-        readonly Typeface fontFace = null; // it is set in constructor
-        readonly double rowHeight = 0;     // it is set in constructor
+        readonly Typeface fontFace = null;      // it is set in constructor
+        readonly double rowHeight = 0;          // it is set in constructor
+        static int rowNbrNoProjectsFiller = 6;  // Number of rows that are reserved to display message for user when there is no Gantt chart
+        static string emptyGanttMsg = "Run Build or Rebuild to see Gantt chart here";
 
         public bool scrollLast = true;
 
@@ -276,6 +278,20 @@ namespace ParallelBuildsMonitor
             drawingContext.DrawLine(grid, new Point(x, (wholeSize ? 0 : 1) * rowHeight), new Point(x, (wholeSize ? totalRowNbr + 1 : totalRowNbr) * rowHeight));
         }
 
+        private void DrawMachineInfo(DrawingContext drawingContext, int rowNbr)
+        {
+            string headerText = DataModel.GetSolutionNameWithMachineInfo("  |  ", false /*WithBuildStartedStr*/);
+
+            FormattedText itext = new FormattedText(headerText, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+            // Cut text when it is too long for window - Set a maximum width and height. If the text overflows those values, an ellipsis "..." appears.
+            itext.MaxTextWidth = RenderSize.Width - Spacings.lOrder - Spacings.rGanttC;
+            itext.MaxTextHeight = rowHeight;
+
+            drawingContext.DrawText(itext, new Point(Spacings.lOrder, rowNbr * rowHeight));
+        }
+
+
+
         private void DrawBar(DrawingContext drawingContext, int rowNbr, long startTime, long endTime, long maxTick, Spacings spacings, Brush color, bool markAsCriticalPath)
         {
             double pixelRange = RenderSize.Width - spacings.lGanttC - Spacings.rGanttC;
@@ -320,6 +336,11 @@ namespace ParallelBuildsMonitor
 
         #region Helpers - Utilities
 
+        static protected bool IsEmptyBuilds()
+        {
+            return ((DataModel.CurrentBuilds.Count == 0) && (DataModel.FinishedBuilds.Count == 0));
+        }
+
         /// <summary>
         /// This class ensure that IsGraphDrawn is always correctly set according to current visual.
         /// </summary>
@@ -346,8 +367,13 @@ namespace ParallelBuildsMonitor
                     if (RenderSize.Width < 10.0 || RenderSize.Height < 10.0)
                         return;
 
-                    if (DataModel.Instance.AllProjectsCount == 0)
+                    if (IsEmptyBuilds())
+                    { // Case when no single build was started yet  -  display some info to ensure user that everything is OK
+                        FormattedText captionFT = new FormattedText(emptyGanttMsg, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                        drawingContext.DrawText(captionFT, new Point(50.0, rowNbrNoProjectsFiller / 2 * rowHeight));
+
                         return;
+                    }
 
                     int linesCount = DataModel.CurrentBuilds.Count + DataModel.FinishedBuilds.Count + 1 + 1 + 1 + 1; // 1 for header, 1 for status, 1 for CPU, 1 for HDD
                     double totalHeight = rowHeight * linesCount;
@@ -415,18 +441,10 @@ namespace ParallelBuildsMonitor
                     spacings.lGanttC = Math.Max(spacings.lGanttC, Spacings.lOrder + usageTextLen + penThickness);
 
                     int rowNbr = 0; //first row has number 0
+
                     { // Draw header
                         DrawSeparator(drawingContext, rowNbr); // draw backgroud things first due to anty-aliasing
-                        string headerText = DataModel.GetSolutionNameWithMachineInfo("  |  ", false /*WithBuildStartedStr*/);
-                        // Draw text
-                        FormattedText itext = new FormattedText(headerText, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
-                        {
-                            // Cut text when it is too long for window. Probably correct solution is to add horizontal scrollbar to window.
-                            // Set a maximum width and height. If the text overflows these values, an ellipsis "..." appears.
-                            itext.MaxTextWidth = RenderSize.Width - Spacings.lOrder - Spacings.rGanttC;
-                            itext.MaxTextHeight = rowHeight;
-                        }
-                        drawingContext.DrawText(itext, new Point(Spacings.lOrder, rowNbr * rowHeight));
+                        DrawMachineInfo(drawingContext, rowNbr);
 
                         rowNbr++;
                     }
