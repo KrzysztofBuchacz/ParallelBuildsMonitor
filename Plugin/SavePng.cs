@@ -22,19 +22,19 @@ namespace ParallelBuildsMonitor
         /// <param name="target">Any control like Image, Button, Calendar etc.</param>
         /// <param name="background">Providing background will override control transparent background. This is optional, and can be null.</param>
         /// <param name="fileName">Filename with path, where .png will be saved.</param>
-        public static void SaveToPng(Visual target, Brush background, string fileName) //Original name was CreateBitmapFromVisual()
+        public static bool SaveToPng(Visual target, Brush background, string fileName) //Original name was CreateBitmapFromVisual()
         {
             if (target == null || string.IsNullOrEmpty(fileName))
             {
                 Debug.Assert(false, "Wrong SaveToPng() method call. Fix caller!");
-                return;
+                return false;
             }
 
             Rect bounds = VisualTreeHelper.GetDescendantBounds(target);
             if (bounds.IsEmpty)
             {
                 Debug.Assert(false, "How it happen that save was not dissabled? Disable SaveAsPng button to avoid wrong call.");
-                return;
+                return false;
             }
 
             RenderTargetBitmap renderTarget = new RenderTargetBitmap((Int32)bounds.Width, (Int32)bounds.Height, 96, 96, PixelFormats.Pbgra32);
@@ -55,6 +55,8 @@ namespace ParallelBuildsMonitor
             {
                 bitmapEncoder.Save(stm);
             }
+
+            return true;
         }
     }
 }
