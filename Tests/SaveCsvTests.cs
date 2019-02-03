@@ -703,7 +703,8 @@ namespace ParallelBuildsMonitor.Tests
                 new BuildInfo("WpfToolTip\\WpfToolTip.csproj", "WpfToolTip.csproj", 2, 40808204, 102393597, true),
                 new BuildInfo("variadic-macros-v1\\variadic-macros-v1.vcxproj", "variadic-macros-v1.vcxproj", 6, 102473587, 149216287, true),
             };
-            DataModel.Instance.SetCriticalPath(criticalPath);
+            var dataModel = new PrivateObject(DataModel.Instance); // Use PrivateObject class to change private member of DataModel object.
+            dataModel.SetField("criticalPath", criticalPath);
 
             bool res1 = SaveCsv.SaveCriticalPathAsCsv(tmpFileName, outputStr1);
             Assert.IsTrue(res1);
@@ -727,7 +728,8 @@ namespace ParallelBuildsMonitor.Tests
                 new BuildInfo("WpfToolTip\\WpfToolTip.csproj", "WpfToolTip.csproj", 2, 40808204, 102393597, true),
                 new BuildInfo("variadic-macros-v1\\variadic-macros-v1.vcxproj", "variadic-macros-v1.vcxproj", 6, 102473587, 149216287, true),
             };
-            DataModel.Instance.SetCriticalPath(criticalPath);
+            var dataModel = new PrivateObject(DataModel.Instance); // Use PrivateObject class to change private member of DataModel object.
+            dataModel.SetField("criticalPath", criticalPath);
 
             bool res1 = SaveCsv.SaveCriticalPathAsCsv(tmpFileName, outputStr1);
             Assert.IsTrue(res1);

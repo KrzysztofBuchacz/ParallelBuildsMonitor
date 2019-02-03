@@ -49,16 +49,6 @@ namespace ParallelBuildsMonitor
 
         #endregion Members
 
-        #region For Testing Only
-
-        // Method only for Unit Testing!
-        public void SetCriticalPath(List<BuildInfo> CriticalPath)
-        {
-            criticalPath = CriticalPath;
-        }
-
-        #endregion For Testing Only
-
         #region Creator, Constructors
 
         private DataModel()
