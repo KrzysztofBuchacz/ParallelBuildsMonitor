@@ -101,7 +101,7 @@ namespace ParallelBuildsMonitor.Tests
     public class SavePngTests
     {
         [TestMethod()]
-        public void SavePng_BuildBeforeStart()
+        public void SavePng_BeforeBuildStart()
         {
             PBMControl pBMcontrol = new PBMControl();
 
@@ -115,7 +115,7 @@ namespace ParallelBuildsMonitor.Tests
             window.Show(); //this will draw PBMControl
             //window.ShowDialog(); //for debug
 
-            string expected = TestUtils.GetTestFile("BuildBeforeStart.png");
+            string expected = TestUtils.GetTestFile("BeforeBuildStart.png");
             // ResultsDirectory   <= this is where results should be saved. How to get value of this xaml tag?
             string tmpFileName = Path.GetTempFileName(); //this method return path to non-existing file in temp directory
             tmpFileName += ".png";
