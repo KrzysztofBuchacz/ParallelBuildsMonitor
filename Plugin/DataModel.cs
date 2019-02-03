@@ -51,8 +51,7 @@ namespace ParallelBuildsMonitor
 
         #region For Testing Only
 
-        // Better option is [assembly: InternalsVisibleTo("ParallelBuildsMonitorTests")]...
-
+        // Method only for Unit Testing!
         public void SetCriticalPath(List<BuildInfo> CriticalPath)
         {
             criticalPath = CriticalPath;
