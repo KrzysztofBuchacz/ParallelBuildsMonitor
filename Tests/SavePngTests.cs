@@ -224,8 +224,6 @@ namespace ParallelBuildsMonitor.Tests
             bool res = pBMcontrol.SaveGraph(tmpFileName /*pathToPngFile*/);
             Assert.IsTrue(res);
             Assert.IsTrue(ImageComparer.AreImagesEqual(expected, tmpFileName));
-
-            // Missing further part of test...
         }
 
         [TestMethod()]
