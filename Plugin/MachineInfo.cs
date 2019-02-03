@@ -25,8 +25,8 @@ namespace ParallelBuildsMonitor
         public int PhysicalHDDsNumber { get; private set; } = 0;
         public ReadOnlyCollection<DetectSsd.DriveType> HddsTypes { get { return hddsTypes.AsReadOnly(); } }
 
-        public List<UInt32> cpusSpeedInMHz = new List<UInt32>();
-        public List<DetectSsd.DriveType> hddsTypes = new List<DetectSsd.DriveType>();
+        private List<UInt32> cpusSpeedInMHz = new List<UInt32>();
+        private List<DetectSsd.DriveType> hddsTypes = new List<DetectSsd.DriveType>();
         private string separatorCached;
 
         static private MachineInfo instance;
