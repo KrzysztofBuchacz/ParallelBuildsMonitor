@@ -45,7 +45,7 @@ namespace ParallelBuildsMonitor
         private static readonly double performanceTimerInterval = 1000; // 1000 means collect data every 1s.
         private System.Timers.Timer performanceTimer = new System.Timers.Timer(performanceTimerInterval);
 
-        static uint projectBuildOrderNumber = 1;
+        static uint projectBuildOrderNumber = 1; //DO NOT SUBMIT - Fix me! Initialize to 1, reset to 0. Local method members are using the same name...
 
         #endregion Members
 
