@@ -49,6 +49,7 @@ namespace ParallelBuildsMonitor
         public bool isBuilding = false;
         private static readonly double refreshTimerInterval = 1000; // 1000 means collect data every 1s.
         private System.Timers.Timer refreshTimer = new System.Timers.Timer(refreshTimerInterval);
+        private long nowTickForTest = 0; // This value is used only when greater from 0 and only for testing.   Rationale: GraphControl refresh itself, but for test constant data is required.
 
         #endregion Members
 
@@ -382,7 +383,7 @@ namespace ParallelBuildsMonitor
 
                     long tickStep = 100000000;
                     long maxTick = tickStep;
-                    long nowTick = DateTime.Now.Ticks;
+                    long nowTick = ((nowTickForTest > 0) ? nowTickForTest : DateTime.Now.Ticks);
                     long t = nowTick - DataModel.StartTime.Ticks;
                     if (DataModel.CurrentBuilds.Count > 0)
                     {
