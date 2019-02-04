@@ -124,5 +124,20 @@ namespace ParallelBuildsMonitor.Tests
             Assert.IsTrue(res);
             Assert.IsTrue(ImageComparer.AreImagesEqual(expected, tmpFileName));
         }
+
+        [TestMethod()]
+        public void SavePng_InProgress()
+        {
+            { // MachineInfo is in the picture, so make MachineInfo as machine indepenent string for unit test puroposes
+                string machineIndepenentInfo = "Processors: 1 | Cores: 2 | CPU Speed: 2.2GHz | Hyper Threading: Enabled | RAM: 8GB | HDD: 1 SSD";
+                MachineInfo mi = MachineInfo.Instance;
+                var machineInfo = new PrivateObject(mi); // Use PrivateObject class to change private member of MachineInfo object.
+                machineInfo.SetField("info", machineIndepenentInfo);
+
+                Assert.AreEqual(MachineInfo.Instance.ToString(), machineIndepenentInfo);
+            }
+
+            // Missing further part of test...
+        }
     }
 }
