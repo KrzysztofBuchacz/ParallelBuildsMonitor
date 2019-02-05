@@ -86,8 +86,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Empty.png" />
-    <Content Include="Example.png" />
+    <Content Include="BeforeBuildStart.png" />
+    <Content Include="BuildFinished.png" />
+    <Content Include="BuildInProgress.png" />
     <Content Include="TestOutputWithBuildTiming.txt" />
     <Content Include="TestOutputWithoutBuildTiming.txt" />
     <Content Include="UnitTestImage.png" />
