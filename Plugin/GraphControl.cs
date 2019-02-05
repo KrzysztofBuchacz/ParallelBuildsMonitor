@@ -46,7 +46,6 @@ namespace ParallelBuildsMonitor
 
         #region Members
 
-        public bool isBuilding = false;
         private static readonly double refreshTimerInterval = 1000; // 1000 means collect data every 1s.
         private System.Timers.Timer refreshTimer = new System.Timers.Timer(refreshTimerInterval);
 
@@ -101,6 +100,13 @@ namespace ParallelBuildsMonitor
             rowHeight = (new FormattedText("A0", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush)).Height + penThickness;
             OnForegroundChanged();
             refreshTimer.Elapsed += new ElapsedEventHandler(RefreshTimerEventTick); // Are we sure there is only one instance of GraphControl? If not operator += will multiply calls...
+
+            if (DataModel.IsBuilding)
+            { // GraphControl can be constructed when build is already in progress
+              // (Open VS, Start Build when PBM window is hidden behind Output tab, Switch to PBM window),
+              // then GraphControl never got BuildBegin() event, so we need start it manually.
+                BuildBegin();
+            }
         }
 
         public static GraphControl Instance
@@ -145,13 +151,11 @@ namespace ParallelBuildsMonitor
         {
             scrollLast = true;
             refreshTimer.Start();
-            isBuilding = true;
         }
 
         public void BuildDone()
         {
             refreshTimer.Stop();
-            isBuilding = false;
             InvalidateVisual(); // When solution build finished, refresh graph manually, since refreshTimer has stopped.
         }
 
@@ -191,7 +195,7 @@ namespace ParallelBuildsMonitor
             {
                 long spanL = previousTick - DataModel.StartTime.Ticks;
                 long spanR = data[nbr].Item1 - DataModel.StartTime.Ticks;
-                if (isBuilding && nbr >= data.Count - step)
+                if (DataModel.IsBuilding && nbr >= data.Count - step)
                     spanR = nowTick - DataModel.StartTime.Ticks;
 
                 // Why (int) and (long) is needed here? Let's try to simplify
@@ -420,7 +424,7 @@ namespace ParallelBuildsMonitor
                         if (item.Value.Item1 > maxBuildOrderNbr)
                             maxBuildOrderNbr = item.Value.Item1;
                     }
-                    if (isBuilding)
+                    if (DataModel.IsBuilding)
                     {
                         maxTick = (maxTick / tickStep + 1) * tickStep;
                     }
@@ -477,7 +481,7 @@ namespace ParallelBuildsMonitor
 
                     if (DataModel.CurrentBuilds.Count > 0 || DataModel.FinishedBuilds.Count > 0)
                     {
-                        string status = (isBuilding ? "Building..." : "Done.");
+                        string status = (DataModel.IsBuilding ? "Building..." : "Done.");
                         if (DataModel.MaxParallelBuilds > 0)
                             status += " Max. no. of parallel projects: " + DataModel.MaxParallelBuilds.ToString() + " (Avg. " + 
                                 Math.Round(DataModel.MaxParallelBuilds/100.0* DataModel.PercentageProcessorUse(), 1).ToString(format: "0.0") + ")";

@@ -28,6 +28,8 @@ namespace ParallelBuildsMonitor
         public ReadOnlyCollection<Tuple<long, float>> HddUsage { get { return hddUsage.AsReadOnly(); } }
         public int MaxParallelBuilds { get; private set; } = 0;
 
+        public bool IsBuilding { get { return performanceTimer.Enabled; } }
+
         #endregion Properties
 
         #region Members
