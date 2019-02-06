@@ -7,7 +7,9 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Shell.Settings;
 using Microsoft.Win32;
 
 namespace ParallelBuildsMonitor
@@ -146,10 +148,23 @@ namespace ParallelBuildsMonitor
             }
 
             { // Show and Activate "Parallel Builds Monitor" pane
-                // Do we really want to activate "Parallel Builds Monitor" pane after each solution load?
-                // Or maybe we want to do that only once after installation?
-                // Will it work when PBM plugin is installed whn solution is already opened?
-                //Execute(package);
+              // Do we really want to activate "Parallel Builds Monitor" pane after each solution load?
+              // Or maybe we want to do that only once after installation?
+              // Will it work when PBM plugin is installed whn solution is already opened?
+
+                const string collectionName = "PBMSettings";
+                const string propertyName = "FirstRun";
+                SettingsManager settingsManager = new ShellSettingsManager(PBMCommand.ServiceProvider);
+                WritableSettingsStore writableUserSettingsStore = settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
+                if (!writableUserSettingsStore.CollectionExists(collectionName))
+                    writableUserSettingsStore.CreateCollection(collectionName);
+
+                bool firstRun = writableUserSettingsStore.GetBoolean(collectionName, propertyName, true);
+                if (firstRun)
+                {
+                    writableUserSettingsStore.SetBoolean(collectionName, propertyName, false);
+                    Execute(package);
+                }
             }
         }
 
