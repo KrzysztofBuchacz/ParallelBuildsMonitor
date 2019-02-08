@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="ParallelBuildsMonitor.25D5079B-D885-4D26-9472-99594F1A2EB9" Version="1.7" Language="en-US" Publisher="Krzysztof Buchacz" />
+        <Identity Id="ParallelBuildsMonitor.25D5079B-D885-4D26-9472-99594F1A2EB9" Version="1.8" Language="en-US" Publisher="Krzysztof Buchacz" />
         <DisplayName>Parallel Builds Monitor</DisplayName>
         <Description xml:space="preserve">This Visual Studio extension vizualizes compilation process in form of horizontal bars diagram</Description>
         <License>License.txt</License>

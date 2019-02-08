@@ -1,6 +1,11 @@
 ﻿Parallel Builds Monitor Release Notes
 ==========================================
 
+v. 1.8 2019.02.08 New features
+- CGU and HDD Usage graph
+- Header with system informations
+- Save graph as png and csv
+
 v. 1.7 2017.07.05 Displaying seconds in higher precision
 
 v. 1.6 2017.04.27 Migration to Visual 2017
