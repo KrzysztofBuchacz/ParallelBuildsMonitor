@@ -51,7 +51,9 @@ namespace ParallelBuildsMonitor.Tests
 
         public int GetHashCode(Dictionary<TKey, TValue> obj)
         {
-            throw new NotImplementedException();
+            if (obj == null)
+                return 0;
+            return obj.GetHashCode();
         }
     }
 
@@ -89,7 +91,9 @@ namespace ParallelBuildsMonitor.Tests
 
         public int GetHashCode(List<T> obj)
         {
-            throw new NotImplementedException();
+            if (obj == null)
+                return 0;
+            return obj.GetHashCode();
         }
     }
 
