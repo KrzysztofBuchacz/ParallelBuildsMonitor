@@ -2,9 +2,15 @@
 ==========================================
 
 v. 1.8 2019.02.08 New features
-- CGU and HDD Usage graph
-- Header with system informations
+- Critical Path for build
+- CPU and HDD Usage graphs
 - Save graph as png and csv
+- Saving "Build Timing" to csv
+- Show Elapsed Times for projects in progress
+- Header with system information
+- Improved Gantt chart visualization
+
+v. 1.7 2019.01.15 (Release only for Visual 2019) Adding Visual 2019 support
 
 v. 1.7 2017.07.05 Displaying seconds in higher precision
 
