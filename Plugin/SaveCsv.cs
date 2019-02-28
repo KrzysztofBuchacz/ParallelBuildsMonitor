@@ -102,7 +102,7 @@ namespace ParallelBuildsMonitor
                         summaryDetailedPreHeader.Add("Detailed Report: (Columns Sorted Descending according to sum for column)");
                     }
 
-                    List<object> summaryDetailedHeader = new List<object> { "Critical Path Order", "Project Name", "Build Time in [s] "+ Environment.NewLine + "(Sorted Descending)", "Start Time [s]", "End Time [s]" };
+                    List<object> summaryDetailedHeader = new List<object> { "Critical Path Order", "Project Name", "Build Time in [s] " /*+ Environment.NewLine this should be here but it does NOT work in Excel. It works correctly on Google Doc */ + "(Sorted Descending)", "Start Time [s]", "End Time [s]" };
                     if (detailedReportCoulmnNames != null)
                     {
                         summaryDetailedHeader.Add(sdColumnSeparator);
