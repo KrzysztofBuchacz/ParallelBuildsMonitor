@@ -37,7 +37,6 @@ namespace ParallelBuildsMonitor
     // Not sure if VsDockStyle.Linked is the correctly selected value
     [ProvideToolWindow(typeof(PBMWindow), Style = VsDockStyle.Linked, DockedHeight = 200, Window = "DocumentWell", Orientation = ToolWindowOrientation.Bottom)]
     [Guid(Package.PackageGuidString)]
-    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExistsAndFullyLoaded_string, PackageAutoLoadFlags.None)] // When "PackageAutoLoadFlags.BackgroundLoad" is used "ToolWindowPane window = package.FindToolWindow(typeof(PBMWindow), 0, true);" falls into infinite loop, not sure why because before "await JoinableTaskFactory.SwitchToMainThreadAsync();" is called and debugger shows that "ToolWindowPane window = package.FindToolWindow(typeof(PBMWindow), 0, true);" is executed in MainThread...
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     public sealed class Package : Microsoft.VisualStudio.Shell.AsyncPackage
     {

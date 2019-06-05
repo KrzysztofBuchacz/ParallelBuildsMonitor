@@ -1,6 +1,10 @@
 ﻿Parallel Builds Monitor Release Notes
 ==========================================
 
+v. 1.9 2019.06.05 Bug fixing
+- Remove deprecated API
+- Update desription
+
 v. 1.8 2019.02.08 New features
 - Critical Path for build
 - CPU and HDD Usage graphs
