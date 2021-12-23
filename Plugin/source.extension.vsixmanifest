@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="ParallelBuildsMonitor.25D5079B-D885-4D26-9472-99594F1A2EB9" Version="1.9" Language="en-US" Publisher="Krzysztof Buchacz" />
+        <Identity Id="ParallelBuildsMonitor.25D5079B-D885-4D26-9472-99594F1A2EB9" Version="1.10" Language="en-US" Publisher="Krzysztof Buchacz" />
         <DisplayName>Parallel Builds Monitor</DisplayName>
         <Description xml:space="preserve">Visualizes compilation process, with project dependencies, critical path and timings in Gantt chart and .csv form</Description>
         <License>License.txt</License>
@@ -10,17 +10,18 @@
         <PreviewImage>Resources\Preview.png</PreviewImage>
     </Metadata>
     <Installation>
-        <InstallationTarget Version="[14.0,17.0)" Id="Microsoft.VisualStudio.Community" />
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0, 18.0)">
+            <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
     </Installation>
     <Dependencies>
-        <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
-        <Dependency Id="Microsoft.VisualStudio.MPF.14.0" DisplayName="Visual Studio MPF 14.0" d:Source="Installed" Version="[14.0]" />
+        <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.7,)" />
     </Dependencies>
     <Assets>
         <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
     </Assets>
     <Prerequisites>
-        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[14.0,17.0)" DisplayName="Visual Studio core editor" />
+        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0,)" DisplayName="Visual Studio core editor" />
 
     </Prerequisites>
 </PackageManifest>

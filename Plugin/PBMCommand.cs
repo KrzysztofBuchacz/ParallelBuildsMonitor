@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
+using Microsoft;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System.IO;
@@ -48,7 +49,8 @@ namespace ParallelBuildsMonitor
                 return false; // Protection against double initialization (double subscription to events, double menus etc)
 
             Package = package;
-            Dte = (DTE2)ServiceProvider.GetService(typeof(SDTE));
+            Dte = (DTE2)ServiceProvider.GetService(typeof(DTE));
+            Assumes.Present(Dte);
 
             bool res = SubscribeUnsubscibeApiEvents(true /*subscibe*/);
             res &= CreateDestroyMenu(true /*create*/);
