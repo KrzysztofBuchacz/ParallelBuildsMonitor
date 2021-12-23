@@ -133,6 +133,7 @@ namespace ParallelBuildsMonitor
         {
             { // Adding callback method to "Parallel Builds Monitor" menu item into "VS -> Menu -> View -> Other Windows" menu
                 IMenuCommandService commandService = (IMenuCommandService)await package.GetServiceAsync(typeof(IMenuCommandService));
+                Microsoft.Assumes.Present(commandService);
                 CommandID menuCommandID = new CommandID(typeof(MainMenuCommandSet).GUID, (int)MainMenuCommandSet.ShowToolWindow);
                 MenuCommand menuItem = new MenuCommand((s, e) => Execute(package), menuCommandID);
                 commandService.AddCommand(menuItem);
@@ -187,6 +188,8 @@ namespace ParallelBuildsMonitor
         /// </summary>
         private static void Execute(AsyncPackage package)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             // Get the instance number 0 of this tool window. This window is single instance so this instance
             // is actually the only one.
             // The last flag is set to true so that if the tool window does not exists it will be created.

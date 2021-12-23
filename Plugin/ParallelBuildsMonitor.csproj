@@ -74,6 +74,8 @@
     <Compile Include="BuildInfo.cs" />
     <Compile Include="DataModel.cs" />
     <Compile Include="DetectSsd.cs" />
+    <Compile Include="Events\BuildEvents.cs" />
+    <Compile Include="Events\SolutionEvents.cs" />
     <Compile Include="GraphControl.cs" />
     <Compile Include="MachineInfo.cs" />
     <Compile Include="PBMWindow.cs" />
