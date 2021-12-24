@@ -4,11 +4,7 @@ using System.Runtime.InteropServices;
 using Microsoft;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using System.IO;
-using System.Text;
-using System.Timers;
 using EnvDTE;
-using EnvDTE80;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -204,7 +200,7 @@ namespace ParallelBuildsMonitor
         /// <param name="ProjectConfig"></param>
         /// <param name="Platform"></param>
         /// <param name="SolutionConfig"></param>
-        public static void BuildEvents_OnBuildProjConfigBegin(string ProjectUniqueName, string ProjectConfig, string Platform, string SolutionConfig)
+        public static void BuildEvents_OnBuildProjConfigBegin(string ProjectUniqueName)
         {
             DataModel.AddCurrentBuild(ProjectUniqueName);
         }
@@ -216,7 +212,7 @@ namespace ParallelBuildsMonitor
         /// <param name="Platform"></param>
         /// <param name="SolutionConfig"></param>
         /// <param name="Success"></param>
-        public static void BuildEvents_OnBuildProjConfigDone(string ProjectUniqueName, string ProjectConfig, string Platform, string SolutionConfig, bool Success)
+        public static void BuildEvents_OnBuildProjConfigDone(string ProjectUniqueName, bool Success)
         {
             DataModel.FinishCurrentBuild(ProjectUniqueName, Success);
         }

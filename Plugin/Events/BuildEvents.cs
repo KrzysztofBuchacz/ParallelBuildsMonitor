@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace ParallelBuildsMonitor.Events
@@ -32,15 +33,27 @@ namespace ParallelBuildsMonitor.Events
             return VSConstants.S_OK;
         }
 
+        private string ProjectFullPath(IVsHierarchy pHierProj)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            object saveName;
+            pHierProj.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_SaveName, out saveName);
+            object projectDir;
+            pHierProj.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_ProjectDir, out projectDir);
+            return projectDir.ToString() + saveName.ToString();
+        }
+
         public int UpdateProjectCfg_Begin(IVsHierarchy pHierProj, IVsCfg pCfgProj, IVsCfg pCfgSln, uint dwAction, ref int pfCancel)
         {
-            PBMCommand.BuildEvents_OnBuildProjConfigBegin(pHierProj.GetCanonicalName());
+            ThreadHelper.ThrowIfNotOnUIThread();
+            PBMCommand.BuildEvents_OnBuildProjConfigBegin(ProjectFullPath(pHierProj));
             return VSConstants.S_OK;
         }
 
         public int UpdateProjectCfg_Done(IVsHierarchy pHierProj, IVsCfg pCfgProj, IVsCfg pCfgSln, uint dwAction, int fSuccess, int fCancel)
         {
-            PBMCommand.BuildEvents_OnBuildProjConfigDone(pHierProj.GetCanonicalName(), fSuccess != 0);
+            ThreadHelper.ThrowIfNotOnUIThread();
+            PBMCommand.BuildEvents_OnBuildProjConfigDone(ProjectFullPath(pHierProj), fSuccess != 0);
             return VSConstants.S_OK;
         }
     }
