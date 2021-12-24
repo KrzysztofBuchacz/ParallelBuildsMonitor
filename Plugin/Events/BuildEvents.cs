@@ -6,17 +6,7 @@ namespace ParallelBuildsMonitor.Events
 {
     internal class BuildEvents : IVsUpdateSolutionEvents2
     {
-        public int UpdateSolution_Begin(ref int pfCancelUpdate)
-        {
-            PBMCommand.BuildEvents_OnBuildBegin();
-            return VSConstants.S_OK;
-        }
-
-        public int UpdateSolution_Done(int fSucceeded, int fModified, int fCancelCommand)
-        {
-            PBMCommand.BuildEvents_OnBuildDone();
-            return VSConstants.S_OK;
-        }
+        private uint dwLastAction;
 
         public int UpdateSolution_StartUpdate(ref int pfCancelUpdate)
         {
@@ -33,13 +23,24 @@ namespace ParallelBuildsMonitor.Events
             return VSConstants.S_OK;
         }
 
+        public int UpdateSolution_Begin(ref int pfCancelUpdate)
+        {
+            dwLastAction = 0;
+            PBMCommand.BuildEvents_OnBuildBegin();
+            return VSConstants.S_OK;
+        }
+
+        public int UpdateSolution_Done(int fSucceeded, int fModified, int fCancelCommand)
+        {
+            PBMCommand.BuildEvents_OnBuildDone(dwLastAction);
+            return VSConstants.S_OK;
+        }
+
         private string ProjectFullPath(IVsHierarchy pHierProj)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
-            object saveName;
-            pHierProj.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_SaveName, out saveName);
-            object projectDir;
-            pHierProj.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_ProjectDir, out projectDir);
+            pHierProj.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_SaveName, out object saveName);
+            pHierProj.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_ProjectDir, out object projectDir);
             return projectDir.ToString() + saveName.ToString();
         }
 
@@ -53,6 +54,7 @@ namespace ParallelBuildsMonitor.Events
         public int UpdateProjectCfg_Done(IVsHierarchy pHierProj, IVsCfg pCfgProj, IVsCfg pCfgSln, uint dwAction, int fSuccess, int fCancel)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
+            dwLastAction = dwAction;
             PBMCommand.BuildEvents_OnBuildProjConfigDone(ProjectFullPath(pHierProj), fSuccess != 0);
             return VSConstants.S_OK;
         }

@@ -30,7 +30,7 @@ namespace ParallelBuildsMonitor
 
         #endregion Members
 
-        #region Initialize-Uninitialize
+        #region Initialize
 
         /// <summary>
         /// 
@@ -63,54 +63,10 @@ namespace ParallelBuildsMonitor
             BuildEvents = new ParallelBuildsMonitor.Events.BuildEvents();
             svb.AdviseUpdateSolutionEvents(BuildEvents, out _);
 
-            CreateDestroyMenu(true /*create*/);
+            CreateMenu();
         }
 
-        public static void Uninitialize()
-        {
-            CreateDestroyMenu(false /*create*/);
-
-            Dte = null;
-            Package = null;
-        }
-
-        //private static bool SubscribeUnsubscibeApiEvents(bool subscibe)
-        //{
-        //    if (Dte == null)
-        //        return false;
-
-        //    // Solution Events Callbacks
-        //    SolutionEvents = Dte.Events.SolutionEvents;
-        //    if (subscibe)
-        //    {
-        //        SolutionEvents.AfterClosing += solutionEvents_AfterClosing;
-        //    }
-        //    else
-        //    {
-        //        SolutionEvents.AfterClosing -= solutionEvents_AfterClosing;
-        //    }
-
-        //    // Project Events Callbacks
-        //    BuildEvents = Dte.Events.BuildEvents;
-        //    if (subscibe)
-        //    {
-        //        BuildEvents.OnBuildBegin += BuildEvents_OnBuildBegin;
-        //        BuildEvents.OnBuildDone += BuildEvents_OnBuildDone;
-        //        BuildEvents.OnBuildProjConfigBegin += BuildEvents_OnBuildProjConfigBegin;
-        //        BuildEvents.OnBuildProjConfigDone += BuildEvents_OnBuildProjConfigDone;
-        //    }
-        //    else
-        //    {
-        //        BuildEvents.OnBuildBegin -= BuildEvents_OnBuildBegin;
-        //        BuildEvents.OnBuildDone -= BuildEvents_OnBuildDone;
-        //        BuildEvents.OnBuildProjConfigBegin -= BuildEvents_OnBuildProjConfigBegin;
-        //        BuildEvents.OnBuildProjConfigDone -= BuildEvents_OnBuildProjConfigDone;
-        //    }
-
-        //    return true;
-        //}
-
-        #endregion Initialize-Uninitialize
+        #endregion Initialize
 
         #region Menu
 
@@ -122,8 +78,7 @@ namespace ParallelBuildsMonitor
             SaveAsCsv = 0x0102
         }
 
-        //TODO: Is it correct implementation of destroy?
-        private static bool CreateDestroyMenu(bool create)
+        private static bool CreateMenu()
         {
             OleMenuCommandService commandService = ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService == null)
@@ -133,19 +88,13 @@ namespace ParallelBuildsMonitor
             var SaveAsPngCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.SaveAsPng);
             var menuItemSaveAsPng = new OleMenuCommand(SaveAsPng, SaveAsPngCommandID);
             menuItemSaveAsPng.BeforeQueryStatus += MenuItemSaveAsPng_BeforeQueryStatus;
-            if (create)
-                commandService.AddCommand(menuItemSaveAsPng);
-            else
-                commandService.RemoveCommand(menuItemSaveAsPng);
+            commandService.AddCommand(menuItemSaveAsPng);
 
             // Save As .csv
             var SaveAsCsvCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.SaveAsCsv);
             var menuItemSaveAsCsv = new OleMenuCommand(SaveAsCsv, SaveAsCsvCommandID);
             menuItemSaveAsCsv.BeforeQueryStatus += MenuItemSaveAsCsv_BeforeQueryStatus;
-            if (create)
-                commandService.AddCommand(menuItemSaveAsCsv);
-            else
-                commandService.RemoveCommand(menuItemSaveAsCsv);
+            commandService.AddCommand(menuItemSaveAsCsv);
 
             return true;
         }
@@ -180,6 +129,7 @@ namespace ParallelBuildsMonitor
         {
             try
             {
+                ThreadHelper.ThrowIfNotOnUIThread();
                 string outputPaneContent = GetAllTextFromPane(GetOutputBuildPane()); // Output Build Pane/Window can be cleared even during build, so this is not perfect solution...
                 SaveCsv.SaveAsCsv(outputPaneContent);
             }
@@ -257,9 +207,10 @@ namespace ParallelBuildsMonitor
         /// </summary>
         /// <param name="Scope"></param>
         /// <param name="Action"></param>
-        public static void BuildEvents_OnBuildDone()
+        public static void BuildEvents_OnBuildDone(uint dwAction)
         {
-            bool findAndSetCriticalPath = true; // ((Action == vsBuildAction.vsBuildActionBuild) || (Action == vsBuildAction.vsBuildActionRebuildAll)); // There is no Critical Path for vsBuildAction.vsBuildActionClean. Clean is done sequentially.
+            // Find critical path only for Build action not for Clean or any other action
+            bool findAndSetCriticalPath = (dwAction & (uint)VSSOLNBUILDUPDATEFLAGS.SBF_OPERATION_BUILD) != 0;
             DataModel.BuildDone(GetProjectDependenies(), findAndSetCriticalPath);
             GraphControl.Instance?.BuildDone();
         }

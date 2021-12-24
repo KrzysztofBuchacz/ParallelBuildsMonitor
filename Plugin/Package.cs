@@ -37,7 +37,6 @@ namespace ParallelBuildsMonitor
     // Not sure if VsDockStyle.Linked is the correctly selected value
     [ProvideToolWindow(typeof(PBMWindow), Style = VsDockStyle.Linked, DockedHeight = 200, Window = "DocumentWell", Orientation = ToolWindowOrientation.Bottom)]
     [Guid(Package.PackageGuidString)]
-    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     public sealed class Package : Microsoft.VisualStudio.Shell.AsyncPackage
     {
         /// <summary>

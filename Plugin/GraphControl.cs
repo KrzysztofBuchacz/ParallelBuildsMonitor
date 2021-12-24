@@ -522,7 +522,9 @@ namespace ParallelBuildsMonitor
 
         private void RefreshTimerEventTick(object sender, ElapsedEventArgs e)
         {
+#pragma warning disable VSTHRD001 // Avoid legacy thread switching APIs
             GraphControl.Instance.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background,
+#pragma warning restore VSTHRD001 // Avoid legacy thread switching APIs
                  new System.Action(() =>
                  {
                      GraphControl.Instance.InvalidateVisual();
