@@ -36,18 +36,17 @@ namespace ParallelBuildsMonitor.Events
             return VSConstants.S_OK;
         }
 
-        private string ProjectFullPath(IVsHierarchy pHierProj)
+        private string ProjectUniqueName(IVsHierarchy pHierProj)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
-            pHierProj.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_SaveName, out object saveName);
-            pHierProj.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_ProjectDir, out object projectDir);
-            return projectDir.ToString() + saveName.ToString();
+            pHierProj.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_ExtObject, out object project);
+            return (project as EnvDTE.Project).UniqueName;
         }
 
         public int UpdateProjectCfg_Begin(IVsHierarchy pHierProj, IVsCfg pCfgProj, IVsCfg pCfgSln, uint dwAction, ref int pfCancel)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
-            PBMCommand.BuildEvents_OnBuildProjConfigBegin(ProjectFullPath(pHierProj));
+            PBMCommand.BuildEvents_OnBuildProjConfigBegin(ProjectUniqueName(pHierProj));
             return VSConstants.S_OK;
         }
 
@@ -55,7 +54,7 @@ namespace ParallelBuildsMonitor.Events
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             dwLastAction = dwAction;
-            PBMCommand.BuildEvents_OnBuildProjConfigDone(ProjectFullPath(pHierProj), fSuccess != 0);
+            PBMCommand.BuildEvents_OnBuildProjConfigDone(ProjectUniqueName(pHierProj), fSuccess != 0);
             return VSConstants.S_OK;
         }
     }

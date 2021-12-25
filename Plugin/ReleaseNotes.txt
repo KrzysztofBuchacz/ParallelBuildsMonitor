@@ -3,7 +3,7 @@
 
 v. 1.10 2021.12.23
 - Add support for Visual Studio 2022
-- Remove support for Visual Studio 2015
+- No functional changes but a lot of code has been rewritten
 
 v. 1.9 2019.06.05 Bug fixing
 - Remove deprecated API
