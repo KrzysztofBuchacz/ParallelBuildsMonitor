@@ -129,7 +129,7 @@ namespace ParallelBuildsMonitor.Tests
         public void SavePng_BuildInProgress()
         {
             { // MachineInfo is in the picture, so make MachineInfo as machine indepenent string for unit test puroposes
-                string machineIndepenentInfo = "Processors: 1 | Cores: 2 | CPU Speed: 2.2GHz | Hyper Threading: Enabled | RAM: 8GB | HDD: 1 SSD";
+                string machineIndepenentInfo = "Processors: 1 | Cores: 2 | CPU Speed: 2.7GHz | Hyper Threading: Enabled | RAM: 8GB | HDD: 1 SSD";
                 MachineInfo mi = MachineInfo.Instance;
                 var machineInfo = new PrivateObject(mi); // Use PrivateObject class to change private member of MachineInfo object.
                 machineInfo.SetField("info", machineIndepenentInfo);
@@ -233,7 +233,7 @@ namespace ParallelBuildsMonitor.Tests
         public void SavePng_BuildFinished()
         {
             { // MachineInfo is in the picture, so make MachineInfo as machine indepenent string for unit test puroposes
-                string machineIndepenentInfo = "Processors: 1 | Cores: 2 | CPU Speed: 2.2GHz | Hyper Threading: Enabled | RAM: 8GB | HDD: 1 SSD";
+                string machineIndepenentInfo = "Processors: 1 | Cores: 2 | CPU Speed: 2.7GHz | Hyper Threading: Enabled | RAM: 8GB | HDD: 1 SSD";
                 MachineInfo mi = MachineInfo.Instance;
                 var machineInfo = new PrivateObject(mi); // Use PrivateObject class to change private member of MachineInfo object.
                 machineInfo.SetField("info", machineIndepenentInfo);
@@ -249,7 +249,7 @@ namespace ParallelBuildsMonitor.Tests
                 dataModel.SetProperty("MaxParallelBuilds", 4);
 
                 //<c>string</c> is ProjectUniqueName, <c>uint</c> is project build order number, <c>long</c> is project Start time, relative, counted since <c>DataModel.StartTime</c> in <c>DateTime.Ticks</c> units.
-                Dictionary<string, Tuple<uint, long>> currentBuilds = new Dictionary<string, Tuple<uint, long>>{};
+                Dictionary<string, Tuple<uint, long>> currentBuilds = new Dictionary<string, Tuple<uint, long>> { };
                 dataModel.SetField("currentBuilds", currentBuilds);
 
                 List<BuildInfo> finishedBuilds = new List<BuildInfo>()
@@ -260,67 +260,67 @@ namespace ParallelBuildsMonitor.Tests
                     new BuildInfo("WpfToolTip\\WpfToolTip.csproj", "WpfToolTip.csproj", 2, 56140367, 144319141, true),
                     new BuildInfo("constexpr_templates\\constexpr_templates.vcxproj", "constexpr_templates.vcxproj", 3, 58330492, 151578262, true),
                     new BuildInfo("variadic-macros-v1\\variadic-macros-v1.vcxproj", "variadic-macros-v1.vcxproj", 6, 144449121, 172642436, true)
-				};
+                };
                 dataModel.SetField("finishedBuilds", finishedBuilds);
 
                 Dictionary<string, List<string>> projectDependenies = new Dictionary<string, List<string>> //<c>string</c> is ProjectUniqueName, <c>List<string></c> is list of projects that <c>Key</c> project depends on
-				{
-					{"constexpr_templates\\constexpr_templates.vcxproj", new List<string>{"junk-finddir\\junk-finddir.vcxproj"}},
-					{"DiskPerformance\\DiskPerformance.csproj", new List<string>{"junk-finddir\\junk-finddir.vcxproj"}},
-					{"junk-finddir\\junk-finddir.vcxproj", new List<string>{}},
-					{"junk-vector-const\\junk-vector-const.vcxproj", new List<string>{"junk-finddir\\junk-finddir.vcxproj"}},
-					{"variadic-macros-v1\\variadic-macros-v1.vcxproj", new List<string>{"junk-finddir\\junk-finddir.vcxproj", "WpfToolTip\\WpfToolTip.csproj"}},
-					{"WpfToolTip\\WpfToolTip.csproj", new List<string>{"junk-finddir\\junk-finddir.vcxproj"}}
-				};
+                {
+                    {"constexpr_templates\\constexpr_templates.vcxproj", new List<string>{"junk-finddir\\junk-finddir.vcxproj"}},
+                    {"DiskPerformance\\DiskPerformance.csproj", new List<string>{"junk-finddir\\junk-finddir.vcxproj"}},
+                    {"junk-finddir\\junk-finddir.vcxproj", new List<string>{}},
+                    {"junk-vector-const\\junk-vector-const.vcxproj", new List<string>{"junk-finddir\\junk-finddir.vcxproj"}},
+                    {"variadic-macros-v1\\variadic-macros-v1.vcxproj", new List<string>{"junk-finddir\\junk-finddir.vcxproj", "WpfToolTip\\WpfToolTip.csproj"}},
+                    {"WpfToolTip\\WpfToolTip.csproj", new List<string>{"junk-finddir\\junk-finddir.vcxproj"}}
+                };
                 dataModel.SetField("projectDependenies", projectDependenies);
 
                 List<BuildInfo> criticalPath = new List<BuildInfo>
-				{
+                {
                     new BuildInfo("junk-finddir\\junk-finddir.vcxproj", "junk-finddir.vcxproj", 1, 399931, 54684041, true),
                     new BuildInfo("WpfToolTip\\WpfToolTip.csproj", "WpfToolTip.csproj", 2, 56140367, 144319141, true),
                     new BuildInfo("variadic-macros-v1\\variadic-macros-v1.vcxproj", "variadic-macros-v1.vcxproj", 6, 144449121, 172642436, true)
-				};
+                };
                 dataModel.SetField("criticalPath", criticalPath);
 
                 List<Tuple<long, float>> cpuUsage = new List<Tuple<long, float>>()
                 {
-					new Tuple<long, float>(636849135031963260, 0.0f),
-					new Tuple<long, float>(636849135042025422, 47.36607f),
-					new Tuple<long, float>(636849135052097336, 43.76379f),
-					new Tuple<long, float>(636849135062946043, 36.62839f),
-					new Tuple<long, float>(636849135073055216, 45.90309f),
-					new Tuple<long, float>(636849135083364284, 48.84662f),
-					new Tuple<long, float>(636849135094055281, 48.48177f),
-					new Tuple<long, float>(636849135108063077, 98.88455f),
-					new Tuple<long, float>(636849135118301475, 100f),
-					new Tuple<long, float>(636849135130849521, 100f),
-					new Tuple<long, float>(636849135142927622, 87.70002f),
-					new Tuple<long, float>(636849135152926055, 91.4049f),
-					new Tuple<long, float>(636849135163764355, 76.97614f),
-					new Tuple<long, float>(636849135174642665, 89.21751f),
-					new Tuple<long, float>(636849135188218652, 79.268f),
-					new Tuple<long, float>(636849135199266903, 58.98672f)
+                    new Tuple<long, float>(636849135031963260, 0.0f),
+                    new Tuple<long, float>(636849135042025422, 47.36607f),
+                    new Tuple<long, float>(636849135052097336, 43.76379f),
+                    new Tuple<long, float>(636849135062946043, 36.62839f),
+                    new Tuple<long, float>(636849135073055216, 45.90309f),
+                    new Tuple<long, float>(636849135083364284, 48.84662f),
+                    new Tuple<long, float>(636849135094055281, 48.48177f),
+                    new Tuple<long, float>(636849135108063077, 98.88455f),
+                    new Tuple<long, float>(636849135118301475, 100f),
+                    new Tuple<long, float>(636849135130849521, 100f),
+                    new Tuple<long, float>(636849135142927622, 87.70002f),
+                    new Tuple<long, float>(636849135152926055, 91.4049f),
+                    new Tuple<long, float>(636849135163764355, 76.97614f),
+                    new Tuple<long, float>(636849135174642665, 89.21751f),
+                    new Tuple<long, float>(636849135188218652, 79.268f),
+                    new Tuple<long, float>(636849135199266903, 58.98672f)
                 };
                 dataModel.SetField("cpuUsage", cpuUsage);
 
                 List<Tuple<long, float>> hddUsage = new List<Tuple<long, float>>()
                 {
-					new Tuple<long, float>(636849135031963260, 0.0f),
-					new Tuple<long, float>(636849135042025422, 64.68444f),
-					new Tuple<long, float>(636849135052097336, 10.2781f),
-					new Tuple<long, float>(636849135062946043, 2.541418f),
-					new Tuple<long, float>(636849135073055216, 5.857255f),
-					new Tuple<long, float>(636849135083364284, 8.998146f),
-					new Tuple<long, float>(636849135094055281, 3.024021f),
-					new Tuple<long, float>(636849135108063077, 18.93993f),
-					new Tuple<long, float>(636849135118301475, 25.54949f),
-					new Tuple<long, float>(636849135130849521, 1.439461f),
-					new Tuple<long, float>(636849135142927622, 2.991249f),
-					new Tuple<long, float>(636849135152926055, 1.817592f),
-					new Tuple<long, float>(636849135163764355, 4.232076f),
-					new Tuple<long, float>(636849135174642665, 6.579974f),
-					new Tuple<long, float>(636849135188218652, 8.768057f),
-					new Tuple<long, float>(636849135199266903, 0.652989f),
+                    new Tuple<long, float>(636849135031963260, 0.0f),
+                    new Tuple<long, float>(636849135042025422, 64.68444f),
+                    new Tuple<long, float>(636849135052097336, 10.2781f),
+                    new Tuple<long, float>(636849135062946043, 2.541418f),
+                    new Tuple<long, float>(636849135073055216, 5.857255f),
+                    new Tuple<long, float>(636849135083364284, 8.998146f),
+                    new Tuple<long, float>(636849135094055281, 3.024021f),
+                    new Tuple<long, float>(636849135108063077, 18.93993f),
+                    new Tuple<long, float>(636849135118301475, 25.54949f),
+                    new Tuple<long, float>(636849135130849521, 1.439461f),
+                    new Tuple<long, float>(636849135142927622, 2.991249f),
+                    new Tuple<long, float>(636849135152926055, 1.817592f),
+                    new Tuple<long, float>(636849135163764355, 4.232076f),
+                    new Tuple<long, float>(636849135174642665, 6.579974f),
+                    new Tuple<long, float>(636849135188218652, 8.768057f),
+                    new Tuple<long, float>(636849135199266903, 0.652989f),
                 };
                 dataModel.SetField("hddUsage", hddUsage);
 

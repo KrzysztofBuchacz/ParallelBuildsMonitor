@@ -1,7 +1,6 @@
-"CRICTICAL PATH for   |  Build Started: 0001-01-01 00:00:00  |  Processors: 1  |  Cores: 2  |  CPU Speed: 2.2GHz  |  Hyper Threading: Enabled  |  RAM: 8GB  |  HDD: 1 SSD"
+"CRICTICAL PATH for   |  Build Started: 0001-01-01 00:00:00  |  Processors: 1  |  Cores: 2  |  CPU Speed: 2.7GHz  |  Hyper Threading: Enabled  |  RAM: 8GB  |  HDD: 1 SSD"
 "Summary Report:", , , , , , "Detailed Report: (Columns Sorted Descending according to sum for column)"
-"Critical Path Order", "Project Name", "Build Time in [s] 
-(Sorted Descending)", "Start Time [s]", "End Time [s]", , "CL [ms]", "Link [ms]", "CppClean [ms]", "GetOutOfDateItems [ms]", "WriteLinesToFile [ms]", "MakeDir [ms]", "Touch [ms]", "SetEnv [ms]", "AssignTargetPath [ms]", "Delete [ms]", "ReadLinesFromFile [ms]", "ResolvePackageFileConflicts [ms]", "AssignProjectConfiguration [ms]", "Message [ms]", "AssignCulture [ms]", "FindUnderPath [ms]", "MSBuild [ms]", "RemoveDuplicates [ms]"
+"Critical Path Order", "Project Name", "Build Time in [s] (Sorted Descending)", "Start Time [s]", "End Time [s]", , "CL [ms]", "Link [ms]", "CppClean [ms]", "GetOutOfDateItems [ms]", "WriteLinesToFile [ms]", "MakeDir [ms]", "Touch [ms]", "SetEnv [ms]", "AssignTargetPath [ms]", "Delete [ms]", "ReadLinesFromFile [ms]", "ResolvePackageFileConflicts [ms]", "AssignProjectConfiguration [ms]", "Message [ms]", "AssignCulture [ms]", "FindUnderPath [ms]", "MSBuild [ms]", "RemoveDuplicates [ms]"
 "2", "WpfToolTip.csproj", "6", "4", "10", 
 "3", "variadic-macros-v1.vcxproj", "4", "10", "14", , "1500", "580", "20", "0", "2", "4", "1", "0", "1", "1", "1", "1", "1", "0", "0", "0", "1", "0"
 "1", "junk-finddir.vcxproj", "4", "0", "4", , "3098", "700", "25", "8", "4", "1", "4", "4", "2", "2", "2", "2", "1", "2", "1", "1", "0", "1"

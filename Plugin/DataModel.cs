@@ -34,18 +34,18 @@ namespace ParallelBuildsMonitor
 
         #region Members
 
-        private Dictionary<string, Tuple<uint, long>> currentBuilds = new Dictionary<string, Tuple<uint, long>>(); //<c>string</c> is ProjectUniqueName, <c>uint</c> is project build order number, <c>long</c> is project Start time, relative, counted since <c>DataModel.StartTime</c> in <c>DateTime.Ticks</c> units.
-        private List<BuildInfo> finishedBuilds = new List<BuildInfo>();
+        private readonly Dictionary<string, Tuple<uint, long>> currentBuilds = new Dictionary<string, Tuple<uint, long>>(); //<c>string</c> is ProjectUniqueName, <c>uint</c> is project build order number, <c>long</c> is project Start time, relative, counted since <c>DataModel.StartTime</c> in <c>DateTime.Ticks</c> units.
+        private readonly List<BuildInfo> finishedBuilds = new List<BuildInfo>();
         private Dictionary<string, List<string>> projectDependenies = new Dictionary<string, List<string>>(); //<c>string</c> is ProjectUniqueName, <c>List<string></c> is list of projects that <c>Key</c> project depends on
-        private List<BuildInfo> criticalPath = new List<BuildInfo>();
+        private readonly List<BuildInfo> criticalPath = new List<BuildInfo>();
 
-        private List<Tuple<long, float>> cpuUsage = new List<Tuple<long, float>>();
-        private List<Tuple<long, float>> hddUsage = new List<Tuple<long, float>>();
+        private readonly List<Tuple<long, float>> cpuUsage = new List<Tuple<long, float>>();
+        private readonly List<Tuple<long, float>> hddUsage = new List<Tuple<long, float>>();
 
-        private PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-        private PerformanceCounter hddCounter = new PerformanceCounter("PhysicalDisk", "% Disk Time", "_Total");
+        private readonly PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+        private readonly PerformanceCounter hddCounter = new PerformanceCounter("PhysicalDisk", "% Disk Time", "_Total");
         private static readonly double performanceTimerInterval = 1000; // 1000 means collect data every 1s.
-        private System.Timers.Timer performanceTimer = new System.Timers.Timer(performanceTimerInterval);
+        private readonly System.Timers.Timer performanceTimer = new System.Timers.Timer(performanceTimerInterval);
 
         static uint projectBuildOrderNumber = 0;
 

@@ -146,7 +146,6 @@ namespace ParallelBuildsMonitor
 
             // From: https://referencesource.microsoft.com/#system/compmod/microsoft/win32/SafeNativeMethods.cs
             [DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto, SetLastError = true, BestFitMapping = true)]
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2101:SpecifyMarshalingForPInvokeStringArguments")] // This warning doesn't exist any longer, however there is different one, and some troubles to disable it.
             [System.Runtime.Versioning.ResourceExposure(System.Runtime.Versioning.ResourceScope.None)]
             static extern uint FormatMessage(
                 uint dwFlags,
@@ -176,7 +175,7 @@ namespace ParallelBuildsMonitor
 
                 if (hDrive == null || hDrive.IsInvalid)
                 {
-                    string message = GetErrorMessage(Marshal.GetLastWin32Error());
+                    //string message = GetErrorMessage(Marshal.GetLastWin32Error());
                     //Console.WriteLine("CreateFile failed. " + message);
                     return DriveType.Unknown;
                 }
@@ -207,7 +206,7 @@ namespace ParallelBuildsMonitor
 
                 if (query_seek_penalty_result == false)
                 {
-                    string message = GetErrorMessage(Marshal.GetLastWin32Error());
+                    //string message = GetErrorMessage(Marshal.GetLastWin32Error());
                     //Console.WriteLine("DeviceIoControl failed. " + message);
                 }
 
@@ -249,7 +248,7 @@ namespace ParallelBuildsMonitor
 
                 if (hDrive == null || hDrive.IsInvalid)
                 {
-                    string message = GetErrorMessage(Marshal.GetLastWin32Error());
+                    //string message = GetErrorMessage(Marshal.GetLastWin32Error());
                     //Console.WriteLine("CreateFile failed. " + message);
                     return DriveType.Unknown;
                 }

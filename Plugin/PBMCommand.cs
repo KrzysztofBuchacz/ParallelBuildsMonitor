@@ -78,11 +78,10 @@ namespace ParallelBuildsMonitor
             SaveAsCsv = 0x0102
         }
 
-        private static bool CreateMenu()
+        private static void CreateMenu()
         {
             OleMenuCommandService commandService = ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (commandService == null)
-                return false;
+            Assumes.Present(commandService);
 
             // Save As .png
             var SaveAsPngCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.SaveAsPng);
@@ -95,8 +94,6 @@ namespace ParallelBuildsMonitor
             var menuItemSaveAsCsv = new OleMenuCommand(SaveAsCsv, SaveAsCsvCommandID);
             menuItemSaveAsCsv.BeforeQueryStatus += MenuItemSaveAsCsv_BeforeQueryStatus;
             commandService.AddCommand(menuItemSaveAsCsv);
-
-            return true;
         }
 
         private static void MenuItemSaveAsPng_BeforeQueryStatus(object sender, EventArgs e)

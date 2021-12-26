@@ -1,15 +1,10 @@
 using System;
 using System.Globalization;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Timers;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using EnvDTE;
-using EnvDTE80;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 
@@ -47,7 +42,7 @@ namespace ParallelBuildsMonitor
         #region Members
 
         private static readonly double refreshTimerInterval = 1000; // 1000 means collect data every 1s.
-        private System.Timers.Timer refreshTimer = new System.Timers.Timer(refreshTimerInterval);
+        private readonly System.Timers.Timer refreshTimer = new System.Timers.Timer(refreshTimerInterval);
         private long nowTickForTest = 0; // This value is used only when greater from 0 and only for testing.   Rationale: GraphControl refresh itself, but for test constant data is required.
 
         #endregion Members
