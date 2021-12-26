@@ -44,7 +44,7 @@ namespace ParallelBuildsMonitor
 
         private readonly PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
         private readonly PerformanceCounter hddCounter = new PerformanceCounter("PhysicalDisk", "% Disk Time", "_Total");
-        private static readonly double performanceTimerInterval = 1000; // 1000 means collect data every 1s.
+        private readonly static double performanceTimerInterval = 1000; // 1000 means collect data every 1s.
         private readonly System.Timers.Timer performanceTimer = new System.Timers.Timer(performanceTimerInterval);
 
         static uint projectBuildOrderNumber = 0;

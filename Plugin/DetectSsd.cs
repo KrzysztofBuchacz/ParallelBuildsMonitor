@@ -175,7 +175,7 @@ namespace ParallelBuildsMonitor
 
                 if (hDrive == null || hDrive.IsInvalid)
                 {
-                    //string message = GetErrorMessage(Marshal.GetLastWin32Error());
+                    string message = GetErrorMessage(Marshal.GetLastWin32Error());
                     //Console.WriteLine("CreateFile failed. " + message);
                     return DriveType.Unknown;
                 }
@@ -206,7 +206,7 @@ namespace ParallelBuildsMonitor
 
                 if (query_seek_penalty_result == false)
                 {
-                    //string message = GetErrorMessage(Marshal.GetLastWin32Error());
+                    string message = GetErrorMessage(Marshal.GetLastWin32Error());
                     //Console.WriteLine("DeviceIoControl failed. " + message);
                 }
 
@@ -248,7 +248,7 @@ namespace ParallelBuildsMonitor
 
                 if (hDrive == null || hDrive.IsInvalid)
                 {
-                    //string message = GetErrorMessage(Marshal.GetLastWin32Error());
+                    string message = GetErrorMessage(Marshal.GetLastWin32Error());
                     //Console.WriteLine("CreateFile failed. " + message);
                     return DriveType.Unknown;
                 }

@@ -41,7 +41,7 @@ namespace ParallelBuildsMonitor
 
         #region Members
 
-        private static readonly double refreshTimerInterval = 1000; // 1000 means collect data every 1s.
+        private readonly static double refreshTimerInterval = 1000; // 1000 means collect data every 1s.
         private readonly System.Timers.Timer refreshTimer = new System.Timers.Timer(refreshTimerInterval);
         private long nowTickForTest = 0; // This value is used only when greater from 0 and only for testing.   Rationale: GraphControl refresh itself, but for test constant data is required.
 

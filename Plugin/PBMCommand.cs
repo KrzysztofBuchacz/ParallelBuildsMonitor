@@ -5,6 +5,7 @@ using Microsoft;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using EnvDTE;
+using EnvDTE80;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -23,7 +24,7 @@ namespace ParallelBuildsMonitor
 
         private static Microsoft.VisualStudio.Shell.Package Package { get; set; }
         public static IServiceProvider ServiceProvider { get { return Package; } }
-        private static EnvDTE80.DTE2 Dte { get; set; }
+        private static DTE2 Dte { get; set; }
         private static Events.SolutionEvents SolutionEvents { get; set; }
         private static Events.BuildEvents BuildEvents { get; set; }
         private static DataModel DataModel { get { return DataModel.Instance; } } // Convinient accessor to data.
