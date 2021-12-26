@@ -2,7 +2,7 @@
 
 Parallel Builds Monitor Visual Studio Extension
 
-For Visul Studio 2015 2017 2019 2022
+For Visul Studio 2017 2019 2022
 
 https://marketplace.visualstudio.com/items?itemName=ivson4.ParallelBuildsMonitor-18691
 
@@ -29,8 +29,8 @@ Next Visual Studio will be open. ParallelBuildMonitor will be automatically adde
 
 Developed with:
 ```
-Microsoft Visual Studio Community 2019
-Version 16.11.7
+Microsoft Visual Studio Community 2022 (64-bit)
+Version 17.0.4
 Microsoft .NET Framework
 Version 4.7.2
 ```
