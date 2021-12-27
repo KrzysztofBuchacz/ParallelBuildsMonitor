@@ -205,10 +205,8 @@ namespace ParallelBuildsMonitor
         /// </summary>
         /// <param name="Scope"></param>
         /// <param name="Action"></param>
-        public static void BuildEvents_OnBuildDone(uint dwAction)
+        public static void BuildEvents_OnBuildDone(bool findAndSetCriticalPath)
         {
-            // Find critical path only for Build action not for Clean or any other action
-            bool findAndSetCriticalPath = (dwAction & (uint)VSSOLNBUILDUPDATEFLAGS.SBF_OPERATION_BUILD) != 0;
             DataModel.BuildDone(GetProjectDependenies(), findAndSetCriticalPath);
             GraphControl.Instance?.BuildDone();
         }

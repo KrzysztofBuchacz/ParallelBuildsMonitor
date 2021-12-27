@@ -32,7 +32,9 @@ namespace ParallelBuildsMonitor.Events
 
         public int UpdateSolution_Done(int fSucceeded, int fModified, int fCancelCommand)
         {
-            PBMCommand.BuildEvents_OnBuildDone(dwLastAction);
+            // Find critical path only for Build action not for Clean or any other action
+            bool findAndSetCriticalPath = (dwLastAction & (uint)VSSOLNBUILDUPDATEFLAGS.SBF_OPERATION_BUILD) != 0;
+            PBMCommand.BuildEvents_OnBuildDone(findAndSetCriticalPath);
             return VSConstants.S_OK;
         }
 
@@ -47,13 +49,13 @@ namespace ParallelBuildsMonitor.Events
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             PBMCommand.BuildEvents_OnBuildProjConfigBegin(ProjectUniqueName(pHierProj));
+            dwLastAction = dwAction;
             return VSConstants.S_OK;
         }
 
         public int UpdateProjectCfg_Done(IVsHierarchy pHierProj, IVsCfg pCfgProj, IVsCfg pCfgSln, uint dwAction, int fSuccess, int fCancel)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
-            dwLastAction = dwAction;
             PBMCommand.BuildEvents_OnBuildProjConfigDone(ProjectUniqueName(pHierProj), fSuccess != 0);
             return VSConstants.S_OK;
         }
