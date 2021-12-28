@@ -1,15 +1,10 @@
 using System;
 using System.Globalization;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Timers;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using EnvDTE;
-using EnvDTE80;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 
@@ -46,8 +41,8 @@ namespace ParallelBuildsMonitor
 
         #region Members
 
-        private static readonly double refreshTimerInterval = 1000; // 1000 means collect data every 1s.
-        private System.Timers.Timer refreshTimer = new System.Timers.Timer(refreshTimerInterval);
+        private readonly static double refreshTimerInterval = 1000; // 1000 means collect data every 1s.
+        private readonly System.Timers.Timer refreshTimer = new System.Timers.Timer(refreshTimerInterval);
         private long nowTickForTest = 0; // This value is used only when greater from 0 and only for testing.   Rationale: GraphControl refresh itself, but for test constant data is required.
 
         #endregion Members
@@ -98,7 +93,7 @@ namespace ParallelBuildsMonitor
         {
             Instance = this;
             fontFace = new Typeface(FontFamily.Source);
-            rowHeight = (new FormattedText("A0", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush)).Height + penThickness;
+            rowHeight = (new FormattedText("A0", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush, VisualTreeHelper.GetDpi(this).PixelsPerDip)).Height + penThickness;
             OnForegroundChanged();
             refreshTimer.Elapsed += new ElapsedEventHandler(RefreshTimerEventTick); // Are we sure there is only one instance of GraphControl? If not operator += will multiply calls...
 
@@ -239,7 +234,7 @@ namespace ParallelBuildsMonitor
             if (sumTicks > 0)
             {
                 long average = (long)(sumValues / 2 / sumTicks);
-                FormattedText avg = new FormattedText(" (Avg. " + average.ToString() + "%)", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                FormattedText avg = new FormattedText(" (Avg. " + average.ToString() + "%)", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush, VisualTreeHelper.GetDpi(this).PixelsPerDip);
                 title += avg.Text;
             }
 
@@ -249,7 +244,7 @@ namespace ParallelBuildsMonitor
 
         private void DrawText(DrawingContext drawingContext, string caption, int rowNbr, double xPos, Brush textColor)
         {
-            FormattedText captionFT = new FormattedText(caption, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, textColor);
+            FormattedText captionFT = new FormattedText(caption, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, textColor, VisualTreeHelper.GetDpi(this).PixelsPerDip);
             drawingContext.DrawText(captionFT, new Point(xPos, rowNbr * rowHeight));
         }
 
@@ -287,7 +282,7 @@ namespace ParallelBuildsMonitor
         {
             string headerText = DataModel.GetSolutionNameWithMachineInfo("  |  ", false /*WithBuildStartedStr*/);
 
-            FormattedText itext = new FormattedText(headerText, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+            FormattedText itext = new FormattedText(headerText, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush, VisualTreeHelper.GetDpi(this).PixelsPerDip);
             // Cut text when it is too long for window - Set a maximum width and height. If the text overflows those values, an ellipsis "..." appears.
             itext.MaxTextWidth = RenderSize.Width - Spacings.lOrder - Spacings.rGanttC;
             itext.MaxTextHeight = rowHeight;
@@ -329,7 +324,7 @@ namespace ParallelBuildsMonitor
             }
 
             string time = Utils.SecondsToString(endTime - startTime);
-            FormattedText itime = new FormattedText(time, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, whiteBrush);
+            FormattedText itime = new FormattedText(time, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, whiteBrush, VisualTreeHelper.GetDpi(this).PixelsPerDip);
             double timeLen = itime.Width;
             if (r.Width > timeLen)
             {
@@ -374,7 +369,7 @@ namespace ParallelBuildsMonitor
 
                     if (IsEmptyBuilds())
                     { // Case when no single build was started yet  -  display some info to ensure user that everything is OK
-                        FormattedText captionFT = new FormattedText(emptyGanttMsg, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                        FormattedText captionFT = new FormattedText(emptyGanttMsg, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush, VisualTreeHelper.GetDpi(this).PixelsPerDip);
                         drawingContext.DrawText(captionFT, new Point(50.0, rowNbrNoProjectsFiller / 2 * rowHeight));
 
                         return;
@@ -402,7 +397,7 @@ namespace ParallelBuildsMonitor
                     double projectNameMaxLen = 10;
                     for (ii = 0; ii < DataModel.FinishedBuilds.Count; ii++)
                     {
-                        FormattedText iname = new FormattedText(DataModel.FinishedBuilds[ii].ProjectName, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                        FormattedText iname = new FormattedText(DataModel.FinishedBuilds[ii].ProjectName, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush, VisualTreeHelper.GetDpi(this).PixelsPerDip);
                         double ll = iname.Width;
                         t = DataModel.FinishedBuilds[ii].end;
                         atLeastOneError = atLeastOneError || !DataModel.FinishedBuilds[ii].success;
@@ -417,7 +412,7 @@ namespace ParallelBuildsMonitor
                     }
                     foreach (KeyValuePair<string, Tuple<uint, long>> item in DataModel.CurrentBuilds)
                     {
-                        FormattedText iname = new FormattedText(DataModel.GetHumanReadableProjectName(item.Key), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                        FormattedText iname = new FormattedText(DataModel.GetHumanReadableProjectName(item.Key), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush, VisualTreeHelper.GetDpi(this).PixelsPerDip);
                         double ll = iname.Width;
                         if (ll > projectNameMaxLen)
                             projectNameMaxLen = ll;
@@ -435,14 +430,14 @@ namespace ParallelBuildsMonitor
                         string pattern = "> ";
                         int len = maxBuildOrderNbr.ToString().Length + pattern.Length;
                         pattern = pattern.PadLeft(len, '8'); // let's assume that 8 is the widest char
-                        FormattedText bn = new FormattedText(pattern, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                        FormattedText bn = new FormattedText(pattern, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush, VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
                         spacings.lProjName = Spacings.lOrder + bn.Width + 3; // let's add 3 pix just in case 8 is not the widest
                         spacings.lGanttC = spacings.lProjName + projectNameMaxLen + penThickness + 3; // let's add 3 pix just in case
                     }
 
                     // check if usage text is longer than the longest project name, and yes, values greater than 1000% are possible
-                    double usageTextLen = new FormattedText("HDD Usage (Avg. 1000%)", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush).Width;
+                    double usageTextLen = new FormattedText("HDD Usage (Avg. 1000%)", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush, VisualTreeHelper.GetDpi(this).PixelsPerDip).Width;
                     spacings.lGanttC = Math.Max(spacings.lGanttC, Spacings.lOrder + usageTextLen + penThickness);
 
                     int rowNbr = 0; //first row has number 0
@@ -496,7 +491,7 @@ namespace ParallelBuildsMonitor
 
                     DateTime dt = new DateTime(maxTick);
                     string s = Utils.SecondsToString(dt.Ticks);
-                    FormattedText maxTime = new FormattedText(s, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush);
+                    FormattedText maxTime = new FormattedText(s, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontFace, FontSize, blackBrush, VisualTreeHelper.GetDpi(this).PixelsPerDip);
                     double m = maxTime.Width;
                     drawingContext.DrawText(maxTime, new Point(RenderSize.Width - m - Spacings.rGanttC, rowNbr * rowHeight));
 
@@ -522,7 +517,9 @@ namespace ParallelBuildsMonitor
 
         private void RefreshTimerEventTick(object sender, ElapsedEventArgs e)
         {
+#pragma warning disable VSTHRD001 // Avoid legacy thread switching APIs
             GraphControl.Instance.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background,
+#pragma warning restore VSTHRD001 // Avoid legacy thread switching APIs
                  new System.Action(() =>
                  {
                      GraphControl.Instance.InvalidateVisual();

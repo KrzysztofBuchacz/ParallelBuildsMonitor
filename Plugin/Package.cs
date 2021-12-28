@@ -1,16 +1,10 @@
 ﻿using System;
 using System.ComponentModel.Design;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell.Settings;
-using Microsoft.Win32;
 
 namespace ParallelBuildsMonitor
 {
@@ -37,7 +31,6 @@ namespace ParallelBuildsMonitor
     // Not sure if VsDockStyle.Linked is the correctly selected value
     [ProvideToolWindow(typeof(PBMWindow), Style = VsDockStyle.Linked, DockedHeight = 200, Window = "DocumentWell", Orientation = ToolWindowOrientation.Bottom)]
     [Guid(Package.PackageGuidString)]
-    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     public sealed class Package : Microsoft.VisualStudio.Shell.AsyncPackage
     {
         /// <summary>
@@ -53,32 +46,6 @@ namespace ParallelBuildsMonitor
             // not sited yet inside Visual Studio environment. The place to do all the other
             // initialization is the Initialize method.
         }
-
-
-        // Commented out below methods are proper initialization in Microsoft.VisualStudio.Shell.15 (VS 2017),
-        // however PBM is suportting .14 (VS2015), so we can't use them, becasue they are missing in .14 (VS2015) interface.
-        // VS 2017 SDK example is here: https://github.com/Microsoft/VSSDK-Extensibility-Samples/tree/master/AsyncToolWindow
-        //public override IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType)
-        //{
-        //    return toolWindowType.Equals(Guid.Parse(typeof(PBMWindow).GUID)) ? this : null;
-        //}
-        //
-        //protected override string GetToolWindowTitle(Type toolWindowType, int id)
-        //{
-        //    return toolWindowType == typeof(PBMWindow) ? PBMWindow.Title : base.GetToolWindowTitle(toolWindowType, id);
-        //}
-        //
-        //protected override async Task<object> InitializeToolWindowAsync(Type toolWindowType, int id, CancellationToken cancellationToken)
-        //{
-        //    // Perform as much work as possible in this method which is being run on a background thread.
-        //    // The object returned from this method is passed into the constructor of the PBMWindow 
-        //    var dte = await GetServiceAsync(typeof(EnvDTE.DTE)) as EnvDTE80.DTE2;
-        //
-        //    return new PBMWindowState
-        //    {
-        //        DTE = dte
-        //    };
-        //}
 
         /// <summary>
         /// Asynchronic Initialization of the package; this method is called right after the package is sited, so this is the place
@@ -133,6 +100,7 @@ namespace ParallelBuildsMonitor
         {
             { // Adding callback method to "Parallel Builds Monitor" menu item into "VS -> Menu -> View -> Other Windows" menu
                 IMenuCommandService commandService = (IMenuCommandService)await package.GetServiceAsync(typeof(IMenuCommandService));
+                Microsoft.Assumes.Present(commandService);
                 CommandID menuCommandID = new CommandID(typeof(MainMenuCommandSet).GUID, (int)MainMenuCommandSet.ShowToolWindow);
                 MenuCommand menuItem = new MenuCommand((s, e) => Execute(package), menuCommandID);
                 commandService.AddCommand(menuItem);
@@ -167,26 +135,13 @@ namespace ParallelBuildsMonitor
             }
         }
 
-        // This is proper initialization since VS2017.
-        //    For details see comment to GetAsyncToolWindowFactory() method.
-        //private static void Execute(AsyncPackage package)
-        //{
-        //    package.JoinableTaskFactory.RunAsync(async () =>
-        //    {
-        //        ToolWindowPane window = await package.ShowToolWindowAsync(              // MISSING METHOD IN Microsoft.VisualStudio.Shell.14 in AsyncPackage class. Available since .15
-        //            typeof(PBMWindow),
-        //            0,
-        //            create: true,
-        //            cancellationToken: package.DisposalToken);
-        //    });
-        //}
-
-
         /// <summary>
         /// Shows "Parallel Builds Monitor" tool window when "VS -> Menu -> View -> Other Windows -> Parallel Builds Monitor" is clicked.
         /// </summary>
         private static void Execute(AsyncPackage package)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             // Get the instance number 0 of this tool window. This window is single instance so this instance
             // is actually the only one.
             // The last flag is set to true so that if the tool window does not exists it will be created.

@@ -1,6 +1,15 @@
 ﻿Parallel Builds Monitor Release Notes
 ==========================================
 
+v. 1.10 2021.12.23
+- Add support for VS 2022
+- Drop support for VS 2015
+- Migrate from packages.config to PackageReference
+- Migrate from .NET 4.5.2 to 4.7.1
+- Migrate from DTE events to Shell events
+- Migrate development environment from VS 2017 to VS 2022
+- Minor warnings fixed
+
 v. 1.9 2019.06.05 Bug fixing
 - Remove deprecated API
 - Update desription

@@ -1,11 +1,9 @@
 ﻿using System;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
+using Microsoft;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using System.IO;
-using System.Text;
-using System.Timers;
 using EnvDTE;
 using EnvDTE80;
 using System.Collections.Generic;
@@ -27,84 +25,49 @@ namespace ParallelBuildsMonitor
         private static Microsoft.VisualStudio.Shell.Package Package { get; set; }
         public static IServiceProvider ServiceProvider { get { return Package; } }
         private static DTE2 Dte { get; set; }
-        private static EnvDTE.SolutionEvents SolutionEvents { get; set; }  //DTE2.Events.SolutionEvents must be called only once. Calling several times makes events stop working. That is why it is kept as member (call like "DTE2.Events.SolutionEvents.AfterClosing += solutionEvents_AfterClosing;" just NOT work)
-        private static EnvDTE.BuildEvents BuildEvents { get; set; }        //DTE2.Events.BuildEvents    must be called only once. Calling several times makes events stop working. That is why it is kept as member (call like "DTE2.Events.BuildEvents.OnBuildBegin += BuildEvents_OnBuildBegin;" just NOT work)
+        private static Events.SolutionEvents SolutionEvents { get; set; }
+        private static Events.BuildEvents BuildEvents { get; set; }
         private static DataModel DataModel { get { return DataModel.Instance; } } // Convinient accessor to data.
 
         #endregion Members
 
-        #region Initialize-Uninitialize
+        #region Initialize
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
-        public static bool Initialize(Microsoft.VisualStudio.Shell.Package package)
+        public static void Initialize(Microsoft.VisualStudio.Shell.Package package)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             if (package == null)
-                return false;
+                return;
 
             if (Package != null)
-                return false; // Protection against double initialization (double subscription to events, double menus etc)
+                return; // Protection against double initialization (double subscription to events, double menus etc)
 
             Package = package;
-            Dte = (DTE2)ServiceProvider.GetService(typeof(SDTE));
+            Dte = ServiceProvider.GetService(typeof(DTE)) as EnvDTE80.DTE2;
+            Assumes.Present(Dte);
 
-            bool res = SubscribeUnsubscibeApiEvents(true /*subscibe*/);
-            res &= CreateDestroyMenu(true /*create*/);
+            var svc = ServiceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
+            Assumes.Present(svc);
 
-            return res;
+            SolutionEvents = new ParallelBuildsMonitor.Events.SolutionEvents();
+
+            svc.AdviseSolutionEvents(SolutionEvents, out _);
+
+            var svb = ServiceProvider.GetService(typeof(SVsSolutionBuildManager)) as IVsSolutionBuildManager;
+            Assumes.Present(svb);
+
+            BuildEvents = new ParallelBuildsMonitor.Events.BuildEvents();
+            svb.AdviseUpdateSolutionEvents(BuildEvents, out _);
+
+            CreateMenu();
         }
 
-        public static bool Uninitialize()
-        {
-            bool res = CreateDestroyMenu(false /*create*/);
-            res &= SubscribeUnsubscibeApiEvents(false /*subscibe*/);
-
-            Dte = null;
-            Package = null;
-
-            return res;
-        }
-
-
-        private static bool SubscribeUnsubscibeApiEvents(bool subscibe)
-        {
-            if (Dte == null)
-                return false;
-
-            // Solution Events Callbacks
-            SolutionEvents = Dte.Events.SolutionEvents;
-            if (subscibe)
-            {
-                SolutionEvents.AfterClosing += solutionEvents_AfterClosing;
-            }
-            else
-            {
-                SolutionEvents.AfterClosing -= solutionEvents_AfterClosing;
-            }
-
-            // Project Events Callbacks
-            BuildEvents = Dte.Events.BuildEvents;
-            if (subscibe)
-            {
-                BuildEvents.OnBuildBegin += BuildEvents_OnBuildBegin;
-                BuildEvents.OnBuildDone += BuildEvents_OnBuildDone;
-                BuildEvents.OnBuildProjConfigBegin += BuildEvents_OnBuildProjConfigBegin;
-                BuildEvents.OnBuildProjConfigDone += BuildEvents_OnBuildProjConfigDone;
-            }
-            else
-            {
-                BuildEvents.OnBuildBegin -= BuildEvents_OnBuildBegin;
-                BuildEvents.OnBuildDone -= BuildEvents_OnBuildDone;
-                BuildEvents.OnBuildProjConfigBegin -= BuildEvents_OnBuildProjConfigBegin;
-                BuildEvents.OnBuildProjConfigDone -= BuildEvents_OnBuildProjConfigDone;
-            }
-
-            return true;
-        }
-
-        #endregion Initialize-Uninitialize
+        #endregion Initialize
 
         #region Menu
 
@@ -116,32 +79,22 @@ namespace ParallelBuildsMonitor
             SaveAsCsv = 0x0102
         }
 
-        //TODO: Is it correct implementation of destroy?
-        private static bool CreateDestroyMenu(bool create)
+        private static void CreateMenu()
         {
             OleMenuCommandService commandService = ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (commandService == null)
-                return false;
+            Assumes.Present(commandService);
 
             // Save As .png
             var SaveAsPngCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.SaveAsPng);
             var menuItemSaveAsPng = new OleMenuCommand(SaveAsPng, SaveAsPngCommandID);
             menuItemSaveAsPng.BeforeQueryStatus += MenuItemSaveAsPng_BeforeQueryStatus;
-            if (create)
-                commandService.AddCommand(menuItemSaveAsPng);
-            else
-                commandService.RemoveCommand(menuItemSaveAsPng);
+            commandService.AddCommand(menuItemSaveAsPng);
 
             // Save As .csv
             var SaveAsCsvCommandID = new CommandID(typeof(ContextMenuCommandSet).GUID, (int)ContextMenuCommandSet.SaveAsCsv);
             var menuItemSaveAsCsv = new OleMenuCommand(SaveAsCsv, SaveAsCsvCommandID);
             menuItemSaveAsCsv.BeforeQueryStatus += MenuItemSaveAsCsv_BeforeQueryStatus;
-            if (create)
-                commandService.AddCommand(menuItemSaveAsCsv);
-            else
-                commandService.RemoveCommand(menuItemSaveAsCsv);
-
-            return true;
+            commandService.AddCommand(menuItemSaveAsCsv);
         }
 
         private static void MenuItemSaveAsPng_BeforeQueryStatus(object sender, EventArgs e)
@@ -174,6 +127,7 @@ namespace ParallelBuildsMonitor
         {
             try
             {
+                ThreadHelper.ThrowIfNotOnUIThread();
                 string outputPaneContent = GetAllTextFromPane(GetOutputBuildPane()); // Output Build Pane/Window can be cleared even during build, so this is not perfect solution...
                 SaveCsv.SaveAsCsv(outputPaneContent);
             }
@@ -194,7 +148,7 @@ namespace ParallelBuildsMonitor
         /// <param name="ProjectConfig"></param>
         /// <param name="Platform"></param>
         /// <param name="SolutionConfig"></param>
-        static void BuildEvents_OnBuildProjConfigBegin(string ProjectUniqueName, string ProjectConfig, string Platform, string SolutionConfig)
+        public static void BuildEvents_OnBuildProjConfigBegin(string ProjectUniqueName)
         {
             DataModel.AddCurrentBuild(ProjectUniqueName);
         }
@@ -206,13 +160,15 @@ namespace ParallelBuildsMonitor
         /// <param name="Platform"></param>
         /// <param name="SolutionConfig"></param>
         /// <param name="Success"></param>
-        static void BuildEvents_OnBuildProjConfigDone(string ProjectUniqueName, string ProjectConfig, string Platform, string SolutionConfig, bool Success)
+        public static void BuildEvents_OnBuildProjConfigDone(string ProjectUniqueName, bool Success)
         {
             DataModel.FinishCurrentBuild(ProjectUniqueName, Success);
         }
 
-        static void BuildEvents_OnBuildBegin(vsBuildScope Scope, vsBuildAction Action)
+        public static void BuildEvents_OnBuildBegin()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             DataModel.BuildBegin(System.IO.Path.GetFileName(Dte.Solution.FileName));
             GraphControl.Instance?.BuildBegin();
         }
@@ -224,6 +180,8 @@ namespace ParallelBuildsMonitor
         /// and value is list of projects that this projects depend on in <c>Project.UniqueName</c> form</returns>
         static private Dictionary<string, List<string>> GetProjectDependenies()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             Dictionary<string, List<string>> deps = new Dictionary<string, List<string>>();
 
             foreach (BuildDependency bd in Dte.Solution.SolutionBuild.BuildDependencies)
@@ -247,9 +205,8 @@ namespace ParallelBuildsMonitor
         /// </summary>
         /// <param name="Scope"></param>
         /// <param name="Action"></param>
-        static void BuildEvents_OnBuildDone(vsBuildScope Scope, vsBuildAction Action)
+        public static void BuildEvents_OnBuildDone(bool findAndSetCriticalPath)
         {
-            bool findAndSetCriticalPath = ((Action == vsBuildAction.vsBuildActionBuild) || (Action == vsBuildAction.vsBuildActionRebuildAll)); // There is no Critical Path for vsBuildAction.vsBuildActionClean. Clean is done sequentially.
             DataModel.BuildDone(GetProjectDependenies(), findAndSetCriticalPath);
             GraphControl.Instance?.BuildDone();
         }
@@ -260,7 +217,7 @@ namespace ParallelBuildsMonitor
         /// <remarks>
         /// Clear data and graph from prevously executed build.
         /// </remarks>
-        static void solutionEvents_AfterClosing()
+        public static void AfterSolutionClosing()
         {
             DataModel.Reset();
             GraphControl.Instance?.InvalidateVisual();
@@ -272,6 +229,8 @@ namespace ParallelBuildsMonitor
 
         public static EnvDTE.OutputWindowPane GetOutputBuildPane()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             EnvDTE.OutputWindowPanes panes = Dte.ToolWindows.OutputWindow.OutputWindowPanes;
             foreach (EnvDTE.OutputWindowPane pane in panes)
             {
@@ -284,6 +243,8 @@ namespace ParallelBuildsMonitor
 
         public static string GetAllTextFromPane(EnvDTE.OutputWindowPane Pane)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             if (Pane == null)
                 return null;
 

@@ -1,7 +1,6 @@
-"CRICTICAL PATH for   |  Build Started: 0001-01-01 00:00:00  |  Processors: 1  |  Cores: 2  |  CPU Speed: 2.2GHz  |  Hyper Threading: Enabled  |  RAM: 8GB  |  HDD: 1 SSD"
+"CRICTICAL PATH for   |  Build Started: 0001-01-01 00:00:00  |  Processors: 1  |  Cores: 2  |  CPU Speed: 2.7GHz  |  Hyper Threading: Enabled  |  RAM: 8GB  |  HDD: 1 SSD"
 "Summary Report:"
-"Critical Path Order", "Project Name", "Build Time in [s] 
-(Sorted Descending)", "Start Time [s]", "End Time [s]"
+"Critical Path Order", "Project Name", "Build Time in [s] (Sorted Descending)", "Start Time [s]", "End Time [s]"
 "2", "WpfToolTip.csproj", "6", "4", "10"
 "3", "variadic-macros-v1.vcxproj", "4", "10", "14"
 "1", "junk-finddir.vcxproj", "4", "0", "4"
