@@ -4,8 +4,9 @@ Parallel Builds Monitor Visual Studio Extension
 
 For Visul Studio 2017 2019 2022
 
-https://marketplace.visualstudio.com/items?itemName=ivson4.ParallelBuildsMonitor-18691
+This extension can be installed via [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=ivson4.ParallelBuildsMonitor-18691)
 
+[Release Notes](Plugin/ReleaseNotes.txt)
 
 ## Git contents:
 - `Plugin` - contain `Parallel Build Monitor` extension to be installed in Visual Studio.  
