@@ -1,6 +1,9 @@
 ﻿Parallel Builds Monitor Release Notes
 ==========================================
 
+v. 1.11 2025.01.XX
+- Add support for VS 2026
+
 v. 1.10 2021.12.23
 - Add support for VS 2022
 - Drop support for VS 2015

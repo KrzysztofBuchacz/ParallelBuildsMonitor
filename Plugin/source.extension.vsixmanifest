@@ -1,7 +1,7 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="ParallelBuildsMonitor.25D5079B-D885-4D26-9472-99594F1A2EB9" Version="1.10" Language="en-US" Publisher="Krzysztof Buchacz" />
+        <Identity Id="ParallelBuildsMonitor.25D5079B-D885-4D26-9472-99594F1A2EB9" Version="1.11" Language="en-US" Publisher="Krzysztof Buchacz" />
         <DisplayName>Parallel Builds Monitor</DisplayName>
         <Description xml:space="preserve">Visualizes compilation process, with project dependencies, critical path and timings in Gantt chart and .csv form</Description>
         <License>License.txt</License>
@@ -21,6 +21,9 @@
     <Installation>
         <InstallationTarget Version="[15.0,17.0)" Id="Microsoft.VisualStudio.Community" />
         <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0, 18.0)">
+            <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[19.0, 20.0)">
             <ProductArchitecture>amd64</ProductArchitecture>
         </InstallationTarget>
     </Installation>
