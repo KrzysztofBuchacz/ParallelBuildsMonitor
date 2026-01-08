@@ -31,6 +31,6 @@ Next Visual Studio will be open. ParallelBuildMonitor will be automatically adde
 Developed with:
 ```
 Microsoft Visual Studio Community 2022 (64-bit)
-Version 17.0.4
+Version 17.12+
 Microsoft .NET Framework
-Version 4.7.2
+Version 4.7.2 (Plugin) / 4.8 (Tests)
