@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.168
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11408.102 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "constexpr_templates", "constexpr_templates\constexpr_templates.vcxproj", "{3982C5EC-7B79-41B1-B5C8-700E57723704}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -27,6 +27,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "variadic-macros-v1", "varia
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfToolTip", "WpfToolTip\WpfToolTip.csproj", "{D9CC08BF-961F-4AA7-8F99-32C79D07B55C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompilationFailure", "CompilationFailure\CompilationFailure.vcxproj", "{52BE4066-CDD6-4BCF-83A8-4F67A6EA98A3}"
 	ProjectSection(ProjectDependencies) = postProject
 		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
 	EndProjectSection
@@ -61,6 +66,10 @@ Global
 		{D9CC08BF-961F-4AA7-8F99-32C79D07B55C}.Debug|x64.Build.0 = Debug|Any CPU
 		{D9CC08BF-961F-4AA7-8F99-32C79D07B55C}.Release|x64.ActiveCfg = Release|Any CPU
 		{D9CC08BF-961F-4AA7-8F99-32C79D07B55C}.Release|x64.Build.0 = Release|Any CPU
+		{52BE4066-CDD6-4BCF-83A8-4F67A6EA98A3}.Debug|x64.ActiveCfg = Debug|x64
+		{52BE4066-CDD6-4BCF-83A8-4F67A6EA98A3}.Debug|x64.Build.0 = Debug|x64
+		{52BE4066-CDD6-4BCF-83A8-4F67A6EA98A3}.Release|x64.ActiveCfg = Release|x64
+		{52BE4066-CDD6-4BCF-83A8-4F67A6EA98A3}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
