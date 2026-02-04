@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.2.11408.102 d18.0
+VisualStudioVersion = 18.2.11408.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "constexpr_templates", "constexpr_templates\constexpr_templates.vcxproj", "{3982C5EC-7B79-41B1-B5C8-700E57723704}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -15,11 +15,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiskPerformance", "DiskPerf
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "junk-finddir", "junk-finddir\junk-finddir.vcxproj", "{2076BD99-2EBE-4026-AE0B-8A3A85183AA3}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "junk-vector-const", "junk-vector-const\junk-vector-const.vcxproj", "{A2FD53C9-7BFD-4DA2-B486-22D86277B8BB}"
-	ProjectSection(ProjectDependencies) = postProject
-		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "variadic-macros-v1", "variadic-macros-v1\variadic-macros-v1.vcxproj", "{95A0AA1F-4910-42AF-9310-0D34DCBCA526}"
 	ProjectSection(ProjectDependencies) = postProject
 		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
@@ -32,6 +27,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfToolTip", "WpfToolTip\Wp
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompilationFailure", "CompilationFailure\CompilationFailure.vcxproj", "{52BE4066-CDD6-4BCF-83A8-4F67A6EA98A3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConstVector", "ConstVector\ConstVector.vcxproj", "{F8D8E1B7-B743-4EE6-8FCE-DED5E7344F16}"
 	ProjectSection(ProjectDependencies) = postProject
 		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
 	EndProjectSection
@@ -54,10 +54,6 @@ Global
 		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3}.Debug|x64.Build.0 = Debug|x64
 		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3}.Release|x64.ActiveCfg = Release|x64
 		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3}.Release|x64.Build.0 = Release|x64
-		{A2FD53C9-7BFD-4DA2-B486-22D86277B8BB}.Debug|x64.ActiveCfg = Debug|x64
-		{A2FD53C9-7BFD-4DA2-B486-22D86277B8BB}.Debug|x64.Build.0 = Debug|x64
-		{A2FD53C9-7BFD-4DA2-B486-22D86277B8BB}.Release|x64.ActiveCfg = Release|x64
-		{A2FD53C9-7BFD-4DA2-B486-22D86277B8BB}.Release|x64.Build.0 = Release|x64
 		{95A0AA1F-4910-42AF-9310-0D34DCBCA526}.Debug|x64.ActiveCfg = Debug|x64
 		{95A0AA1F-4910-42AF-9310-0D34DCBCA526}.Debug|x64.Build.0 = Debug|x64
 		{95A0AA1F-4910-42AF-9310-0D34DCBCA526}.Release|x64.ActiveCfg = Release|x64
@@ -70,6 +66,10 @@ Global
 		{52BE4066-CDD6-4BCF-83A8-4F67A6EA98A3}.Debug|x64.Build.0 = Debug|x64
 		{52BE4066-CDD6-4BCF-83A8-4F67A6EA98A3}.Release|x64.ActiveCfg = Release|x64
 		{52BE4066-CDD6-4BCF-83A8-4F67A6EA98A3}.Release|x64.Build.0 = Release|x64
+		{F8D8E1B7-B743-4EE6-8FCE-DED5E7344F16}.Debug|x64.ActiveCfg = Debug|x64
+		{F8D8E1B7-B743-4EE6-8FCE-DED5E7344F16}.Debug|x64.Build.0 = Debug|x64
+		{F8D8E1B7-B743-4EE6-8FCE-DED5E7344F16}.Release|x64.ActiveCfg = Release|x64
+		{F8D8E1B7-B743-4EE6-8FCE-DED5E7344F16}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
