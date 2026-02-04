@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{52be4066-cdd6-4bcf-83a8-4f67a6ea98a3}</ProjectGuid>
-    <RootNamespace>CompilationFailure</RootNamespace>
+    <ProjectGuid>{50a83eb2-972f-4d88-90fc-50c1b1889a42}</ProjectGuid>
+    <RootNamespace>IntentionalCompilationFailure</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -127,7 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CompilationFailure.cpp" />
+    <ClCompile Include="IntentionalCompilationFailure.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

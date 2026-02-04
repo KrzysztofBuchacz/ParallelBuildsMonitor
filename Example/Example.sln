@@ -26,12 +26,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfToolTip", "WpfToolTip\Wp
 		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompilationFailure", "CompilationFailure\CompilationFailure.vcxproj", "{52BE4066-CDD6-4BCF-83A8-4F67A6EA98A3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConstVector", "ConstVector\ConstVector.vcxproj", "{F8D8E1B7-B743-4EE6-8FCE-DED5E7344F16}"
 	ProjectSection(ProjectDependencies) = postProject
 		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConstVector", "ConstVector\ConstVector.vcxproj", "{F8D8E1B7-B743-4EE6-8FCE-DED5E7344F16}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IntentionalCompilationFailure", "IntentionalCompilationFailure\IntentionalCompilationFailure.vcxproj", "{50A83EB2-972F-4D88-90FC-50C1B1889A42}"
 	ProjectSection(ProjectDependencies) = postProject
 		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
 	EndProjectSection
@@ -62,14 +62,14 @@ Global
 		{D9CC08BF-961F-4AA7-8F99-32C79D07B55C}.Debug|x64.Build.0 = Debug|Any CPU
 		{D9CC08BF-961F-4AA7-8F99-32C79D07B55C}.Release|x64.ActiveCfg = Release|Any CPU
 		{D9CC08BF-961F-4AA7-8F99-32C79D07B55C}.Release|x64.Build.0 = Release|Any CPU
-		{52BE4066-CDD6-4BCF-83A8-4F67A6EA98A3}.Debug|x64.ActiveCfg = Debug|x64
-		{52BE4066-CDD6-4BCF-83A8-4F67A6EA98A3}.Debug|x64.Build.0 = Debug|x64
-		{52BE4066-CDD6-4BCF-83A8-4F67A6EA98A3}.Release|x64.ActiveCfg = Release|x64
-		{52BE4066-CDD6-4BCF-83A8-4F67A6EA98A3}.Release|x64.Build.0 = Release|x64
 		{F8D8E1B7-B743-4EE6-8FCE-DED5E7344F16}.Debug|x64.ActiveCfg = Debug|x64
 		{F8D8E1B7-B743-4EE6-8FCE-DED5E7344F16}.Debug|x64.Build.0 = Debug|x64
 		{F8D8E1B7-B743-4EE6-8FCE-DED5E7344F16}.Release|x64.ActiveCfg = Release|x64
 		{F8D8E1B7-B743-4EE6-8FCE-DED5E7344F16}.Release|x64.Build.0 = Release|x64
+		{50A83EB2-972F-4D88-90FC-50C1B1889A42}.Debug|x64.ActiveCfg = Debug|x64
+		{50A83EB2-972F-4D88-90FC-50C1B1889A42}.Debug|x64.Build.0 = Debug|x64
+		{50A83EB2-972F-4D88-90FC-50C1B1889A42}.Release|x64.ActiveCfg = Release|x64
+		{50A83EB2-972F-4D88-90FC-50C1B1889A42}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
