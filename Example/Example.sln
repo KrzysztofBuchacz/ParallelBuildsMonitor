@@ -4,37 +4,33 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 18.2.11408.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "constexpr_templates", "constexpr_templates\constexpr_templates.vcxproj", "{3982C5EC-7B79-41B1-B5C8-700E57723704}"
-	ProjectSection(ProjectDependencies) = postProject
-		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiskPerformance", "DiskPerformance\DiskPerformance.csproj", "{34AAC5B7-BDBB-4671-A6FB-EAB482135B6B}"
 	ProjectSection(ProjectDependencies) = postProject
-		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
+		{CA764AE4-9F9B-4BCC-830C-CEF399D08497} = {CA764AE4-9F9B-4BCC-830C-CEF399D08497}
 	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "junk-finddir", "junk-finddir\junk-finddir.vcxproj", "{2076BD99-2EBE-4026-AE0B-8A3A85183AA3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "variadic-macros-v1", "variadic-macros-v1\variadic-macros-v1.vcxproj", "{95A0AA1F-4910-42AF-9310-0D34DCBCA526}"
 	ProjectSection(ProjectDependencies) = postProject
-		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
 		{D9CC08BF-961F-4AA7-8F99-32C79D07B55C} = {D9CC08BF-961F-4AA7-8F99-32C79D07B55C}
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfToolTip", "WpfToolTip\WpfToolTip.csproj", "{D9CC08BF-961F-4AA7-8F99-32C79D07B55C}"
 	ProjectSection(ProjectDependencies) = postProject
-		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
+		{CA764AE4-9F9B-4BCC-830C-CEF399D08497} = {CA764AE4-9F9B-4BCC-830C-CEF399D08497}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConstVector", "ConstVector\ConstVector.vcxproj", "{F8D8E1B7-B743-4EE6-8FCE-DED5E7344F16}"
 	ProjectSection(ProjectDependencies) = postProject
-		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
+		{CA764AE4-9F9B-4BCC-830C-CEF399D08497} = {CA764AE4-9F9B-4BCC-830C-CEF399D08497}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IntentionalCompilationFailure", "IntentionalCompilationFailure\IntentionalCompilationFailure.vcxproj", "{50A83EB2-972F-4D88-90FC-50C1B1889A42}"
 	ProjectSection(ProjectDependencies) = postProject
-		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3} = {2076BD99-2EBE-4026-AE0B-8A3A85183AA3}
+		{CA764AE4-9F9B-4BCC-830C-CEF399D08497} = {CA764AE4-9F9B-4BCC-830C-CEF399D08497}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sum", "Sum\Sum.vcxproj", "{CA764AE4-9F9B-4BCC-830C-CEF399D08497}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -50,10 +46,6 @@ Global
 		{34AAC5B7-BDBB-4671-A6FB-EAB482135B6B}.Debug|x64.Build.0 = Debug|Any CPU
 		{34AAC5B7-BDBB-4671-A6FB-EAB482135B6B}.Release|x64.ActiveCfg = Release|Any CPU
 		{34AAC5B7-BDBB-4671-A6FB-EAB482135B6B}.Release|x64.Build.0 = Release|Any CPU
-		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3}.Debug|x64.ActiveCfg = Debug|x64
-		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3}.Debug|x64.Build.0 = Debug|x64
-		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3}.Release|x64.ActiveCfg = Release|x64
-		{2076BD99-2EBE-4026-AE0B-8A3A85183AA3}.Release|x64.Build.0 = Release|x64
 		{95A0AA1F-4910-42AF-9310-0D34DCBCA526}.Debug|x64.ActiveCfg = Debug|x64
 		{95A0AA1F-4910-42AF-9310-0D34DCBCA526}.Debug|x64.Build.0 = Debug|x64
 		{95A0AA1F-4910-42AF-9310-0D34DCBCA526}.Release|x64.ActiveCfg = Release|x64
@@ -70,6 +62,10 @@ Global
 		{50A83EB2-972F-4D88-90FC-50C1B1889A42}.Debug|x64.Build.0 = Debug|x64
 		{50A83EB2-972F-4D88-90FC-50C1B1889A42}.Release|x64.ActiveCfg = Release|x64
 		{50A83EB2-972F-4D88-90FC-50C1B1889A42}.Release|x64.Build.0 = Release|x64
+		{CA764AE4-9F9B-4BCC-830C-CEF399D08497}.Debug|x64.ActiveCfg = Debug|x64
+		{CA764AE4-9F9B-4BCC-830C-CEF399D08497}.Debug|x64.Build.0 = Debug|x64
+		{CA764AE4-9F9B-4BCC-830C-CEF399D08497}.Release|x64.ActiveCfg = Release|x64
+		{CA764AE4-9F9B-4BCC-830C-CEF399D08497}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
