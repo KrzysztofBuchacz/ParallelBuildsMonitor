@@ -131,7 +131,7 @@ namespace ParallelBuildsMonitor
 
         public override string ToString()
         {
-            return ToString("  |  ");
+            return ToString(" | ");
         }
 
         public string ToString(string separator)
