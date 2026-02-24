@@ -1,17 +1,11 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ParallelBuildsMonitor;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 using System.Windows;
-
-using CM = ParallelBuildsMonitor.Tests.ComparisonMethods;
-using System.Windows.Controls;
 using System.Drawing;
 using System.Security.Cryptography;
+using ParallelBuildsMonitorTests;
 
 namespace ParallelBuildsMonitor.Tests
 {
@@ -237,6 +231,7 @@ namespace ParallelBuildsMonitor.Tests
                 MachineInfo mi = MachineInfo.Instance;
                 var machineInfo = new PrivateObject(mi); // Use PrivateObject class to change private member of MachineInfo object.
                 machineInfo.SetField("info", machineIndepenentInfo);
+                machineInfo.SetField("separatorCached", " | ");  // Set separator to avoid generating machine dependent info and use just set ones
 
                 Assert.AreEqual(MachineInfo.Instance.ToString(), machineIndepenentInfo); // Verify if internal data were updated
             }

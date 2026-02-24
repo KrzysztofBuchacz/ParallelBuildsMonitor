@@ -1,170 +1,11 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ParallelBuildsMonitor;
-using System;
+using ParallelBuildsMonitorTests;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
-
-using CM = ParallelBuildsMonitor.Tests.ComparisonMethods;
+using CM = ParallelBuildsMonitorTests.ComparisonMethods;
 
 namespace ParallelBuildsMonitor.Tests
 {
-    /// <summary>
-    /// Compare <c>Dictionary</c>ies by values, not by reference as C# default is.
-    /// </summary>
-    /// <typeparam name="TKey"></typeparam>
-    /// <typeparam name="TValue"></typeparam>
-    public class DictionaryComparer<TKey, TValue> : IEqualityComparer<Dictionary<TKey, TValue>>
-    {
-        private IEqualityComparer<TValue> valueComparer;
-        public DictionaryComparer(IEqualityComparer<TValue> valueComparer = null)
-        {
-            this.valueComparer = valueComparer ?? EqualityComparer<TValue>.Default;
-        }
-
-        public bool Equals(Dictionary<TKey, TValue> x, Dictionary<TKey, TValue> y)
-        {
-            if ((x == null) && (y == null))
-                return true;
-
-            if ((x == null) || (y == null))
-                return false;
-
-            if (x.Count != y.Count)
-                return false;
-
-            if (x.Keys.Except(y.Keys).Any())
-                return false;
-
-            if (y.Keys.Except(x.Keys).Any())
-                return false;
-
-            foreach (KeyValuePair<TKey, TValue> pair in x)
-            {
-                if (!valueComparer.Equals(pair.Value, y[pair.Key]))
-                    return false;
-            }
-            return true;
-        }
-
-        public int GetHashCode(Dictionary<TKey, TValue> obj)
-        {
-            if (obj == null)
-                return 0;
-            return obj.GetHashCode();
-        }
-    }
-
-    /// <summary>
-    /// Compare <c>List</c>s by values, not by reference as C# default is.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class ListComparer<T> : IEqualityComparer<List<T>>
-    {
-        private IEqualityComparer<T> valueComparer;
-        public ListComparer(IEqualityComparer<T> valueComparer = null)
-        {
-            this.valueComparer = valueComparer ?? EqualityComparer<T>.Default;
-        }
-
-        public bool Equals(List<T> x, List<T> y)
-        {
-            if ((x == null) && (y == null))
-                return true;
-
-            if ((x == null) || (y == null))
-                return false;
-
-            if (x.Count != y.Count)
-                return false;
-
-            for (int ii = 0; ii < x.Count; ii++)
-            {
-                if (x[ii].ToString() != y[ii].ToString())
-                    return false;
-            }
-
-            return true;
-        }
-
-        public int GetHashCode(List<T> obj)
-        {
-            if (obj == null)
-                return 0;
-            return obj.GetHashCode();
-        }
-    }
-
-    /// <summary>
-    /// Provide static methods that compare nested <c>Dictionary</c>ies and <c>List</c>s.
-    /// </summary>
-    public static class ComparisonMethods
-    {
-        /// <summary>
-        /// Compare Dictionary with nested List, by values in those collections (not by reference as default implementation)
-        /// </summary>
-        /// <remarks>
-        /// Comparision:
-        ///     - Dictionary keys can be in arbitrary order
-        ///     - List elements must be in the same sequence
-        ///     - strings are compare as case sensitive
-        /// </remarks>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="W"></typeparam>
-        /// <param name="dict1"></param>
-        /// <param name="dict2"></param>
-        /// <returns></returns>
-        public static bool CollectionAreEquals<T, W>(Dictionary<T, List<W>> dict1, Dictionary<T, List<W>> dict2)
-        {
-            return (new DictionaryComparer<T, List<W>>(new ListComparer<W>())).Equals(dict1, dict2);
-        }
-
-        /// <summary>
-        /// Compare Dictionary with nested Dictionary, by values in those collections (not by reference as default implementation)
-        /// </summary>
-        /// <remarks>
-        /// Comparision:
-        ///     - Dictionary keys can be in arbitrary order
-        ///     - strings are compare as case sensitive
-        ///     - comparison nested Dictionary have the same rules as outside Dictionary
-        /// </remarks>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="W"></typeparam>
-        /// <param name="dict1"></param>
-        /// <param name="dict2"></param>
-        /// <returns></returns>
-        public static bool CollectionAreEquals<T, U, W>(Dictionary<T, Dictionary<U, W>> dict1, Dictionary<T, Dictionary<U, W>> dict2)
-        {
-            return (new DictionaryComparer<T, Dictionary<U, W>>(new DictionaryComparer<U, W>())).Equals(dict1, dict2);
-        }
-    }
-
-    /// <summary>
-    /// Other test helper methods.
-    /// </summary>
-    public static class TestUtils
-    {
-        static string CurrentFileName([System.Runtime.CompilerServices.CallerFilePath] string fileName = "")
-        {
-            return fileName;
-        }
-
-        /// <summary>
-        /// Return absolute path to file file with test data.
-        /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        public static string GetTestFile(string fileName)
-        {
-            string testDirectory = Path.GetDirectoryName(CurrentFileName());
-
-            return Path.Combine(testDirectory, fileName ?? "");
-        }
-
-    }
-
     [TestClass()]
     public class CsvTestHelperMethodsTests
     {
@@ -715,7 +556,7 @@ namespace ParallelBuildsMonitor.Tests
 
             string current = File.ReadAllText(TestUtils.GetTestFile(tmpFileName));
             string expected = File.ReadAllText(TestUtils.GetTestFile("PBM Example.sln CP WithBuildTiming.csv"));
-            Assert.IsTrue(current == expected);
+            Assert.IsTrue(TestUtils.CompareCsvWithMachineInfo(current, expected), "CSV content mismatch");
 
             File.Delete(tmpFileName);
         }
@@ -740,7 +581,7 @@ namespace ParallelBuildsMonitor.Tests
 
             string current = File.ReadAllText(TestUtils.GetTestFile(tmpFileName));
             string expected = File.ReadAllText(TestUtils.GetTestFile("PBM Example.sln CP WithoutBuildTiming.csv"));
-            Assert.IsTrue(current == expected);
+            Assert.IsTrue(TestUtils.CompareCsvWithMachineInfo(current, expected), "CSV content mismatch");
 
             File.Delete(tmpFileName);
         }
