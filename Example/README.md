@@ -2,6 +2,9 @@
 
 This solution provides a small set of projects used to exercise and validate the Parallel Builds Monitor Visual Studio extension. It is intentionally simple and contains projects with dependencies and some intentionally buggy code to produce meaningful build timelines and failures.
 
+Building this solution with the Parallel Builds Monitor extension installed should look like this:
+![Parallel Builds Monitor example build](Example.png)
+
 Quick start
 1. Build and run the Parallel Builds Monitor Visual Studio extension from the parent folder, or install it from the Marketplace: https://marketplace.visualstudio.com/items?itemName=ivson4.ParallelBuildsMonitor-18691
 2. Open the solution (`Example.sln`) in Visual Studio 2026.

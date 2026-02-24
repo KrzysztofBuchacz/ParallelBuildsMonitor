@@ -6,6 +6,8 @@ For Visual Studio 2017 2019 2022 2026
 
 This extension can be installed via [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=ivson4.ParallelBuildsMonitor-18691)
 
+For project details, options, installation instructions, and images, refer to the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=ivson4.ParallelBuildsMonitor-18691)
+
 [Release Notes](Plugin/ReleaseNotes.txt)
 
 ## Git contents:
