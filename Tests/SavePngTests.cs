@@ -327,7 +327,7 @@ namespace ParallelBuildsMonitor.Tests
                 };
 
                 window.Show(); //this will draw PBMControl
-                               //window.ShowDialog(); //for debug
+                //window.ShowDialog(); //for debug
 
                 string expected = TestUtils.GetTestFile("BuildFinished.png");
                 // ResultsDirectory   <= this is where results should be saved. How to get value of this xaml tag?
