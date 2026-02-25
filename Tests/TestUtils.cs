@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using ParallelBuildsMonitor;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -157,6 +159,40 @@ namespace ParallelBuildsMonitorTests
             string testDirectory = Path.GetDirectoryName(CurrentFileName());
 
             return Path.Combine(testDirectory, fileName ?? "");
+        }
+
+
+        /// <summary>
+        /// Provides a scope for overriding machine information with independent, test-friendly values. When
+        /// instantiated, this class temporarily replaces the machine information used by the MachineInfo singleton with
+        /// specified values, restoring the original state when disposed.
+        /// </summary>
+        /// <remarks>
+        /// Use this class to ensure consistent machine information during unit tests or scenarios where hardware-dependent
+        /// values should be controlled. The override is active for the lifetime of the scope and is reverted when
+        /// reaching end of the scope.
+        /// This class is not thread-safe (operate on static MachineInfo); concurrent use may lead to unpredictable results.
+        /// </remarks>
+        public sealed class MachineInfoIndependentScope : IDisposable
+        {
+            public MachineInfoIndependentScope(string machineIndependentInfo = "Processors: 1  |  Cores: 2  |  CPU Speed: 2.7GHz  |  Hyper Threading: Enabled  |  RAM: 8GB  |  HDD: 1 SSD")
+            {
+                var mi = new PrivateObject(MachineInfo.Instance); // Use PrivateObject class to change private member of MachineInfo object.
+                mi.SetField("info", machineIndependentInfo);
+                mi.SetField("separatorCached", "  |  ");  // Set separator to avoid generating machine dependent info and use just set ones
+
+                Assert.AreEqual(MachineInfo.Instance.ToString("  |  "), machineIndependentInfo); // Verify if internal data were updated // Yes, the Assert will work here for [TestMethod()]
+            }
+
+            /// <summary>
+            /// Reset Machine Info Independent data from cache, so real values will be generated and used in next MachineInfo.Instance.ToString() call.
+            /// </summary>
+            public void Dispose()
+            {
+                var mi = new PrivateObject(MachineInfo.Instance); // Use PrivateObject class to change private member of MachineInfo object.
+                mi.SetField("info", null);
+                mi.SetField("separatorCached", null);
+            }
         }
 
         /// <summary>
